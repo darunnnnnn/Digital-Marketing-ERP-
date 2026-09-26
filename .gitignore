@@ -1,0 +1,11 @@
+node_modules
+.next
+out
+build
+.env
+*.db
+*.db-journal
+prisma/dev.db*
+.DS_Store
+next-env.d.ts
+.next-verify
