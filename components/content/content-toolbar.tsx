@@ -11,7 +11,7 @@ export function ContentToolbar({
   members,
   overdueCount,
 }: {
-  clients: ClientOption[];
+  clients: Pick<ClientOption, "id" | "name">[];
   members: MemberOption[];
   overdueCount: number;
 }) {

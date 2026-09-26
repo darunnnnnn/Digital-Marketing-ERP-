@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { createPortal } from "react-dom";
 
 export function Modal({
   open,
@@ -30,7 +31,11 @@ export function Modal({
 
   if (!open) return null;
 
-  return (
+  // Rendered straight into <body>. A card with a blur effect (our "surface"
+  // style) traps position:fixed children in Chrome, which squeezed any dialog
+  // opened from inside a card into that card's box instead of the full screen.
+  // `open` only turns true after a click, so `document` always exists here.
+  return createPortal(
     <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto p-4 sm:items-center">
       <div
         className="fixed inset-0 bg-brand-900/25 backdrop-blur-sm"
@@ -68,6 +73,7 @@ export function Modal({
         </div>
         <div className="px-7 pb-7 pt-4">{children}</div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

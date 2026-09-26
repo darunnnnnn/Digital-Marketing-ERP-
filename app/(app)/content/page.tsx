@@ -43,9 +43,9 @@ export default async function ContentPage({ searchParams }: { searchParams: Prom
   }
   const monthKey = currentMonthKey();
 
-  // None of these five depend on each other, so they go out together —
+  // None of these four depend on each other, so they go out together —
   // one Tokyo round trip instead of three.
-  const [clientRows, members, rows, publishedThisMonth, plannedPerClient] = await Promise.all([
+  const [clientRows, members, rows, publishedThisMonth] = await Promise.all([
     db.client.findMany({
       where: { agencyId: agency.id, status: { not: "archived" } },
       orderBy: { name: "asc" },
@@ -104,12 +104,6 @@ export default async function ContentPage({ searchParams }: { searchParams: Prom
     db.contentItem.count({
       where: { agencyId: agency.id, monthKey, stage: "published" },
     }),
-    // Planned counts feed the "x of y planned" hint in the plan dialog.
-    db.contentItem.groupBy({
-      by: ["clientId"],
-      where: { agencyId: agency.id, monthKey },
-      _count: { _all: true },
-    }),
   ]);
 
   const items: BoardItem[] = rows.map((row) => {
@@ -147,12 +141,8 @@ export default async function ContentPage({ searchParams }: { searchParams: Prom
     (i) => i.stage === "script_review" || i.stage === "edit_review",
   ).length;
   const inFlight = items.filter((i) => i.stage !== "published").length;
-  const plannedMap = new Map(plannedPerClient.map((r) => [r.clientId, r._count._all]));
 
-  const clientOptions = clientRows.map((c) => ({
-    ...c,
-    planned: plannedMap.get(c.id) ?? 0,
-  }));
+  const clientOptions = clientRows;
 
   const hasAnyContent = items.length > 0;
 
@@ -170,10 +160,7 @@ export default async function ContentPage({ searchParams }: { searchParams: Prom
           </p>
         </div>
         {canPlan(user) && (
-          <NewContentButton
-            clients={clientOptions}
-            members={members}
-          />
+          <NewContentButton />
         )}
       </div>
 
@@ -229,11 +216,7 @@ export default async function ContentPage({ searchParams }: { searchParams: Prom
           }
           action={
             hasAnyContent || !canPlan(user) ? undefined : (
-              <NewContentButton
-                clients={clientOptions}
-                members={members}
-                label="Plan your first videos"
-              />
+              <NewContentButton label="Plan your first videos" />
             )
           }
         />
