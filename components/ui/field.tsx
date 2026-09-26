@@ -28,14 +28,27 @@ export function Field({
   );
 }
 
+// autoComplete="off" by default — without it, Chrome guesses these are address
+// or payment fields and pops its own suggestion list over them (that's the
+// "Manage addresses…" dropdown, not anything this app renders). A caller that
+// actually wants autofill (email, password) passes its own autoComplete and it
+// wins, since props are spread after this default.
 export function Input(props: React.InputHTMLAttributes<HTMLInputElement>) {
-  return <input {...props} className={cn(CONTROL, props.className)} />;
+  return <input autoComplete="off" {...props} className={cn(CONTROL, props.className)} />;
 }
 
 export function Textarea(props: React.TextareaHTMLAttributes<HTMLTextAreaElement>) {
-  return <textarea {...props} className={cn(CONTROL, "resize-none", props.className)} />;
+  return (
+    <textarea
+      autoComplete="off"
+      {...props}
+      className={cn(CONTROL, "resize-none", props.className)}
+    />
+  );
 }
 
 export function Select(props: React.SelectHTMLAttributes<HTMLSelectElement>) {
-  return <select {...props} className={cn(CONTROL, "cursor-pointer", props.className)} />;
+  return (
+    <select autoComplete="off" {...props} className={cn(CONTROL, "cursor-pointer", props.className)} />
+  );
 }

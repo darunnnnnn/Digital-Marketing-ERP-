@@ -23,34 +23,37 @@ export default async function ClientsPage({
   const { agency } = await requireRole(canManageClients);
   const monthKey = currentMonthKey();
 
-  const grouped = await db.client.groupBy({
-    by: ["status"],
-    where: { agencyId: agency.id },
-    _count: { _all: true },
-  });
+  // Independent of each other — run together instead of one after the other,
+  // which matters a lot when every round trip crosses to Tokyo.
+  const [grouped, clients] = await Promise.all([
+    db.client.groupBy({
+      by: ["status"],
+      where: { agencyId: agency.id },
+      _count: { _all: true },
+    }),
+    db.client.findMany({
+      where: {
+        agencyId: agency.id,
+        ...(status !== "all" ? { status } : {}),
+        ...(q
+          ? {
+              OR: [
+                { name: { contains: q, ...insensitive } },
+                { industry: { contains: q, ...insensitive } },
+                { contactName: { contains: q, ...insensitive } },
+              ],
+            }
+          : {}),
+      },
+      orderBy: [{ status: "asc" }, { name: "asc" }],
+    }),
+  ]);
 
   const counts: Record<string, number> = { all: 0, active: 0, paused: 0, archived: 0 };
   for (const row of grouped) {
     counts[row.status] = row._count._all;
     counts.all += row._count._all;
   }
-
-  const clients = await db.client.findMany({
-    where: {
-      agencyId: agency.id,
-      ...(status !== "all" ? { status } : {}),
-      ...(q
-        ? {
-            OR: [
-              { name: { contains: q, ...insensitive } },
-              { industry: { contains: q, ...insensitive } },
-              { contactName: { contains: q, ...insensitive } },
-            ],
-          }
-        : {}),
-    },
-    orderBy: [{ status: "asc" }, { name: "asc" }],
-  });
 
   const stats = await statsForClients(
     clients.map((c) => c.id),

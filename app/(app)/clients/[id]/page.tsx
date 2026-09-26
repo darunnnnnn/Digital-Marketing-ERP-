@@ -43,13 +43,16 @@ export default async function ClientDetailPage({
   if (!client) notFound();
 
   const monthKey = currentMonthKey();
-  const stats = await statsForClient(client.id, monthKey);
-  const recent = await db.contentItem.findMany({
-    where: { clientId: client.id, monthKey },
-    orderBy: [{ updatedAt: "desc" }],
-    take: 8,
-    select: { id: true, ref: true, title: true, stage: true },
-  });
+  // Independent of each other — one round trip instead of two.
+  const [stats, recent] = await Promise.all([
+    statsForClient(client.id, monthKey),
+    db.contentItem.findMany({
+      where: { clientId: client.id, monthKey },
+      orderBy: [{ updatedAt: "desc" }],
+      take: 8,
+      select: { id: true, ref: true, title: true, stage: true },
+    }),
+  ]);
 
   const a = accent(client.accent);
   const s = statusStyle(client.status);

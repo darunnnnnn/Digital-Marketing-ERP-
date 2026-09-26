@@ -43,7 +43,9 @@ export default async function ContentPage({ searchParams }: { searchParams: Prom
   }
   const monthKey = currentMonthKey();
 
-  const [clientRows, members] = await Promise.all([
+  // None of these five depend on each other, so they go out together —
+  // one Tokyo round trip instead of three.
+  const [clientRows, members, rows, publishedThisMonth, plannedPerClient] = await Promise.all([
     db.client.findMany({
       where: { agencyId: agency.id, status: { not: "archived" } },
       orderBy: { name: "asc" },
@@ -54,9 +56,7 @@ export default async function ContentPage({ searchParams }: { searchParams: Prom
       orderBy: { name: "asc" },
       select: { id: true, name: true, role: true, accent: true },
     }),
-  ]);
-
-  const rows = await db.contentItem.findMany({
+    db.contentItem.findMany({
     where: {
       agencyId: agency.id,
       ...(client ? { clientId: client } : {}),
@@ -99,8 +99,18 @@ export default async function ContentPage({ searchParams }: { searchParams: Prom
       cameraman: { select: { name: true, accent: true, role: true } },
       editor: { select: { name: true, accent: true, role: true } },
       publisher: { select: { name: true, accent: true, role: true } },
-    },
-  });
+      },
+    }),
+    db.contentItem.count({
+      where: { agencyId: agency.id, monthKey, stage: "published" },
+    }),
+    // Planned counts feed the "x of y planned" hint in the plan dialog.
+    db.contentItem.groupBy({
+      by: ["clientId"],
+      where: { agencyId: agency.id, monthKey },
+      _count: { _all: true },
+    }),
+  ]);
 
   const items: BoardItem[] = rows.map((row) => {
     const field = stageConfig(row.stage).assign;
@@ -137,16 +147,6 @@ export default async function ContentPage({ searchParams }: { searchParams: Prom
     (i) => i.stage === "script_review" || i.stage === "edit_review",
   ).length;
   const inFlight = items.filter((i) => i.stage !== "published").length;
-  const publishedThisMonth = await db.contentItem.count({
-    where: { agencyId: agency.id, monthKey, stage: "published" },
-  });
-
-  // Planned counts feed the "x of y planned" hint in the plan dialog.
-  const plannedPerClient = await db.contentItem.groupBy({
-    by: ["clientId"],
-    where: { agencyId: agency.id, monthKey },
-    _count: { _all: true },
-  });
   const plannedMap = new Map(plannedPerClient.map((r) => [r.clientId, r._count._all]));
 
   const clientOptions = clientRows.map((c) => ({
