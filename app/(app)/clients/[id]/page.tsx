@@ -105,6 +105,13 @@ export default async function ClientDetailPage({
                 /month
               </>
             )}
+            {client.monthlyPostTarget > 0 && (
+              <>
+                {" · "}
+                <span className="font-medium text-stone-700">{client.monthlyPostTarget}</span>{" "}
+                posts/month
+              </>
+            )}
           </p>
           {services.length > 0 && (
             <div className="mt-3 flex flex-wrap gap-1.5">

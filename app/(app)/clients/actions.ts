@@ -28,6 +28,7 @@ function parse(fd: FormData) {
     contactEmail: text(fd, "contactEmail"),
     contactPhone: text(fd, "contactPhone"),
     monthlyTarget: text(fd, "monthlyTarget"),
+    monthlyPostTarget: text(fd, "monthlyPostTarget"),
     retainer: text(fd, "retainer"),
     services: text(fd, "services"),
     notes: text(fd, "notes"),
@@ -45,6 +46,11 @@ function parse(fd: FormData) {
   const target = Number(values.monthlyTarget || 0);
   if (!Number.isInteger(target) || target < 0 || target > 999) {
     errors.monthlyTarget = "Enter a whole number between 0 and 999.";
+  }
+
+  const postTarget = Number(values.monthlyPostTarget || 0);
+  if (!Number.isInteger(postTarget) || postTarget < 0 || postTarget > 999) {
+    errors.monthlyPostTarget = "Enter a whole number between 0 and 999.";
   }
 
   const retainer = Number(values.retainer || 0);
@@ -67,6 +73,7 @@ function parse(fd: FormData) {
       contactEmail: values.contactEmail || null,
       contactPhone: values.contactPhone || null,
       monthlyTarget: target,
+      monthlyPostTarget: postTarget,
       retainer: Math.round(retainer),
       services: values.services,
       notes: values.notes || null,

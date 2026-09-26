@@ -40,7 +40,8 @@ model Client {
   contactEmail String?
   contactPhone String?
 
-  monthlyTarget Int    @default(0)
+  monthlyTarget     Int @default(0) // videos / month
+  monthlyPostTarget Int @default(0) // posts / month, tracked separately from video output
   retainer      Int    @default(0)
   services      String @default("")
 

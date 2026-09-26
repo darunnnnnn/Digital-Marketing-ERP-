@@ -17,6 +17,7 @@ export type ClientDefaults = {
   contactEmail?: string | null;
   contactPhone?: string | null;
   monthlyTarget?: number;
+  monthlyPostTarget?: number;
   retainer?: number;
   services?: string;
   notes?: string | null;
@@ -98,6 +99,20 @@ export function ClientForm({
             min={0}
             max={999}
             defaultValue={prev.monthlyTarget ?? defaults.monthlyTarget ?? 12}
+          />
+        </Field>
+
+        <Field
+          label="Monthly post target"
+          hint="posts / month"
+          error={err.monthlyPostTarget}
+        >
+          <Input
+            name="monthlyPostTarget"
+            type="number"
+            min={0}
+            max={999}
+            defaultValue={prev.monthlyPostTarget ?? defaults.monthlyPostTarget ?? 0}
           />
         </Field>
 
