@@ -172,21 +172,41 @@ export async function memberPerformance(
   const open: WorkRow[] = [];
   let revisions = 0;
 
-  for (const step of steps) {
-    const mine: Prisma.ContentItemWhereInput = step.assign
-      ? { agencyId: member.agencyId, [step.assign]: member.id }
-      : { agencyId: member.agencyId };
+  // Every step's queries go out at once — one database round trip for the
+  // whole person, instead of two or three per step, one step after another.
+  const fetched = await Promise.all(
+    steps.map((step) => {
+      const mine: Prisma.ContentItemWhereInput = step.assign
+        ? { agencyId: member.agencyId, [step.assign]: member.id }
+        : { agencyId: member.agencyId };
 
-    const [doneRows, openRows] = (await Promise.all([
-      db.contentItem.findMany({
-        where: { ...mine, [step.done]: { gte: start, lt: end } },
-        include: { client: { select: { name: true } } },
-      }),
-      db.contentItem.findMany({
-        where: { ...mine, stage: step.stage },
-        include: { client: { select: { name: true } } },
-      }),
-    ])) as [Row[], Row[]];
+      return Promise.all([
+        db.contentItem.findMany({
+          where: { ...mine, [step.done]: { gte: start, lt: end } },
+          include: { client: { select: { name: true } } },
+        }),
+        db.contentItem.findMany({
+          where: { ...mine, stage: step.stage },
+          include: { client: { select: { name: true } } },
+        }),
+        // Send-backs to this person's step, on videos they are assigned to.
+        step.sentBackTo && step.assign
+          ? db.contentEvent.count({
+              where: {
+                kind: "revision",
+                createdAt: { gte: start, lt: end },
+                message: { startsWith: `Sent back to ${step.sentBackTo}` },
+                content: mine,
+              },
+            })
+          : Promise.resolve(0),
+      ]) as Promise<[Row[], Row[], number]>;
+    }),
+  );
+
+  steps.forEach((step, i) => {
+    const [doneRows, openRows, sentBack] = fetched[i];
+    revisions += sentBack;
 
     for (const r of doneRows) {
       const doneAt = r[step.done] as Date;
@@ -216,19 +236,7 @@ export async function memberPerformance(
         lateDays: daysLate(due, today),
       });
     }
-
-    // Send-backs to this person's step, on videos they are assigned to.
-    if (step.sentBackTo && step.assign) {
-      revisions += await db.contentEvent.count({
-        where: {
-          kind: "revision",
-          createdAt: { gte: start, lt: end },
-          message: { startsWith: `Sent back to ${step.sentBackTo}` },
-          content: mine,
-        },
-      });
-    }
-  }
+  });
 
   completed.sort((a, b) => (b.doneAt?.getTime() ?? 0) - (a.doneAt?.getTime() ?? 0));
   // Most overdue first, then soonest due.

@@ -47,6 +47,16 @@ export async function monthPayouts(agencyId: string, monthKey: string): Promise<
   ]);
   const frozen = new Map(records.map((r) => [r.memberId, r]));
 
+  // Everyone who still needs live numbers is calculated at once, not one
+  // person after another — otherwise the page slows down with every hire.
+  const live = new Map(
+    await Promise.all(
+      members
+        .filter((m) => !frozen.has(m.id))
+        .map(async (m) => [m.id, (await memberPerformance(m, monthKey)).summary] as const),
+    ),
+  );
+
   const rows: PayoutRow[] = [];
   for (const m of members) {
     const rec = frozen.get(m.id);
@@ -76,7 +86,7 @@ export async function monthPayouts(agencyId: string, monthKey: string): Promise<
       continue;
     }
 
-    const { summary } = await memberPerformance(m, monthKey);
+    const summary = live.get(m.id)!;
     const pay = computePay(m.payType, summary.done, m.rate, m.salary);
 
     // Deactivated people only appear for months where they are owed something.

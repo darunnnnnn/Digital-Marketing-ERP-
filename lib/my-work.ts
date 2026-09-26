@@ -35,15 +35,20 @@ export async function myWork(user: { id: string; role: string; agencyId: string 
   const step = (ROLE_STEPS[user.role] ?? [])[0];
   if (!step || !step.assign) return null;
 
-  const rows = await db.contentItem.findMany({
-    where: {
-      agencyId: user.agencyId,
-      [step.assign]: user.id,
-      stage: { not: "published" },
-    },
-    include: { client: { select: { name: true } } },
-    orderBy: [{ [step.due]: "asc" }, { ref: "asc" }],
-  });
+  // Their queue and their month's numbers are independent — fetch together.
+  const [rows, { summary }] = await Promise.all([
+    db.contentItem.findMany({
+      where: {
+        agencyId: user.agencyId,
+        [step.assign]: user.id,
+        stage: { not: "published" },
+      },
+      include: { client: { select: { name: true } } },
+      orderBy: [{ [step.due]: "asc" }, { ref: "asc" }],
+    }),
+    // How their month is going, so the dashboard can show progress, not just a list.
+    memberPerformance({ ...user, name: "" }, currentMonthKey()),
+  ]);
 
   const mine = stageIndex(step.stage);
   const map = (r: (typeof rows)[number]): WorkItem => ({
@@ -54,9 +59,6 @@ export async function myWork(user: { id: string; role: string; agencyId: string 
     stage: r.stage,
     due: (r[step.due] as Date | null) ?? null,
   });
-
-  // How their month is going, so the dashboard can show progress, not just a list.
-  const { summary } = await memberPerformance({ ...user, name: "" }, currentMonthKey());
 
   return {
     step,
