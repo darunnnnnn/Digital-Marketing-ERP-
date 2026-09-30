@@ -2,7 +2,13 @@ import type { SVGProps } from "react";
 
 type P = SVGProps<SVGSVGElement>;
 
+// width/height are set here so an icon is never rendered unsized. Without a
+// size, an <svg> falls back to the browser's default for a replaced element —
+// 300x150px — which is what a missing rule looks like on screen. These are
+// plain attributes, so any CSS rule further down still wins.
 const base = {
+  width: 16,
+  height: 16,
   fill: "none",
   stroke: "currentColor",
   strokeWidth: 1.7,

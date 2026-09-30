@@ -5,6 +5,12 @@
   font-weight: 500;
   border: 0;
   cursor: pointer;
+  /* A button is a fixed height, so a wrapped label overflows its own pill.
+     Labels here are short by design — keep them on one line. */
+  white-space: nowrap;
+  /* Buttons sit at the end of flex rows (page headers, toolbars); without this
+     they get squeezed by a long title beside them. */
+  flex-shrink: 0;
   transition:
     background-color 0.15s,
     color 0.15s,
@@ -86,4 +92,12 @@
 /* Full-width, for forms and modal footers. */
 .btn-block {
   width: 100%;
+}
+
+/* Icons sit beside a label, so they match its cap height rather than the
+   button's full height. */
+.btn svg {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
 }

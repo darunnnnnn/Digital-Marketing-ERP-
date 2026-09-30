@@ -180,6 +180,12 @@ button {
   color: var(--stone-900);
 }
 
+.back-link svg {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+}
+
 /* Vertical rhythm helpers, the equivalent of the old space-y utilities. */
 .stack-5 > * + * {
   margin-top: var(--sp-5);
