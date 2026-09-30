@@ -9,20 +9,22 @@
   backdrop-filter: blur(14px);
 }
 
+/*
+ * A tint across the whole card rather than a spot in one corner.
+ * A localised circle — blurred or not — always reads as a smudge on the
+ * surface, because it has a middle and an outside. A gradient spanning the
+ * full card has neither, so it registers as the card being lit from one side
+ * and never as something sitting on top of it.
+ */
 .stat-glow {
   pointer-events: none;
   position: absolute;
-  top: -2.5rem;
-  right: -2.5rem;
-  width: 8rem;
-  height: 8rem;
-  border-radius: var(--radius-full);
-  filter: blur(28px);
-  background: rgb(174 214 199 / 0.5);
+  inset: 0;
+  background: linear-gradient(225deg, rgb(55 125 103 / 0.07), rgb(55 125 103 / 0) 60%);
 }
 
 .stat-alert .stat-glow {
-  background: rgb(254 202 202 / 0.4);
+  background: linear-gradient(225deg, rgb(220 38 38 / 0.06), rgb(220 38 38 / 0) 60%);
 }
 
 .stat-icon {

@@ -89,10 +89,17 @@ body {
   font-family: var(--font-sans);
   color: var(--stone-900);
   -webkit-font-smoothing: antialiased;
+  /*
+   * One hue family. The left wash used to be a sandy tan, which is a warm
+   * colour sitting in a cool evergreen-and-mist palette — that mismatch is
+   * what made the page read as tinted rather than lit. All three washes are
+   * now the brand green at low opacity, so they blend into the grey instead
+   * of competing with it.
+   */
   background:
-    radial-gradient(1100px 520px at 92% -10%, rgb(55 125 103 / 0.16), transparent 60%),
-    radial-gradient(900px 480px at 8% -5%, rgb(214 196 160 / 0.2), transparent 55%),
-    radial-gradient(1000px 600px at 50% 115%, rgb(55 125 103 / 0.08), transparent 60%),
+    radial-gradient(1100px 520px at 92% -10%, rgb(55 125 103 / 0.1), transparent 62%),
+    radial-gradient(900px 480px at 8% -5%, rgb(127 186 165 / 0.1), transparent 58%),
+    radial-gradient(1000px 600px at 50% 115%, rgb(55 125 103 / 0.06), transparent 60%),
     var(--stone-100);
   background-attachment: fixed;
 }
