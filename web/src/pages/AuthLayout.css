@@ -1,0 +1,106 @@
+.auth {
+  display: grid;
+  place-items: center;
+  min-height: 100vh;
+  padding: var(--sp-8) var(--sp-5);
+}
+
+.auth-col {
+  width: 100%;
+  max-width: 28rem;
+}
+
+.auth-brand {
+  margin-bottom: var(--sp-8);
+  text-align: center;
+}
+
+.auth-mark {
+  display: grid;
+  place-items: center;
+  width: 3.5rem;
+  height: 3.5rem;
+  margin: 0 auto;
+  border-radius: var(--radius-lg);
+  background: #fff;
+  font-family: var(--font-serif);
+  font-size: 1.875rem;
+  color: var(--brand-800);
+  box-shadow:
+    var(--shadow-sm),
+    inset 0 0 0 1px var(--stone-200);
+}
+
+.auth-name {
+  margin-top: var(--sp-4);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--stone-500);
+}
+
+/* ---- the card and its form -------------------------------------------- */
+
+.auth-card {
+  padding: 2.25rem var(--sp-8);
+}
+
+.auth-card-center {
+  text-align: center;
+}
+
+.auth-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--stone-900);
+}
+
+.auth-lede {
+  margin-top: 0.375rem;
+  font-size: 0.875rem;
+  color: var(--stone-500);
+}
+
+.auth-agency {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--brand-600);
+}
+
+.auth-form {
+  margin-top: 1.75rem;
+}
+
+.auth-form > * + * {
+  margin-top: var(--sp-5);
+}
+
+.auth-alert {
+  border-radius: var(--radius);
+  background: var(--red-50);
+  padding: 0.625rem 0.875rem;
+  font-size: 0.875rem;
+  color: var(--red-700);
+}
+
+.auth-note {
+  margin-top: var(--sp-6);
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--stone-400);
+}
+
+.auth-link {
+  display: inline-block;
+  margin-top: var(--sp-6);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--brand-700);
+}
+
+.auth-strong {
+  font-weight: 500;
+  color: var(--stone-700);
+}

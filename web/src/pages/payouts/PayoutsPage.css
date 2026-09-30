@@ -1,0 +1,130 @@
+.pay-head {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+}
+
+@media (min-width: 1024px) {
+  .pay-head {
+    flex-direction: row;
+    align-items: flex-end;
+    justify-content: space-between;
+  }
+}
+
+.pay-head-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.625rem;
+}
+
+/* The month switcher sits on the page here rather than inside a card, so it
+   gets its own light background. */
+.months-light {
+  background: rgb(255 255 255 / 0.8);
+  box-shadow: inset 0 0 0 1px var(--stone-200);
+}
+
+.months-light .months-arrow:hover {
+  background: var(--stone-100);
+}
+
+/* ---- the running-total notice ------------------------------------------ */
+
+.pay-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-3);
+  border-radius: var(--radius-lg);
+  background: rgb(255 255 255 / 0.7);
+  padding: var(--sp-4) var(--sp-5);
+  font-size: 0.875rem;
+  color: var(--stone-600);
+  box-shadow: inset 0 0 0 1px var(--stone-200);
+}
+
+.pay-notice svg {
+  flex-shrink: 0;
+  width: 1rem;
+  height: 1rem;
+  margin-top: 0.125rem;
+  color: var(--brand-600);
+}
+
+/* ---- the table --------------------------------------------------------- */
+
+.pay-table {
+  min-width: 1000px;
+}
+
+.pay-cell {
+  font-size: 0.875rem;
+  color: var(--stone-700);
+}
+
+.pay-sub {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--stone-400);
+}
+
+.pay-none {
+  color: var(--stone-300);
+}
+
+/* The one number that matters most in the row. */
+.pay-total-cell {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--stone-900);
+}
+
+.team-status-paid {
+  background: var(--brand-800);
+  color: #fff;
+}
+
+.pay-locked {
+  font-size: 0.75rem;
+  color: var(--stone-400);
+}
+
+.pay-table tfoot tr {
+  border-top: 1px solid rgb(227 231 228 / 0.7);
+}
+
+.pay-foot {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--stone-500);
+}
+
+.pay-foot-total {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--stone-900);
+}
+
+/* ---- people with no pay configured ------------------------------------- */
+
+.offpayroll {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-2) var(--sp-4);
+  padding: 0 var(--sp-2);
+  font-size: 0.875rem;
+  color: var(--stone-500);
+}
+
+.offpayroll-person {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+}
+
+.offpayroll-name {
+  font-weight: 500;
+  color: var(--stone-700);
+}

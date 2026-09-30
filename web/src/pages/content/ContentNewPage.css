@@ -1,0 +1,168 @@
+/* The deadlines block — tinted, because it is the part of this form that the
+   whole four-week cycle hangs off. */
+.plan-box {
+  border-radius: var(--radius-lg);
+  background: rgb(238 246 243 / 0.7);
+  padding: var(--sp-4);
+}
+
+.plan-box-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-3);
+}
+
+.plan-box-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--brand-900);
+}
+
+.plan-switch {
+  display: inline-flex;
+  gap: var(--sp-1);
+  border-radius: var(--radius-full);
+  background: #fff;
+  padding: var(--sp-1);
+}
+
+.plan-switch-btn {
+  border: 0;
+  background: transparent;
+  border-radius: var(--radius-full);
+  padding: var(--sp-1) var(--sp-3);
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--stone-600);
+  cursor: pointer;
+  transition:
+    background-color 0.15s,
+    color 0.15s;
+}
+
+.plan-switch-btn:hover {
+  color: var(--stone-900);
+}
+
+.plan-switch-on,
+.plan-switch-on:hover {
+  background: var(--brand-800);
+  color: #fff;
+}
+
+.plan-explain {
+  font-size: 0.75rem;
+  line-height: 1.625;
+  color: var(--brand-800);
+}
+
+/* ---- the six deadlines ------------------------------------------------- */
+
+.plan-steps {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.625rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+@media (min-width: 640px) {
+  .plan-steps {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.plan-step {
+  border-radius: var(--radius);
+  background: #fff;
+  padding: 0.625rem var(--sp-3);
+  box-shadow: inset 0 0 0 1px transparent;
+}
+
+.plan-step-bad {
+  box-shadow: inset 0 0 0 1px var(--red-200);
+}
+
+.plan-step-week {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--brand-600);
+}
+
+.plan-step-label {
+  margin-top: 0.125rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--stone-800);
+}
+
+.plan-step-date {
+  margin-top: 0.375rem;
+  width: 100%;
+  font: inherit;
+  font-size: 0.75rem;
+  color: var(--stone-800);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--stone-200);
+  background: var(--stone-50);
+  padding: var(--sp-1) var(--sp-2);
+  outline: none;
+}
+
+.plan-step-date:focus {
+  border-color: var(--brand-500);
+  background: #fff;
+}
+
+.plan-error {
+  margin-top: 0.625rem;
+  font-size: 0.75rem;
+  color: var(--red-600);
+}
+
+.plan-assign-label {
+  margin: var(--sp-4) 0 var(--sp-2);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--brand-700);
+}
+
+/* ---- the client's monthly target hint ---------------------------------- */
+
+.plan-target {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  border-radius: var(--radius);
+  background: var(--stone-50);
+  padding: 0.625rem 0.875rem;
+  font-size: 0.75rem;
+}
+
+.plan-target-name {
+  font-weight: 500;
+}
+
+.plan-target-left {
+  margin-left: auto;
+  border-radius: var(--radius-sm);
+  background: var(--brand-100);
+  padding: 0.125rem var(--sp-2);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--brand-700);
+}
+
+.plan-footnote {
+  font-size: 0.75rem;
+  line-height: 1.625;
+  color: var(--stone-400);
+}

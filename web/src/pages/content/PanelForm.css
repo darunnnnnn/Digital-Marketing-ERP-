@@ -1,0 +1,66 @@
+.panel {
+  padding: var(--sp-5);
+}
+
+.panel > * + * {
+  margin-top: var(--sp-4);
+}
+
+.panel-fields {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+}
+
+.panel-fields > * + * {
+  margin-top: var(--sp-4);
+}
+
+/* Read-only rather than greyed out: people who can't edit still need to read it. */
+.panel-fields:disabled {
+  opacity: 0.8;
+}
+
+.panel-foot {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--sp-3);
+}
+
+.panel-error {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--red-600);
+}
+
+/* A panel's fields sit two-up on anything wider than a phone. */
+.panel-pair {
+  display: grid;
+  gap: var(--sp-4);
+}
+
+@media (min-width: 640px) {
+  .panel-pair {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.panel-trio {
+  display: grid;
+  gap: var(--sp-4);
+}
+
+@media (min-width: 640px) {
+  .panel-trio {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* A script reads better monospaced — the beats line up. */
+.panel-script {
+  font-family: ui-monospace, "SFMono-Regular", monospace;
+  font-size: 0.75rem;
+  line-height: 1.625;
+}

@@ -1,0 +1,125 @@
+/* The sum, laid out as a receipt — every line that adds up to the total is
+   shown, because this is the number someone gets paid. */
+.breakdown {
+  margin: 0;
+  border-radius: var(--radius-lg);
+  background: var(--stone-50);
+  padding: 0 var(--sp-4);
+  font-size: 0.875rem;
+}
+
+.breakdown-row {
+  display: flex;
+  justify-content: space-between;
+  padding: var(--sp-3) 0;
+}
+
+.breakdown-row + .breakdown-row {
+  border-top: 1px solid rgb(227 231 228 / 0.7);
+}
+
+.breakdown-row dt,
+.breakdown-row dd {
+  margin: 0;
+}
+
+.breakdown-value {
+  font-weight: 500;
+  color: var(--stone-900);
+}
+
+.breakdown-up {
+  font-weight: 500;
+  color: var(--brand-700);
+}
+
+.breakdown-down {
+  font-weight: 500;
+  color: var(--red-600);
+}
+
+.breakdown-total {
+  font-size: 1rem;
+}
+
+.breakdown-total dt,
+.breakdown-total dd {
+  font-weight: 600;
+  color: var(--stone-900);
+}
+
+/* A narrow amount next to a wide reason. */
+.adjust-grid {
+  display: grid;
+  gap: var(--sp-4);
+}
+
+@media (min-width: 640px) {
+  .adjust-grid {
+    grid-template-columns: 160px 1fr;
+  }
+}
+
+.dialog-note {
+  font-size: 0.75rem;
+  color: var(--stone-500);
+}
+
+/* ---- pay type picker --------------------------------------------------- */
+
+.paytypes {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--sp-2);
+}
+
+.paytype {
+  border: 0;
+  border-radius: var(--radius-lg);
+  padding: var(--sp-3);
+  text-align: left;
+  background: var(--stone-50);
+  color: var(--stone-700);
+  box-shadow: inset 0 0 0 1px var(--stone-200);
+  cursor: pointer;
+  transition:
+    background-color 0.15s,
+    color 0.15s,
+    box-shadow 0.15s;
+}
+
+.paytype:hover {
+  box-shadow: inset 0 0 0 1px var(--stone-300);
+}
+
+.paytype-on,
+.paytype-on:hover {
+  background: var(--brand-800);
+  color: #fff;
+  box-shadow: inset 0 0 0 1px var(--brand-800);
+}
+
+.paytype-label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.paytype-hint {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--stone-500);
+}
+
+.paytype-on .paytype-hint {
+  color: var(--brand-100);
+}
+
+.row-action-quiet {
+  color: var(--stone-600);
+}
+
+.row-action-quiet:hover {
+  background: var(--stone-100);
+  color: var(--stone-900);
+}

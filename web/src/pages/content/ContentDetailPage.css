@@ -1,0 +1,367 @@
+/* ---- header ------------------------------------------------------------ */
+
+.video-head {
+  padding: 1.75rem;
+}
+
+.video-head-top {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-5);
+}
+
+@media (min-width: 1024px) {
+  .video-head-top {
+    flex-direction: row;
+    align-items: flex-start;
+  }
+}
+
+.video-head-main {
+  min-width: 0;
+  flex: 1;
+}
+
+.video-head-actions {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.video-tags {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+/* The reference number is the one thing people read out to each other. */
+.video-ref {
+  border-radius: var(--radius-sm);
+  background: var(--stone-900);
+  padding: var(--sp-1) var(--sp-2);
+  font-family: ui-monospace, "SFMono-Regular", monospace;
+  font-size: 11px;
+  font-weight: 500;
+  color: #fff;
+}
+
+.video-tag {
+  border-radius: var(--radius-sm);
+  padding: var(--sp-1) var(--sp-2);
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.video-title {
+  margin-top: var(--sp-3);
+  font-size: 1.875rem;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  color: var(--stone-900);
+}
+
+.video-client {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  margin-top: 0.375rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--stone-500);
+  transition: color 0.15s;
+}
+
+.video-client:hover {
+  color: var(--stone-900);
+}
+
+.video-client-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: var(--radius-full);
+}
+
+.video-blurb {
+  margin-top: var(--sp-3);
+  max-width: 36rem;
+  font-size: 0.875rem;
+  line-height: 1.625;
+  color: var(--stone-500);
+}
+
+.video-rail {
+  margin-top: var(--sp-6);
+  padding-top: var(--sp-5);
+  border-top: 1px solid var(--stone-200);
+}
+
+.video-meta {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--sp-4);
+  margin-top: var(--sp-5);
+}
+
+@media (min-width: 640px) {
+  .video-meta {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.video-meta-cell {
+  border-radius: var(--radius);
+  background: var(--stone-50);
+  padding: 0.625rem var(--sp-3);
+}
+
+.video-meta-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--stone-400);
+}
+
+.video-meta-value {
+  margin-top: 0.125rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.video-meta-late {
+  color: var(--red-600);
+}
+
+/* ---- two-column body --------------------------------------------------- */
+
+.video-columns {
+  display: grid;
+  gap: var(--sp-6);
+}
+
+@media (min-width: 1024px) {
+  .video-columns {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .video-main {
+    grid-column: span 2;
+  }
+}
+
+/* ---- the four-week schedule -------------------------------------------- */
+
+.steps {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.steps > li + li {
+  border-top: 1px solid var(--stone-100);
+}
+
+.step {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  padding: 0.875rem var(--sp-5);
+}
+
+.step-current {
+  background: rgb(238 246 243 / 0.6);
+}
+
+.step-week {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: var(--radius-full);
+  background: var(--stone-100);
+  color: var(--stone-400);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.step-week-done {
+  background: var(--brand-600);
+  color: #fff;
+}
+
+.step-week-current {
+  background: #fff;
+  color: var(--brand-700);
+  box-shadow: inset 0 0 0 2px var(--brand-600);
+}
+
+.step-main {
+  min-width: 0;
+  flex: 1;
+}
+
+.step-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--stone-900);
+}
+
+.step-who {
+  font-size: 0.75rem;
+  color: var(--stone-500);
+}
+
+.step-status {
+  flex-shrink: 0;
+  border-radius: var(--radius-full);
+  padding: var(--sp-1) 0.625rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.step-status-done {
+  background: var(--brand-50);
+  color: var(--brand-700);
+}
+
+.step-status-neutral {
+  background: var(--stone-100);
+  color: var(--stone-600);
+}
+
+.step-status-late {
+  background: var(--red-50);
+  color: var(--red-700);
+}
+
+.step-status-none {
+  color: var(--stone-400);
+}
+
+/* ---- the "edit deadlines" drawer --------------------------------------- */
+
+.edit-drawer {
+  border-top: 1px solid var(--stone-100);
+}
+
+.edit-drawer-summary {
+  display: flex;
+  cursor: pointer;
+  list-style: none;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+  background: rgb(238 246 243 / 0.7);
+  padding: 0.875rem var(--sp-5);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--brand-800);
+  transition: background-color 0.15s;
+}
+
+.edit-drawer-summary::-webkit-details-marker {
+  display: none;
+}
+
+.edit-drawer-summary:hover {
+  background: rgb(214 235 227 / 0.7);
+}
+
+.edit-drawer[open] .edit-drawer-summary {
+  background: transparent;
+}
+
+.edit-drawer-summary svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.edit-drawer-open,
+.edit-drawer[open] .edit-drawer-closed {
+  display: none;
+}
+
+.edit-drawer[open] .edit-drawer-open {
+  display: inline;
+}
+
+/* ---- panel status lines ------------------------------------------------ */
+
+.panel-status {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--brand-600);
+}
+
+.panel-status-quiet {
+  color: var(--stone-400);
+}
+
+/* ---- right rail -------------------------------------------------------- */
+
+.assignees {
+  padding: var(--sp-3);
+}
+
+.assignees > * + * {
+  margin-top: var(--sp-1);
+}
+
+.links {
+  padding: var(--sp-3);
+}
+
+.links > * + * {
+  margin-top: 0.375rem;
+}
+
+.link-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  border-radius: var(--radius);
+  padding: var(--sp-2) 0.625rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: background-color 0.15s;
+}
+
+.link-row:hover {
+  background: var(--stone-100);
+}
+
+.link-row svg {
+  margin-left: auto;
+  width: 0.875rem;
+  height: 0.875rem;
+  color: var(--stone-400);
+}
+
+/* ---- the delete icon button -------------------------------------------- */
+
+.icon-danger {
+  display: grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border: 0;
+  background: transparent;
+  border-radius: var(--radius);
+  color: var(--stone-400);
+  cursor: pointer;
+  transition:
+    background-color 0.15s,
+    color 0.15s;
+}
+
+.icon-danger:hover {
+  background: var(--red-50);
+  color: var(--red-600);
+}
+
+.icon-danger svg {
+  width: 1rem;
+  height: 1rem;
+}

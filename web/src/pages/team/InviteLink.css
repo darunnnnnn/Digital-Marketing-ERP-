@@ -1,0 +1,55 @@
+.invite-link {
+  border-radius: var(--radius-lg);
+  background: rgb(238 246 243 / 0.8);
+  padding: var(--sp-4);
+}
+
+.invite-link-title {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--brand-900);
+}
+
+.invite-link-note {
+  margin-top: 0.125rem;
+  font-size: 0.75rem;
+  color: var(--brand-700);
+}
+
+.invite-link-row {
+  display: flex;
+  gap: var(--sp-2);
+  margin-top: var(--sp-3);
+}
+
+/* Monospaced and selectable, so it can be copied by hand if the clipboard
+   is blocked. */
+.invite-link-input {
+  min-width: 0;
+  flex: 1;
+  border-radius: var(--radius);
+  border: 1px solid var(--brand-200);
+  background: #fff;
+  padding: var(--sp-2) var(--sp-3);
+  font-family: ui-monospace, "SFMono-Regular", monospace;
+  font-size: 0.75rem;
+  color: var(--stone-700);
+  outline: none;
+}
+
+.invite-link-copy {
+  flex-shrink: 0;
+  border: 0;
+  border-radius: var(--radius-full);
+  background: var(--brand-800);
+  padding: 0 var(--sp-4);
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #fff;
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+
+.invite-link-copy:hover {
+  background: var(--brand-900);
+}

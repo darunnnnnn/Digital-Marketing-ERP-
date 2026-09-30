@@ -1,0 +1,102 @@
+.client-card {
+  display: flex;
+  flex-direction: column;
+  padding: var(--sp-6);
+  border-radius: var(--radius-xl);
+  background: rgb(255 255 255 / 0.82);
+  border: 1px solid rgb(255 255 255 / 0.95);
+  box-shadow: var(--shadow-surface);
+  backdrop-filter: blur(14px);
+  transition: box-shadow 0.15s;
+}
+
+.client-card:hover {
+  box-shadow: 0 20px 45px -15px rgb(22 51 43 / 0.2);
+}
+
+.client-card-top {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-3);
+}
+
+.client-card-id {
+  min-width: 0;
+  flex: 1;
+}
+
+.client-card-name {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--stone-900);
+}
+
+.client-card-industry {
+  font-size: 0.75rem;
+  color: var(--stone-500);
+}
+
+/* ---- monthly progress -------------------------------------------------- */
+
+.client-card-progress {
+  margin-top: var(--sp-5);
+}
+
+.client-card-progress-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: var(--stone-900);
+}
+
+.client-card-progress-row strong {
+  font-weight: 500;
+}
+
+.client-card-of {
+  color: var(--stone-400);
+}
+
+.client-card-bar {
+  margin-top: var(--sp-2);
+}
+
+/* ---- the three counts -------------------------------------------------- */
+
+.client-card-cells {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--sp-4);
+  margin: var(--sp-4) 0 0;
+  padding-top: var(--sp-4);
+  border-top: 1px solid var(--stone-100);
+}
+
+.client-card-cell-label {
+  font-size: 11px;
+  color: var(--stone-400);
+}
+
+.client-card-cell-value {
+  margin: 0.125rem 0 0;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+/* ---- service tags ------------------------------------------------------ */
+
+.client-card-services {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+  margin-top: var(--sp-4);
+}
+
+.tag {
+  border-radius: 0.25rem;
+  padding: 0.125rem 0.375rem;
+  font-size: 11px;
+  color: var(--stone-500);
+  box-shadow: inset 0 0 0 1px var(--stone-200);
+}

@@ -1,0 +1,28 @@
+/* The frosted panel from index.css, clipped so rounded corners hold. */
+.card {
+  border-radius: var(--radius-xl);
+  background: rgb(255 255 255 / 0.82);
+  border: 1px solid rgb(255 255 255 / 0.95);
+  box-shadow: var(--shadow-surface);
+  backdrop-filter: blur(14px);
+  overflow: hidden;
+}
+
+.card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  padding: var(--sp-5) var(--sp-6) var(--sp-2);
+}
+
+.card-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--stone-900);
+}
+
+/* Body padding, for cards that aren't a table or a list. */
+.card-body {
+  padding: var(--sp-4) var(--sp-6) var(--sp-6);
+}

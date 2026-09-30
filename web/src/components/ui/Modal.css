@@ -1,0 +1,97 @@
+.modal-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  overflow-y: auto;
+  padding: var(--sp-4);
+}
+
+@media (min-width: 640px) {
+  .modal-layer {
+    align-items: center;
+  }
+}
+
+.modal-scrim {
+  position: fixed;
+  inset: 0;
+  background: rgb(22 51 43 / 0.25);
+  backdrop-filter: blur(4px);
+}
+
+.modal {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  max-width: 42rem;
+  border-radius: var(--radius-xl);
+  background: #fff;
+  box-shadow: 0 25px 60px -15px rgb(22 51 43 / 0.35);
+}
+
+@media (min-width: 640px) {
+  .modal {
+    border-radius: 1.75rem;
+  }
+}
+
+.modal-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--sp-4);
+  padding: var(--sp-6) 1.75rem var(--sp-2);
+}
+
+.modal-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.modal-subtitle {
+  margin-top: 0.125rem;
+  font-size: 0.875rem;
+  color: var(--stone-500);
+}
+
+.modal-close {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 1.75rem;
+  height: 1.75rem;
+  border: 0;
+  background: transparent;
+  border-radius: var(--radius-sm);
+  color: var(--stone-400);
+  cursor: pointer;
+  transition:
+    background-color 0.15s,
+    color 0.15s;
+}
+
+.modal-close:hover {
+  background: var(--stone-100);
+  color: var(--stone-700);
+}
+
+.modal-close svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.modal-body {
+  padding: var(--sp-4) 1.75rem 1.75rem;
+}
+
+/* Right-aligned action row at the bottom of a dialog. */
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--sp-2);
+  margin-top: var(--sp-6);
+}

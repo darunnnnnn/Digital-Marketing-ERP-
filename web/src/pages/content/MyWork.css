@@ -1,0 +1,318 @@
+.mywork-date {
+  font-size: 0.875rem;
+  color: var(--stone-500);
+}
+
+.mywork-hello {
+  margin-top: var(--sp-1);
+}
+
+.mywork-columns {
+  display: grid;
+  gap: var(--sp-6);
+}
+
+@media (min-width: 1024px) {
+  .mywork-columns {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .mywork-main {
+    grid-column: span 2;
+  }
+}
+
+/* ---- nothing to do ----------------------------------------------------- */
+
+.mywork-clear {
+  padding: 4rem var(--sp-6);
+  text-align: center;
+}
+
+.mywork-clear-icon {
+  display: grid;
+  place-items: center;
+  width: 3rem;
+  height: 3rem;
+  margin: 0 auto;
+  border-radius: var(--radius-lg);
+  background: var(--brand-50);
+  color: var(--brand-600);
+}
+
+.mywork-clear-icon svg {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.mywork-clear-title {
+  margin-top: var(--sp-4);
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--stone-900);
+}
+
+.mywork-clear-note {
+  margin: 0.375rem auto 0;
+  max-width: 24rem;
+  font-size: 0.875rem;
+  color: var(--stone-500);
+}
+
+/* ---- urgency groups ---------------------------------------------------- */
+
+.group-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  padding: 0.875rem var(--sp-5);
+}
+
+/* A tinted header is the only signal needed — the rows below stay neutral. */
+.group-head-alert {
+  background: rgb(254 242 242 / 0.7);
+}
+
+.group-head-now {
+  background: rgb(238 246 243 / 0.7);
+}
+
+.group-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--stone-900);
+}
+
+.group-title-alert {
+  color: var(--red-700);
+}
+
+.group-note {
+  margin-top: 0.125rem;
+  font-size: 0.75rem;
+  color: var(--stone-500);
+}
+
+.group-count {
+  flex-shrink: 0;
+  border-radius: var(--radius-full);
+  background: #fff;
+  padding: var(--sp-1) 0.625rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--stone-600);
+  box-shadow: inset 0 0 0 1px var(--stone-200);
+}
+
+.group-count-alert {
+  background: var(--red-100);
+  color: var(--red-700);
+  box-shadow: none;
+}
+
+/* ---- one task ---------------------------------------------------------- */
+
+.task-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid rgb(227 231 228 / 0.7);
+}
+
+.task-list > li + li {
+  border-top: 1px solid rgb(227 231 228 / 0.7);
+}
+
+.task {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  padding: var(--sp-4) var(--sp-5);
+  transition: background-color 0.15s;
+}
+
+.task:hover {
+  background: rgb(238 246 243 / 0.5);
+}
+
+.task-ref {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: var(--radius-full);
+  font-family: ui-monospace, "SFMono-Regular", monospace;
+  font-size: 0.75rem;
+  background: var(--stone-100);
+  color: var(--stone-600);
+}
+
+.task-ref-alert {
+  background: var(--red-50);
+  color: var(--red-700);
+}
+
+.task-ref-now {
+  background: var(--brand-100);
+  color: var(--brand-800);
+}
+
+.task-main {
+  min-width: 0;
+  flex: 1;
+}
+
+.task-title {
+  display: block;
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--stone-900);
+}
+
+.task-sub {
+  display: block;
+  margin-top: 0.125rem;
+  font-size: 0.875rem;
+  color: var(--stone-500);
+}
+
+.task-due {
+  flex-shrink: 0;
+  text-align: right;
+}
+
+.task-due-date {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--stone-700);
+}
+
+.task-due-late {
+  color: var(--red-600);
+}
+
+.task-due-label {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--stone-400);
+}
+
+.task-go {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: var(--radius-full);
+  background: var(--stone-100);
+  color: var(--stone-500);
+  transition:
+    background-color 0.15s,
+    color 0.15s;
+}
+
+.task:hover .task-go {
+  background: var(--brand-800);
+  color: #fff;
+}
+
+.task-go svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+/* ---- side panel -------------------------------------------------------- */
+
+.month-card {
+  padding: var(--sp-4) var(--sp-5);
+}
+
+.month-title {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--stone-900);
+}
+
+.month-list {
+  margin: var(--sp-3) 0 0;
+  font-size: 0.875rem;
+}
+
+.month-list > * + * {
+  margin-top: 0.625rem;
+}
+
+.month-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.month-row dt,
+.month-row dd {
+  margin: 0;
+}
+
+.month-value {
+  font-weight: 500;
+  color: var(--stone-900);
+}
+
+.month-value-late {
+  color: var(--red-600);
+}
+
+/* ---- quiet lists ------------------------------------------------------- */
+
+.quiet-head {
+  padding: var(--sp-4) var(--sp-5) var(--sp-2);
+}
+
+.quiet-title {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--stone-900);
+}
+
+.quiet-note {
+  margin-top: 0.125rem;
+  font-size: 0.75rem;
+  color: var(--stone-500);
+}
+
+.quiet-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.quiet-list > li + li {
+  border-top: 1px solid rgb(227 231 228 / 0.7);
+}
+
+.quiet-row {
+  padding: var(--sp-3) var(--sp-5);
+}
+
+.quiet-row-title {
+  font-size: 0.875rem;
+  color: var(--stone-700);
+}
+
+.quiet-row-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  margin-top: 0.125rem;
+  font-size: 0.75rem;
+  color: var(--stone-400);
+}
+
+.quiet-more {
+  padding: 0.625rem var(--sp-5);
+  font-size: 0.75rem;
+  color: var(--stone-400);
+}

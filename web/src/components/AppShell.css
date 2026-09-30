@@ -1,0 +1,316 @@
+.shell {
+  display: flex;
+  min-height: 100vh;
+  width: 100%;
+}
+
+/* ---- left icon rail ---------------------------------------------------- */
+/* Hidden below 1024px, where the top bar carries everything instead. */
+
+.rail {
+  display: none;
+}
+
+@media (min-width: 1024px) {
+  .rail {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    width: 88px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: var(--sp-5) 0;
+    border-right: 1px solid rgb(255 255 255 / 0.7);
+    background: rgb(255 255 255 / 0.6);
+    backdrop-filter: blur(20px);
+  }
+}
+
+.rail-mark {
+  display: grid;
+  place-items: center;
+  width: 3rem;
+  height: 3rem;
+  border-radius: var(--radius-lg);
+  background: #fff;
+  font-family: var(--font-serif);
+  font-size: 1.5rem;
+  color: var(--brand-800);
+  box-shadow:
+    var(--shadow-sm),
+    inset 0 0 0 1px var(--stone-200);
+}
+
+.rail-nav {
+  margin-top: var(--sp-8);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.rail-link {
+  display: grid;
+  place-items: center;
+  width: 3rem;
+  height: 3rem;
+  border-radius: var(--radius-lg);
+  color: var(--stone-500);
+  transition:
+    background-color 0.15s,
+    color 0.15s;
+}
+
+.rail-link svg {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.rail-link:hover {
+  background: #fff;
+  color: var(--brand-800);
+}
+
+.rail-link-active,
+.rail-link-active:hover {
+  background: var(--brand-800);
+  color: #fff;
+  box-shadow: 0 12px 28px -12px rgb(22 51 43 / 0.6);
+}
+
+.rail-soon {
+  color: var(--stone-300);
+  cursor: not-allowed;
+}
+
+.rail-soon:hover {
+  background: transparent;
+  color: var(--stone-300);
+}
+
+.rail-foot {
+  margin-top: auto;
+  width: 100%;
+  padding: var(--sp-5) var(--sp-3) 0;
+  border-top: 1px solid rgb(227 231 228 / 0.7);
+}
+
+.rail-signout {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-1);
+  width: 100%;
+  padding: var(--sp-2) 0;
+  border: 0;
+  background: transparent;
+  border-radius: var(--radius-lg);
+  color: var(--stone-500);
+  cursor: pointer;
+  transition:
+    background-color 0.15s,
+    color 0.15s;
+}
+
+.rail-signout:hover {
+  background: #fff;
+  color: var(--red-600);
+}
+
+.rail-signout svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.rail-signout span {
+  font-size: 10px;
+  font-weight: 500;
+}
+
+/* ---- right column ------------------------------------------------------ */
+
+.shell-main {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+}
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  height: 5rem;
+  align-items: center;
+  gap: var(--sp-4);
+  padding: 0 var(--sp-5);
+  border-bottom: 1px solid rgb(255 255 255 / 0.7);
+  background: rgb(255 255 255 / 0.7);
+  backdrop-filter: blur(20px);
+}
+
+@media (min-width: 1024px) {
+  .topbar {
+    padding: 0 var(--sp-10);
+  }
+}
+
+.topbar-mark {
+  display: grid;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: var(--radius);
+  background: #fff;
+  font-family: var(--font-serif);
+  font-size: 1.25rem;
+  color: var(--brand-800);
+  box-shadow: inset 0 0 0 1px var(--stone-200);
+}
+
+@media (min-width: 1024px) {
+  .topbar-mark {
+    display: none;
+  }
+}
+
+.topbar-title {
+  font-size: 1.125rem;
+  font-weight: 500;
+  color: var(--stone-900);
+}
+
+.topbar-right {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.topbar-icon {
+  display: grid;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 0;
+  background: transparent;
+  border-radius: var(--radius-full);
+  color: var(--stone-500);
+  cursor: pointer;
+  transition:
+    background-color 0.15s,
+    color 0.15s;
+}
+
+.topbar-icon:hover {
+  background: #fff;
+  color: var(--brand-800);
+}
+
+.topbar-icon svg {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.topbar-divider {
+  margin: 0 var(--sp-2);
+  width: 1px;
+  height: 2rem;
+  background: var(--stone-200);
+}
+
+.topbar-who {
+  display: none;
+  text-align: right;
+}
+
+@media (min-width: 640px) {
+  .topbar-who {
+    display: block;
+  }
+}
+
+.topbar-name {
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.25;
+  color: var(--stone-900);
+}
+
+.topbar-role {
+  font-size: 0.75rem;
+  color: var(--stone-500);
+}
+
+.avatar {
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  flex-shrink: 0;
+  border-radius: var(--radius-full);
+  background: var(--brand-800);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #fff;
+  box-shadow: 0 4px 12px -4px rgb(22 51 43 / 0.6);
+}
+
+.topbar-signout {
+  margin-left: var(--sp-1);
+  display: inline-flex;
+  height: 2.5rem;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: 0 var(--sp-4);
+  border: 0;
+  border-radius: var(--radius-full);
+  background: #fff;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--stone-600);
+  cursor: pointer;
+  box-shadow: inset 0 0 0 1px var(--stone-200);
+  transition:
+    color 0.15s,
+    box-shadow 0.15s;
+}
+
+.topbar-signout:hover {
+  color: var(--red-600);
+  box-shadow: inset 0 0 0 1px var(--red-200);
+}
+
+.topbar-signout svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.topbar-signout span {
+  display: none;
+}
+
+@media (min-width: 640px) {
+  .topbar-signout span {
+    display: inline;
+  }
+}
+
+/* ---- page area --------------------------------------------------------- */
+
+.shell-page {
+  margin: 0 auto;
+  width: 100%;
+  max-width: 80rem;
+  flex: 1;
+  padding: var(--sp-10) var(--sp-5);
+}
+
+@media (min-width: 1024px) {
+  .shell-page {
+    padding: var(--sp-10);
+  }
+}

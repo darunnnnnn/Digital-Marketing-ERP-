@@ -1,0 +1,248 @@
+/*
+ * Design tokens and base styles. Every page and component stylesheet builds on
+ * these, so colour, spacing and type stay consistent without a framework.
+ *
+ * Evergreen & mist:
+ *   --stone-*  a cool mist grey — text, borders, quiet surfaces
+ *   --brand-*  deep evergreen — navigation, primary actions, progress
+ * Surfaces are frosted white over a softly tinted page, never flat white.
+ * Red is reserved for "overdue" and "delete".
+ */
+:root {
+  color-scheme: light;
+
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Instrument Serif", ui-serif, Georgia, serif;
+
+  --stone-50: #fafbfa;
+  --stone-100: #f2f4f2;
+  --stone-200: #e3e7e4;
+  --stone-300: #cbd1cd;
+  --stone-400: #8d958f;
+  --stone-500: #6b736d;
+  --stone-600: #525953;
+  --stone-700: #3b413c;
+  --stone-800: #262b27;
+  --stone-900: #161a17;
+
+  --brand-50: #eef6f3;
+  --brand-100: #d6ebe3;
+  --brand-200: #aed6c7;
+  --brand-300: #7fbaa5;
+  --brand-400: #529a82;
+  --brand-500: #377d67;
+  --brand-600: #2a6553;
+  --brand-700: #235244;
+  --brand-800: #1d4338;
+  --brand-900: #16332b;
+
+  --red-50: #fef2f2;
+  --red-100: #fee2e2;
+  --red-200: #fecaca;
+  --red-400: #f87171;
+  --red-500: #ef4444;
+  --red-600: #dc2626;
+  --red-700: #b91c1c;
+
+  /* Spacing, on a 4px step. */
+  --sp-1: 0.25rem;
+  --sp-2: 0.5rem;
+  --sp-3: 0.75rem;
+  --sp-4: 1rem;
+  --sp-5: 1.25rem;
+  --sp-6: 1.5rem;
+  --sp-7: 1.75rem;
+  --sp-8: 2rem;
+  --sp-10: 2.5rem;
+
+  --radius-sm: 0.5rem;
+  --radius: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.5rem;
+  --radius-full: 9999px;
+
+  --shadow-sm: 0 1px 2px rgb(22 51 43 / 0.05);
+  --shadow-md: 0 4px 12px -4px rgb(22 51 43 / 0.12);
+  --shadow-lg: 0 12px 28px -12px rgb(22 51 43 / 0.25);
+  --shadow-surface: 0 1px 2px rgb(22 51 43 / 0.04), 0 14px 34px -18px rgb(22 51 43 / 0.2);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+* {
+  margin: 0;
+  scrollbar-width: thin;
+  scrollbar-color: var(--stone-300) transparent;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  font-family: var(--font-sans);
+  color: var(--stone-900);
+  -webkit-font-smoothing: antialiased;
+  background:
+    radial-gradient(1100px 520px at 92% -10%, rgb(55 125 103 / 0.16), transparent 60%),
+    radial-gradient(900px 480px at 8% -5%, rgb(214 196 160 / 0.2), transparent 55%),
+    radial-gradient(1000px 600px at 50% 115%, rgb(55 125 103 / 0.08), transparent 60%),
+    var(--stone-100);
+  background-attachment: fixed;
+}
+
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+}
+
+::selection {
+  background: var(--brand-100);
+  color: var(--brand-900);
+}
+
+/* ---- Shared building blocks -------------------------------------------- */
+
+/* The frosted card everything sits on. */
+.surface {
+  border-radius: var(--radius-xl);
+  background: rgb(255 255 255 / 0.82);
+  border: 1px solid rgb(255 255 255 / 0.95);
+  box-shadow: var(--shadow-surface);
+  backdrop-filter: blur(14px);
+}
+
+/* Smaller solid tile, for cards inside cards and board items. */
+.surface-sm {
+  border-radius: var(--radius-lg);
+  background: rgb(255 255 255 / 0.95);
+  border: 1px solid rgb(227 231 228 / 0.9);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Page title block, used at the top of every page. */
+.page-head {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+}
+
+@media (min-width: 640px) {
+  .page-head {
+    flex-direction: row;
+    align-items: flex-end;
+    justify-content: space-between;
+  }
+}
+
+.page-title {
+  font-size: 2.25rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--stone-900);
+}
+
+.page-subtitle {
+  margin-top: var(--sp-2);
+  font-size: 1rem;
+  color: var(--stone-500);
+}
+
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--stone-500);
+  transition: color 0.15s;
+}
+
+.back-link:hover {
+  color: var(--stone-900);
+}
+
+/* Vertical rhythm helpers, the equivalent of the old space-y utilities. */
+.stack-5 > * + * {
+  margin-top: var(--sp-5);
+}
+
+.stack-6 > * + * {
+  margin-top: var(--sp-6);
+}
+
+.stack-8 > * + * {
+  margin-top: var(--sp-8);
+}
+
+.muted {
+  color: var(--stone-500);
+}
+
+/* Small square avatar for a client or a person, next to their name. */
+.avatar-soft {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: var(--radius-sm);
+  background: var(--stone-100);
+  color: var(--stone-900);
+  font-size: 0.75rem;
+  font-weight: 500;
+  box-shadow: inset 0 0 0 1px var(--stone-200);
+}
+
+.tint-soft {
+  background: var(--stone-100);
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+.truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@keyframes pulse {
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}

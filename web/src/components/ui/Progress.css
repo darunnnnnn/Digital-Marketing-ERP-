@@ -1,0 +1,54 @@
+.progress {
+  height: 0.5rem;
+  width: 100%;
+  overflow: hidden;
+  border-radius: var(--radius-full);
+  background: var(--stone-100);
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: var(--radius-full);
+  transition: width 0.5s ease-out;
+}
+
+/* ---- ring -------------------------------------------------------------- */
+
+.ring {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.ring-svg {
+  transform: rotate(-90deg);
+}
+
+.ring-track {
+  stroke: var(--stone-100);
+}
+
+.ring-value {
+  stroke: var(--brand-600);
+  transition: stroke-dashoffset 0.5s ease-out;
+}
+
+.ring-center {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  text-align: center;
+  line-height: 1;
+}
+
+.ring-label {
+  font-size: 1.5rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.ring-sublabel {
+  margin-top: var(--sp-1);
+  font-size: 0.75rem;
+  color: var(--stone-400);
+}

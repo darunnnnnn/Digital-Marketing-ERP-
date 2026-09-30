@@ -1,0 +1,70 @@
+/* A form page is narrower than a list page — long lines are hard to scan. */
+.form-page {
+  margin: 0 auto;
+  max-width: 48rem;
+}
+
+.form-identity {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-3);
+  border: 1px solid var(--stone-200);
+  border-radius: var(--radius-sm);
+}
+
+/* A touch larger than the list avatars, since it stands alone here. */
+.form-identity .avatar-soft {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.875rem;
+}
+
+.form-identity-name {
+  min-width: 0;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.form-grid,
+.form-grid-3 {
+  display: grid;
+  gap: var(--sp-4);
+}
+
+@media (min-width: 640px) {
+  .form-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .form-grid-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .span-2 {
+    grid-column: span 2;
+  }
+}
+
+.form-box {
+  padding: var(--sp-4);
+  border: 1px solid var(--stone-200);
+  border-radius: var(--radius);
+}
+
+.form-box-label {
+  margin-bottom: var(--sp-3);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--stone-400);
+}
+
+.form-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.625rem;
+  padding-top: var(--sp-4);
+  border-top: 1px solid var(--stone-200);
+}

@@ -1,0 +1,78 @@
+/* A row per role. The row for the step the video is on right now is tinted, so
+   "who has the ball" is visible without reading the labels. */
+.assignee {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  border-radius: var(--radius);
+  border: 1px solid transparent;
+  padding: var(--sp-2) 0.625rem;
+  transition:
+    background-color 0.15s,
+    border-color 0.15s;
+}
+
+.assignee:hover {
+  background: var(--stone-100);
+}
+
+.assignee-current,
+.assignee-current:hover {
+  border-color: var(--brand-200);
+  background: rgb(238 246 243 / 0.6);
+}
+
+.assignee-avatar {
+  width: 2rem;
+  height: 2rem;
+  border-radius: var(--radius-sm);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.assignee-avatar-empty {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  border: 1px dashed var(--stone-300);
+  background: transparent;
+  box-shadow: none;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--stone-300);
+}
+
+.assignee-main {
+  min-width: 0;
+  flex: 1;
+}
+
+.assignee-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--stone-400);
+}
+
+.assignee-select {
+  margin-left: -2px;
+  width: 100%;
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  border: 0;
+  border-radius: 0.25rem;
+  background: transparent;
+  padding: 0 2px;
+  outline: none;
+}
+
+.assignee-select:focus {
+  box-shadow: 0 0 0 1px var(--brand-600);
+}
+
+.assignee-select:disabled {
+  cursor: default;
+  color: var(--stone-600);
+}
