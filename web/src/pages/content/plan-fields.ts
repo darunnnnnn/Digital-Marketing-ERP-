@@ -6,7 +6,6 @@
 // assignee really exists in this agency. This is the friendly first pass.
 
 import { STEPS, type DeadlineField } from "@/lib/schedule";
-import { parseDateInput } from "@/lib/utils";
 import type { MemberOption } from "./types";
 
 export type PlanValues = {
@@ -27,13 +26,6 @@ export type PlanValues = {
   dates: Record<DeadlineField, string>;
 };
 
-/** The day after, for the CEO's own review deadline. */
-export function dayAfter(date: string) {
-  const d = parseDateInput(date);
-  if (!d) return "";
-  d.setUTCDate(d.getUTCDate() + 1);
-  return d.toISOString().slice(0, 10);
-}
 
 /** The titles this form will create, one per video. */
 export function titlesFor(v: PlanValues) {
@@ -83,8 +75,6 @@ export function validatePlan(v: PlanValues, members: MemberOption[]) {
     if (!v.dates.scriptDue) errors.scriptDue = "Set the deadline for the script.";
     if (!v.scriptwriterId) errors.scriptwriterId = "Choose who is writing.";
     deadlines.scriptDue = v.dates.scriptDue;
-    // The CEO's own review gets the next day, so it doesn't sit undated.
-    deadlines.scriptApprovalDue = dayAfter(v.dates.scriptDue);
   }
 
   const has = (id: string, role: string) =>

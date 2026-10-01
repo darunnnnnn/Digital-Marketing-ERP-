@@ -75,12 +75,14 @@ export const ROLE_STEPS: Record<string, RoleStep[]> = {
       sentBackTo: "Ready to post",
     },
   ],
+  // The CEO owns no delivery step, so each approval is measured against the
+  // deadline of the step it is reviewing rather than a date of its own.
   ceo: [
     {
       label: "Scripts approved",
       assign: null,
       done: "scriptApprovedAt",
-      due: "scriptApprovalDue",
+      due: "scriptDue",
       stage: "script_review",
       sentBackTo: null,
     },
@@ -96,7 +98,7 @@ export const ROLE_STEPS: Record<string, RoleStep[]> = {
       label: "Final videos approved",
       assign: null,
       done: "editApprovedAt",
-      due: "finalApprovalDue",
+      due: "editDue",
       stage: "edit_review",
       sentBackTo: null,
     },
@@ -166,7 +168,7 @@ const PERF_COLUMNS = `
   scriptwriterId, cameramanId, editorId, publisherId,
   scriptSubmittedAt, scriptApprovedAt, shootCompletedAt,
   editStartedAt, editSubmittedAt, editApprovedAt, publishedAt,
-  scriptDue, scriptApprovalDue, shootDue, editDue, finalApprovalDue, publishDue,
+  scriptDue, shootDue, editDue, publishDue,
   client:Client(name)
 `;
 

@@ -1,22 +1,18 @@
-// The four-week content cycle.
+// The content cycle: the four steps someone has to deliver.
 //
-//   Week 1  script written, then approved by the CEO
-//   Week 2  shot, raw footage uploaded
-//   Week 3  edited
-//   Week 4  final video approved by the CEO, then posted
+//   Script written  ->  Shot & footage uploaded  ->  Edit complete  ->  Posted
 //
-// Every video gets a deadline for each step, counted in days from the Monday
-// its cycle starts. Deadlines are ordinary dates afterwards and can be moved.
+// Approving is the CEO's job but carries no deadline of its own: a review is
+// measured against the step it is reviewing (see STAGE_DEADLINE), so nothing
+// waits on a date that exists only to describe the CEO's own turnaround.
+//
+// Picking a start date fills these in as a suggestion, spaced roughly a week
+// apart. They are ordinary dates afterwards and can be moved to any pace —
+// four videos in a week, or one over a month.
 
 import { calendarDate } from "./utils";
 
-export type DeadlineField =
-  | "scriptDue"
-  | "scriptApprovalDue"
-  | "shootDue"
-  | "editDue"
-  | "finalApprovalDue"
-  | "publishDue";
+export type DeadlineField = "scriptDue" | "shootDue" | "editDue" | "publishDue";
 
 /** The timestamp that marks a step as done. */
 export type DoneField =
@@ -32,8 +28,7 @@ export type Step = {
   done: DoneField;
   label: string;
   who: string;
-  week: number;
-  /** Days after the cycle's Monday. */
+  /** Days after the cycle's start, used only to suggest a first set of dates. */
   offset: number;
 };
 
@@ -43,23 +38,13 @@ export const STEPS: Step[] = [
     done: "scriptSubmittedAt",
     label: "Script written",
     who: "Scriptwriter",
-    week: 1,
     offset: 3,
-  },
-  {
-    field: "scriptApprovalDue",
-    done: "scriptApprovedAt",
-    label: "Script approved",
-    who: "CEO",
-    week: 1,
-    offset: 4,
   },
   {
     field: "shootDue",
     done: "shootCompletedAt",
     label: "Shot & footage uploaded",
     who: "Cameraman",
-    week: 2,
     offset: 11,
   },
   {
@@ -67,23 +52,13 @@ export const STEPS: Step[] = [
     done: "editSubmittedAt",
     label: "Edit complete",
     who: "Editor",
-    week: 3,
     offset: 18,
-  },
-  {
-    field: "finalApprovalDue",
-    done: "editApprovedAt",
-    label: "Final video approved",
-    who: "CEO",
-    week: 4,
-    offset: 22,
   },
   {
     field: "publishDue",
     done: "publishedAt",
     label: "Posted",
     who: "Posting team",
-    week: 4,
     offset: 25,
   },
 ];
@@ -92,15 +67,16 @@ export const STEPS: Step[] = [
 export const STAGE_DEADLINE: Record<string, DeadlineField | null> = {
   planned: "scriptDue",
   scripting: "scriptDue",
-  script_review: "scriptApprovalDue",
   shooting: "shootDue",
-  // The CEO should turn footage around quickly, so it still counts against the
-  // shoot deadline until an edit deadline is set.
-  footage_review: "shootDue",
   editing: "editDue",
-  edit_review: "finalApprovalDue",
   ready: "publishDue",
   published: null,
+  // The three CEO gates have no deadline of their own. Each keeps counting
+  // against the step it is reviewing, so a video held up in review still shows
+  // as late — the delay lands on the step, which is where it is felt.
+  script_review: "scriptDue",
+  footage_review: "shootDue",
+  edit_review: "editDue",
 };
 
 function addDays(d: Date, days: number) {
@@ -109,7 +85,7 @@ function addDays(d: Date, days: number) {
   return out;
 }
 
-/** All six deadlines for a cycle starting on `start` (a midday-UTC calendar date). */
+/** A suggested date for each step, from a cycle start (a midday-UTC calendar date). */
 export function scheduleFrom(start: Date): Record<DeadlineField, Date> & { cycleStart: Date } {
   const out = { cycleStart: start } as Record<DeadlineField, Date> & { cycleStart: Date };
   for (const step of STEPS) out[step.field] = addDays(start, step.offset);

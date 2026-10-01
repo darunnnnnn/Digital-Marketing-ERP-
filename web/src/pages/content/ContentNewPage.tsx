@@ -175,31 +175,26 @@ function PlanForm({
         {v.planMode === "script" ? (
           <p className="plan-explain">
             Only the writer gets a deadline now. You&apos;ll set the shoot, edit and posting dates
-            later, each time you approve the work and hand it on. Your own script review is set for
-            the day after the script is due.
+            later, each time you approve the work and hand it on.
           </p>
         ) : (
           <>
-            <ol className="plan-steps">
+            <div className="plan-dates">
               {STEPS.map((step, i) => (
-                <li
+                <Field
                   key={step.field}
-                  className={cn("plan-step", i === outOfOrder && "plan-step-bad")}
+                  label={step.label}
+                  hint={step.who.toLowerCase()}
+                  error={i === outOfOrder && !errors.schedule ? " " : undefined}
                 >
-                  <p className="plan-step-week">
-                    Week {step.week} · {step.who}
-                  </p>
-                  <p className="plan-step-label">{step.label}</p>
-                  <input
+                  <Input
                     type="date"
-                    aria-label={step.label}
                     value={v.dates[step.field]}
                     onChange={(e) => set("dates", { ...v.dates, [step.field]: e.target.value })}
-                    className="plan-step-date"
                   />
-                </li>
+                </Field>
               ))}
-            </ol>
+            </div>
             {(outOfOrder > 0 || errors.schedule) && (
               <p className="plan-error">
                 {errors.schedule ??

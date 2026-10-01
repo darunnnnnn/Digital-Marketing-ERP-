@@ -253,7 +253,7 @@ export function ContentDetailPage() {
           {/* Schedule */}
           <Card>
             <CardHeader
-              title="Four-week schedule"
+              title="Schedule"
               action={
                 <span className="panel-status panel-status-quiet">
                   {item.cycleStart
@@ -263,19 +263,19 @@ export function ContentDetailPage() {
               }
             />
             <ol className="steps">
-              {STEPS.map((step) => {
+              {STEPS.map((step, i) => {
                 const status = stepStatus(toDate(item[step.field]), toDate(item[step.done]));
                 const current = step.field === stepField;
                 return (
                   <li key={step.field} className={cn("step", current && "step-current")}>
                     <span
                       className={cn(
-                        "step-week",
-                        status.kind === "done" && "step-week-done",
-                        status.kind !== "done" && current && "step-week-current",
+                        "step-num",
+                        status.kind === "done" && "step-num-done",
+                        status.kind !== "done" && current && "step-num-current",
                       )}
                     >
-                      W{step.week}
+                      {i + 1}
                     </span>
                     <div className="step-main">
                       <p className="step-label">{step.label}</p>
@@ -317,7 +317,7 @@ export function ContentDetailPage() {
                 <PanelForm id={item.id} panel="schedule" onSaved={reload}>
                   <div className="panel-trio">
                     {STEPS.map((step) => (
-                      <Field key={step.field} label={step.label} hint={`week ${step.week}`}>
+                      <Field key={step.field} label={step.label} hint={step.who.toLowerCase()}>
                         <Input
                           type="date"
                           name={step.field}
