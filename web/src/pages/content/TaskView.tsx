@@ -102,11 +102,30 @@ export function TaskView({
       </div>
 
       {/* What they were given */}
-      {(item.idea || item.scriptBody || item.footageUrl || item.shootNotes || item.editBrief) && (
+      {(item.idea ||
+        item.referenceUrl ||
+        item.scriptBody ||
+        item.footageUrl ||
+        item.shootNotes ||
+        item.editBrief) && (
         <Card>
           <CardHeader title="1 · What you need" />
           <div className="refs">
             {panel === "script" && item.idea && <Reference label="The idea">{item.idea}</Reference>}
+
+            {/* The reference is what the writer and the camera team work from. */}
+            {(panel === "script" || panel === "shoot") && item.referenceUrl && (
+              <Reference label="Reference video">
+                <a
+                  href={item.referenceUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="ref-link"
+                >
+                  Open the reference
+                </a>
+              </Reference>
+            )}
 
             {(panel === "shoot" || panel === "edit") && item.scriptBody && (
               <Reference label="Approved script">

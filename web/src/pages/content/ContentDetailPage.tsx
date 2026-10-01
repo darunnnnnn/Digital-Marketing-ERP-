@@ -344,11 +344,14 @@ export function ContentDetailPage() {
                 <Input name="title" defaultValue={item.title} />
               </Field>
               <Field label="The idea" hint="what this video is actually about">
-                <Textarea
-                  name="idea"
-                  rows={3}
-                  defaultValue={item.idea ?? ""}
-                  placeholder="Chef plates the signature dish while talking through the two ingredients nobody expects."
+                <Textarea name="idea" rows={3} defaultValue={item.idea ?? ""} />
+              </Field>
+              <Field label="Reference link" hint="optional — an example video to work from">
+                <Input
+                  name="referenceUrl"
+                  type="url"
+                  defaultValue={item.referenceUrl ?? ""}
+                  placeholder="https://instagram.com/reel/…"
                 />
               </Field>
               <div className="panel-pair">
@@ -442,7 +445,6 @@ export function ContentDetailPage() {
                   <Input
                     name="shootLocation"
                     defaultValue={item.shootLocation ?? ""}
-                    placeholder="Client's kitchen, Anna Nagar"
                   />
                 </Field>
               </div>
@@ -451,7 +453,6 @@ export function ContentDetailPage() {
                   name="shootNotes"
                   rows={3}
                   defaultValue={item.shootNotes ?? ""}
-                  placeholder="Gimbal, two lapel mics, chef in uniform. Golden hour on the terrace."
                 />
               </Field>
               <Field label="Raw footage link">
@@ -490,7 +491,6 @@ export function ContentDetailPage() {
                   name="editBrief"
                   rows={3}
                   defaultValue={item.editBrief ?? ""}
-                  placeholder="Fast cuts, burned-in captions, brand lower third at 0:02, trending audio."
                 />
               </Field>
               <Field label="Edited video link">
@@ -543,7 +543,6 @@ export function ContentDetailPage() {
                   name="caption"
                   rows={3}
                   defaultValue={item.caption ?? ""}
-                  placeholder="The dish that built this restaurant 🍜"
                 />
               </Field>
               <div className="panel-pair">
@@ -551,7 +550,6 @@ export function ContentDetailPage() {
                   <Input
                     name="hashtags"
                     defaultValue={item.hashtags ?? ""}
-                    placeholder="#chennaifood #reels"
                   />
                 </Field>
                 <Field label="Thumbnail link">
@@ -610,11 +608,12 @@ export function ContentDetailPage() {
             </div>
           </Card>
 
-          {(item.footageUrl || item.editUrl || item.publishedUrl) && (
+          {(item.referenceUrl || item.footageUrl || item.editUrl || item.publishedUrl) && (
             <Card>
               <CardHeader title="Links" />
               <div className="links">
                 {[
+                  { label: "Reference", href: item.referenceUrl },
                   { label: "Raw footage", href: item.footageUrl },
                   { label: "Edited cut", href: item.editUrl },
                   { label: "Live post", href: item.publishedUrl },

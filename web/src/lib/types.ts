@@ -57,6 +57,8 @@ export type ContentItem = {
   ref: number;
   title: string;
   idea: string | null;
+  /** An example video to work from. Optional, set when planning. */
+  referenceUrl: string | null;
   format: string;
   priority: string;
   stage: string;

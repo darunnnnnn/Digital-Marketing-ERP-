@@ -20,6 +20,7 @@ export type PlanValues = {
   format: string;
   priority: string;
   scriptwriterId: string;
+  referenceUrl: string;
   cameramanId: string;
   editorId: string;
   publisherId: string;
@@ -56,6 +57,11 @@ export function validatePlan(v: PlanValues, members: MemberOption[]) {
   }
 
   if (!v.clientId) errors.clientId = "Pick a client.";
+
+  // Optional, but if given it has to be a link someone can actually open.
+  if (v.referenceUrl.trim() && !/^https?:\/\//i.test(v.referenceUrl.trim())) {
+    errors.referenceUrl = "Links need to start with http:// or https://";
+  }
 
   // Two ways to plan: the script deadline alone, or the whole cycle up front.
   const deadlines: Partial<Record<DeadlineField, string>> = {};

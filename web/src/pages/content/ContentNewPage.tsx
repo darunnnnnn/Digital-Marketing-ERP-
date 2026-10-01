@@ -56,6 +56,7 @@ function PlanForm({
     format: "reel",
     priority: "normal",
     scriptwriterId: "",
+    referenceUrl: "",
     cameramanId: "",
     editorId: "",
     publisherId: "",
@@ -109,6 +110,7 @@ function PlanForm({
         // Blank in script-only mode, so no later deadline is invented.
         weekStart: v.planMode === "full" ? v.weekStart : "",
         scriptwriterId: v.scriptwriterId,
+        referenceUrl: v.referenceUrl.trim(),
         deadlines,
         assignees,
       });
@@ -262,9 +264,6 @@ function PlanForm({
               rows={6}
               value={v.ideas}
               onChange={(e) => set("ideas", e.target.value)}
-              placeholder={
-                "Signature dish reel\nBehind the scenes\nCustomer reaction\nChef interview"
-              }
               autoFocus
             />
           </Field>
@@ -285,6 +284,19 @@ function PlanForm({
           </Field>
         )}
       </div>
+
+      <Field
+        label="Reference link"
+        hint="optional — an example video to work from"
+        error={errors.referenceUrl}
+      >
+        <Input
+          type="url"
+          value={v.referenceUrl}
+          onChange={(e) => set("referenceUrl", e.target.value)}
+          placeholder="https://instagram.com/reel/…"
+        />
+      </Field>
 
       <div className="form-grid-3">
         <Field label="Format">

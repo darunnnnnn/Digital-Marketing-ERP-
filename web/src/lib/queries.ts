@@ -172,6 +172,8 @@ export type PlanInput = {
   priority: string;
   weekStart: string;
   scriptwriterId: string;
+  /** An example video for the writer and camera team. Optional. */
+  referenceUrl?: string;
   deadlines?: Partial<Record<DeadlineField, string>>;
   assignees?: { cameramanId?: string; editorId?: string; publisherId?: string };
   actor?: string;
@@ -212,6 +214,7 @@ export async function planContent(input: PlanInput) {
     title,
     format: input.format,
     priority: input.priority,
+    referenceUrl: input.referenceUrl || null,
     ...schedule,
     dueDate: schedule.publishDue ?? null,
     monthKey,
@@ -401,7 +404,13 @@ export async function setAssignee(
   );
 }
 
-const LINK_FIELDS = ["footageUrl", "editUrl", "publishedUrl", "thumbnailUrl"];
+const LINK_FIELDS = [
+  "footageUrl",
+  "editUrl",
+  "publishedUrl",
+  "thumbnailUrl",
+  "referenceUrl",
+];
 
 /** Saves one panel of the video page. Returns an error message, or null. */
 export async function saveContentPanel(
@@ -415,6 +424,7 @@ export async function saveContentPanel(
     const title = get("title");
     if (title) data.title = title;
     data.idea = get("idea") || null;
+    data.referenceUrl = get("referenceUrl") || null;
     data.format = get("format") || "reel";
     data.priority = get("priority") || "normal";
   } else if (panel === "schedule") {
