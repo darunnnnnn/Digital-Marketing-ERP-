@@ -40,6 +40,18 @@ permission rules, and adds the two functions the invite page needs.
 `policies.sql` and `invites.sql` are the same content split by subject, kept for
 reading. `setup.sql` is the one to run.
 
+Before running it on a real database, check it:
+
+```bash
+npm run verify:db
+```
+
+That loads the production schema from `prisma/migrations` into a throwaway
+Postgres, applies `setup.sql` twice, and then makes every insert the app makes.
+PGlite is Postgres itself compiled to WebAssembly, so it is the real engine —
+real triggers, real row level security — with nothing to install beyond npm,
+no Docker, and nothing left running afterwards.
+
 Then in **Authentication → Providers → Email**, decide whether you want email
 confirmation. With it on, someone who accepts an invite has to click a link in
 their inbox before they can sign in; with it off, they are in straight away.
