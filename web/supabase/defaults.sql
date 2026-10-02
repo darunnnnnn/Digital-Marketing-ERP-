@@ -24,12 +24,21 @@ alter table "ContentEvent" alter column id set default gen_random_uuid()::text;
 -- already blocks all access to that table regardless.
 
 -- Same root cause, a second place it bites: @updatedAt was also a Prisma-only
--- behaviour, set in JavaScript on every update rather than stored as a real
--- rule in the database. Without it, "updatedAt" silently freezes at creation
--- time forever once Prisma stops touching these rows — which is what feeds
--- "Recent content" on the client page, so the order would quietly go wrong
--- rather than error, hours or weeks from now. Fixed the same way the id was:
--- a database-level rule standing in for what Prisma used to do in code.
+-- behaviour, set in JavaScript rather than stored as a real rule in the
+-- database. Prisma set it on insert AND on update, so both halves are needed:
+--
+--   insert — the column is NOT NULL with no default, so creating a client or a
+--            video fails outright with a not-null violation.
+--   update — without a trigger the value freezes at creation time forever,
+--            which is what "Recent content" sorts by, so that half goes quietly
+--            wrong rather than erroring.
+--
+-- Checked against prisma/migrations rather than guessed: "id" and "updatedAt"
+-- are the only NOT NULL columns in the whole schema with no database default.
+-- Everything else the app supplies itself on insert.
+alter table "Client"      alter column "updatedAt" set default now();
+alter table "ContentItem" alter column "updatedAt" set default now();
+
 create or replace function set_updated_at()
 returns trigger
 language plpgsql
