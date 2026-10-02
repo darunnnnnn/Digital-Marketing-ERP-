@@ -32,10 +32,13 @@ npm run preview     # serve dist/ locally
 
 ## Set the database up once
 
-Run these two files in the Supabase SQL editor, in this order:
+Run `supabase/setup.sql` in the Supabase SQL editor. One file, safe to run
+again at any time — it adds the columns the app expects, gives the database its
+own way to fill in ids and timestamps, turns on row level security with the
+permission rules, and adds the two functions the invite page needs.
 
-1. `supabase/policies.sql` — turns on row level security and installs the rules.
-2. `supabase/invites.sql` — the two functions the invite page needs.
+`policies.sql` and `invites.sql` are the same content split by subject, kept for
+reading. `setup.sql` is the one to run.
 
 Then in **Authentication → Providers → Email**, decide whether you want email
 confirmation. With it on, someone who accepts an invite has to click a link in
