@@ -10,6 +10,7 @@ import { IconChevronLeft } from "@/components/icons";
 import { useToast } from "@/components/ui/Toast";
 import { useViewer } from "@/lib/auth";
 import { FORMATS } from "@/lib/pipeline";
+import { hasRole } from "@/lib/roles";
 import { listClients, listMembers, plannedPerClient, planContent } from "@/lib/queries";
 import { STEPS, defaultCycleStart, scheduleFrom, type DeadlineField } from "@/lib/schedule";
 import { useAsync } from "@/lib/use-async";
@@ -43,7 +44,7 @@ function PlanForm({
   const viewer = useViewer();
   const navigate = useNavigate();
   const toast = useToast();
-  const byRole = (role: string) => members.filter((m) => m.role === role);
+  const byRole = (role: string) => members.filter((m) => hasRole(m, role));
   const writers = byRole("scriptwriter");
 
   const [v, setV] = useState<PlanValues>(() => ({

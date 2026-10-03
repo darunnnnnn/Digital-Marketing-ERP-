@@ -13,6 +13,7 @@ export type PayoutRow = {
   memberId: string;
   name: string;
   role: string;
+  roles: string[];
   active: boolean;
   payType: string;
   deliveries: number;
@@ -60,6 +61,7 @@ export async function monthPayouts(agencyId: string, monthKey: string): Promise<
         memberId: m.id,
         name: m.name,
         role: m.role,
+        roles: m.roles,
         active: m.active,
         payType: rec.payType,
         deliveries: rec.deliveries,
@@ -89,6 +91,7 @@ export async function monthPayouts(agencyId: string, monthKey: string): Promise<
       memberId: m.id,
       name: m.name,
       role: m.role,
+      roles: m.roles,
       active: m.active,
       payType: m.payType,
       deliveries: summary.done,

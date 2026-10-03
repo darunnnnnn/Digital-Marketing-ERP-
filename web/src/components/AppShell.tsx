@@ -1,14 +1,20 @@
 import type { ReactElement, ReactNode } from "react";
 import { Link, useLocation } from "react-router";
 import { useAuth } from "@/lib/auth";
-import { ROLE_LABELS, type Role } from "@/lib/pipeline";
+import { deskCounts } from "@/lib/my-work";
+import { rolesLabel, workPortals } from "@/lib/roles";
+import { useAsync } from "@/lib/use-async";
 import { cn, initials } from "@/lib/utils";
 import {
   IconBell,
+  IconCamera,
   IconChart,
   IconFilm,
   IconGrid,
   IconLogout,
+  IconPencil,
+  IconScissors,
+  IconSend,
   IconSettings,
   IconSpark,
   IconUsers,
@@ -24,6 +30,18 @@ type NavItem = {
   soon?: boolean;
   /** Who sees it. Omitted means everyone. */
   roles?: string[];
+  /** Shown under the icon, for links that are someone's whole job. */
+  caption?: string;
+  /** Videos waiting on them there. */
+  count?: number;
+};
+
+/** One sidebar link per desk, for someone who writes, shoots and edits. */
+const CRAFT_ICONS: Record<string, NavItem["icon"]> = {
+  script: IconPencil,
+  shoot: IconCamera,
+  edit: IconScissors,
+  post: IconSend,
 };
 
 const MANAGERS = ["ceo", "manager"];
@@ -41,14 +59,35 @@ export function AppShell({
   user,
   children,
 }: {
-  user: { name: string; role: string };
+  user: { id: string; name: string; role: string; roles?: string[] | null; agencyId: string };
   children: ReactNode;
 }) {
   const { pathname } = useLocation();
   const { signOut } = useAuth();
-  const nav = NAV.filter((n) => !n.roles || n.roles.includes(user.role));
+  const portals = workPortals(user);
+
+  // Refetched on every navigation, so finishing a task updates the badges as
+  // soon as they go back to their queue.
+  const counts = useAsync(
+    () => (portals.length ? deskCounts(user) : Promise.resolve({} as Record<string, number>)),
+    [user.id, portals.length, pathname],
+  );
+
+  const nav = NAV.filter((n) => !n.roles || n.roles.includes(user.role)).flatMap((n) =>
+    // Someone with several roles gets a desk per role in place of the one queue.
+    n.to === "/content" && portals.length
+      ? portals.map((c) => ({
+          to: `/work/${c.slug}`,
+          label: c.label,
+          title: `${c.label} — your work`,
+          icon: CRAFT_ICONS[c.slug] ?? IconFilm,
+          caption: c.label,
+          count: counts.data?.[c.slug],
+        }))
+      : [n],
+  );
   const section = nav.find((n) => !n.soon && pathname.startsWith(n.to));
-  const roleLabel = ROLE_LABELS[user.role as Role] ?? user.role;
+  const roleLabel = rolesLabel(user);
 
   return (
     <div className="shell">
@@ -75,10 +114,16 @@ export function AppShell({
               <Link
                 key={item.to}
                 to={item.to}
-                title={item.label}
-                className={cn("rail-link", active && "rail-link-active")}
+                title={item.count ? `${item.label} — ${item.count} waiting` : item.label}
+                className={cn(
+                  "rail-link",
+                  item.caption && "rail-link-captioned",
+                  active && "rail-link-active",
+                )}
               >
                 <Icon />
+                {item.caption && <span className="rail-caption">{item.caption}</span>}
+                {item.count ? <span className="rail-count">{item.count}</span> : null}
               </Link>
             );
           })}

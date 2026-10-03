@@ -1,0 +1,35 @@
+/* Switches between someone's desks: Scripts, Shoot, Edit. */
+.work-tabs {
+  margin-top: var(--sp-4);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+}
+
+.work-tab {
+  display: inline-flex;
+  height: 2.25rem;
+  align-items: center;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--stone-200);
+  background: var(--stone-50);
+  padding: 0 var(--sp-4);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--stone-600);
+  transition:
+    border-color 0.15s,
+    background-color 0.15s,
+    color 0.15s;
+}
+
+.work-tab:hover {
+  color: var(--stone-900);
+}
+
+.work-tab-active,
+.work-tab-active:hover {
+  border-color: var(--brand-800);
+  background: var(--brand-800);
+  color: #fff;
+}

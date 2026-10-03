@@ -10,6 +10,7 @@
 import { supabase } from "./supabase";
 import { STEPS, scheduleFrom, type DeadlineField } from "./schedule";
 import { handoff, nextStage, prevStage, stageConfig, type Stage } from "./pipeline";
+import { craftByAssign, hasRole } from "./roles";
 import { currentMonthKey, parseDateInput } from "./utils";
 import type {
   Client,
@@ -351,7 +352,7 @@ export async function handOff(
 
   const member = team.find((m) => m.id === input.memberId);
   if (!member || !member.active) return `Pick a ${gate.who} from your team.`;
-  if (member.role !== gate.role) return `${member.name} isn't a ${gate.who}.`;
+  if (!hasRole(member, gate.role)) return `${member.name} isn't a ${gate.who}.`;
 
   const due = parseDateInput(input.due);
   if (!due) return "Set a deadline for this step.";
@@ -399,7 +400,9 @@ export async function setAssignee(
   await logEvent(
     item.id,
     "assign",
-    member ? `${member.name} assigned as ${member.role}` : "Assignment cleared",
+    member
+      ? `${member.name} assigned as ${craftByAssign(field)?.role ?? member.role}`
+      : "Assignment cleared",
     actor,
   );
 }

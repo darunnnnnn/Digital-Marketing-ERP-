@@ -36,6 +36,7 @@ export function TaskView({
   canSubmit,
   canSendBack,
   onChanged,
+  backTo = "/content",
 }: {
   item: ContentItemWithNames;
   events: ContentEvent[];
@@ -45,6 +46,8 @@ export function TaskView({
   canSubmit: boolean;
   canSendBack: boolean;
   onChanged: () => void;
+  /** Their queue this came from: /work/edit for someone with several roles. */
+  backTo?: string;
 }) {
   const stage = stageConfig(item.stage);
   const dueField = STAGE_DEADLINE[item.stage];
@@ -59,7 +62,7 @@ export function TaskView({
 
   return (
     <div className="task-page stack-6">
-      <Link to="/content" className="back-link">
+      <Link to={backTo} className="back-link">
         <IconChevronLeft />
         Your work
       </Link>

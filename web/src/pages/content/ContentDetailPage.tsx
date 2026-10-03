@@ -17,6 +17,7 @@ import { PageSkeleton } from "@/components/PageSkeleton";
 import { useToast } from "@/components/ui/Toast";
 import { useViewer } from "@/lib/auth";
 import { ROLE_PANEL } from "@/lib/my-work";
+import { craftFor, hasRole, workPortals } from "@/lib/roles";
 import {
   canAdvance,
   canAssign,
@@ -140,23 +141,28 @@ export function ContentDetailPage() {
   const events = data!.events ?? [];
   const team = data!.team ?? [];
 
-  const panel = ROLE_PANEL[viewer.role];
+  // Which of their roles they are here in: the editor on one video may be the
+  // writer on the next. Falls back to their primary role, as it always did.
+  const craft = craftFor(viewer, item);
+  const taskRole = craft?.role ?? viewer.role;
+  const panel = ROLE_PANEL[taskRole];
   if (!manager && panel) {
     return (
       <TaskView
         item={item}
         events={events}
-        role={viewer.role}
+        role={taskRole}
         panel={panel}
         actor={viewer.name}
         canSubmit={canAdvance(viewer, item)}
         canSendBack={canSendBack(viewer, item)}
         onChanged={reload}
+        backTo={craft && workPortals(viewer).length ? `/work/${craft.slug}` : "/content"}
       />
     );
   }
 
-  const byRole = (...roles: string[]) => team.filter((m) => roles.includes(m.role));
+  const byRole = (...roles: string[]) => team.filter((m) => roles.some((r) => hasRole(m, r)));
 
   const stage = stageConfig(item.stage);
   const clientAccent = accent(item.client?.accent);

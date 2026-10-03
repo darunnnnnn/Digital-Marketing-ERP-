@@ -67,3 +67,72 @@
 .row-action-danger:hover {
   background: var(--red-100);
 }
+
+/* "Also Editor, Cameraman" under the main role. */
+.role-extra {
+  display: block;
+  margin-top: 0.375rem;
+  border: 0;
+  background: transparent;
+  padding: 0 var(--sp-3);
+  font: inherit;
+  font-size: 0.75rem;
+  color: var(--brand-700);
+  cursor: pointer;
+  text-align: left;
+}
+
+.role-extra:hover {
+  text-decoration: underline;
+}
+
+.role-extra-fixed {
+  padding: 0;
+  color: var(--stone-500);
+  cursor: default;
+}
+
+.role-extra-fixed:hover {
+  text-decoration: none;
+}
+
+.role-picks {
+  display: grid;
+  gap: var(--sp-2);
+}
+
+.role-pick {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-4);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--stone-200);
+  font-size: 0.875rem;
+  color: var(--stone-800);
+  cursor: pointer;
+}
+
+.role-pick input {
+  width: 1rem;
+  height: 1rem;
+  accent-color: var(--brand-700);
+}
+
+.role-pick-fixed {
+  background: var(--stone-50);
+  cursor: default;
+}
+
+.role-pick-note {
+  margin-left: auto;
+  font-size: 0.75rem;
+  color: var(--stone-500);
+}
+
+.role-picks-foot {
+  margin-top: var(--sp-6);
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--sp-2);
+}

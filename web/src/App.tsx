@@ -4,6 +4,7 @@ import { AppShell } from "@/components/AppShell";
 import { PageSkeleton } from "@/components/PageSkeleton";
 import { useAuth, useViewer } from "@/lib/auth";
 import { canManageClients, canManagePayouts, canManageTeam } from "@/lib/permissions";
+import { workPortals } from "@/lib/roles";
 import { LoginPage } from "@/pages/LoginPage";
 import { InvitePage } from "@/pages/InvitePage";
 import { ClientsPage } from "@/pages/clients/ClientsPage";
@@ -12,6 +13,7 @@ import { ClientDetailPage } from "@/pages/clients/ClientDetailPage";
 import { ContentBoardPage } from "@/pages/content/ContentBoardPage";
 import { ContentNewPage } from "@/pages/content/ContentNewPage";
 import { ContentDetailPage } from "@/pages/content/ContentDetailPage";
+import { WorkPage } from "@/pages/content/WorkPage";
 import { TeamPage } from "@/pages/team/TeamPage";
 import { TeamProfilePage } from "@/pages/team/TeamProfilePage";
 import { PayoutsPage } from "@/pages/payouts/PayoutsPage";
@@ -41,7 +43,7 @@ function Protected({ children }: { children: ReactNode }) {
     return <Navigate to={`/login?next=${next}`} replace />;
   }
 
-  return <AppShell user={{ name: viewer.name, role: viewer.role }}>{children}</AppShell>;
+  return <AppShell user={viewer}>{children}</AppShell>;
 }
 
 /** A page only some roles may open. Others land back on the pipeline. */
@@ -53,6 +55,8 @@ function RoleGate({ allow, children }: { allow: boolean; children: ReactNode }) 
 function AppRoutes() {
   const viewer = useViewer();
   const clients = canManageClients(viewer);
+  // Someone who writes, shoots and edits works from one page per role.
+  const portals = workPortals(viewer);
 
   return (
     <Routes>
@@ -92,7 +96,13 @@ function AppRoutes() {
         }
       />
 
-      <Route path="content" element={<ContentBoardPage />} />
+      <Route
+        path="content"
+        element={
+          portals.length ? <Navigate to={`/work/${portals[0].slug}`} replace /> : <ContentBoardPage />
+        }
+      />
+      <Route path="work/:craft" element={<WorkPage />} />
       <Route path="content/new" element={<ContentNewPage />} />
       <Route path="content/:id" element={<ContentDetailPage />} />
 

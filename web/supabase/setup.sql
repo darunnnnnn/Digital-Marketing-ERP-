@@ -24,6 +24,11 @@ begin;
 
 alter table "ContentItem" add column if not exists "referenceUrl" text;
 
+-- Every role a person holds, for the small-agency case where one person writes,
+-- shoots and edits. Empty means "just the one in role", so existing rows need
+-- no backfill. role stays the primary one, and is still what authority reads.
+alter table "Member" add column if not exists roles text[] not null default '{}';
+
 -- =========================================================================
 -- 2. Defaults that Prisma used to supply
 -- =========================================================================
@@ -189,12 +194,17 @@ create policy member_write on "Member" for all
   with check ("agencyId" = app_agency_id() and app_is_ceo());
 
 -- Everyone may stamp their own last sign-in, and nothing else about themselves.
--- app_role() reads the row as it was before this statement, so requiring
--- role = app_role() is how "you may not promote yourself" is expressed.
+-- app_member() reads the row as it was before this statement, so requiring
+-- role and roles to match it is how "you may not promote yourself" is expressed.
 drop policy if exists member_touch_self on "Member";
 create policy member_touch_self on "Member" for update
   using (id = app_member_id())
-  with check (id = app_member_id() and role = app_role() and "agencyId" = app_agency_id());
+  with check (
+    id = app_member_id()
+    and role = app_role()
+    and roles = (app_member()).roles
+    and "agencyId" = app_agency_id()
+  );
 
 -- ContentItem: creatives see and edit only what is assigned to them. Which
 -- stage transitions they may make is checked by the trigger below, because a

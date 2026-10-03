@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { Link } from "react-router";
 import { IconAlert, IconCheckCircle, IconClock, IconFilm } from "@/components/icons";
 import { Stat } from "@/components/ui/Stat";
@@ -87,11 +88,14 @@ function QuietList({ title, note, items }: { title: string; note: string; items:
 export function MyWork({
   name,
   work,
+  switcher,
 }: {
   name: string;
   work: Work;
   /** Called after something in the queue changes, so the page can refetch. */
   onChanged?: () => void;
+  /** Links to their other desks, for someone holding several roles. */
+  switcher?: ReactNode;
 }) {
   const groups = groupByUrgency(work.todo);
   const verb = work.task?.verb ?? "Your step";
@@ -113,6 +117,7 @@ export function MyWork({
             ? "Nothing is waiting on you right now."
             : `You have ${work.todo.length} ${work.todo.length === 1 ? noun : `${noun}s`} to finish.`}
         </p>
+        {switcher}
       </div>
 
       {/* Today at a glance */}

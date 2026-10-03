@@ -185,3 +185,24 @@ export const IconTarget = (p: P) => (
     <circle cx="12" cy="12" r="0.8" />
   </svg>
 );
+
+export const IconCamera = (p: P) => (
+  <svg {...base} {...p}>
+    <rect x="2.5" y="6.5" width="13" height="11" rx="2.5" />
+    <path d="m15.5 10.5 6-3.5v10l-6-3.5" />
+  </svg>
+);
+
+export const IconScissors = (p: P) => (
+  <svg {...base} {...p}>
+    <circle cx="6" cy="6.5" r="2.75" />
+    <circle cx="6" cy="17.5" r="2.75" />
+    <path d="M8.3 8.1 20 18M8.3 15.9 20 6" />
+  </svg>
+);
+
+export const IconSend = (p: P) => (
+  <svg {...base} {...p}>
+    <path d="M21 3 10.5 13.5M21 3l-6.5 18-4-7.5L3 9.5 21 3Z" />
+  </svg>
+);

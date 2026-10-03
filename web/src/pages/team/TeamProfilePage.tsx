@@ -16,7 +16,8 @@ import { useViewer } from "@/lib/auth";
 import { computePay, payTypeLabel } from "@/lib/pay-rules";
 import { ROLE_STEPS, memberPerformance, shiftMonth, type WorkRow } from "@/lib/performance";
 import { getMember } from "@/lib/queries";
-import { ROLE_LABELS, refLabel, type Role } from "@/lib/pipeline";
+import { refLabel } from "@/lib/pipeline";
+import { memberRoles, rolesLabel } from "@/lib/roles";
 import { supabase } from "@/lib/supabase";
 import { useAsync } from "@/lib/use-async";
 import {
@@ -111,8 +112,8 @@ export function TeamProfilePage() {
       };
 
   const s = perf.summary;
-  const steps = ROLE_STEPS[member.role] ?? [];
-  const roleLabel = ROLE_LABELS[member.role as Role] ?? member.role;
+  const steps = memberRoles(member).flatMap((r) => ROLE_STEPS[r] ?? []);
+  const roleLabel = rolesLabel(member);
   const doneLabel = steps.length === 1 ? steps[0].label : steps.length ? "Approvals" : "Completed";
   const lastLogin = toDate(member.lastLoginAt);
   // Sign-in belongs to Supabase Auth now, so "never signed in" stands in for

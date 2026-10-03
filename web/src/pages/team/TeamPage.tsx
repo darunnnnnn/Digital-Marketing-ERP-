@@ -1,13 +1,14 @@
 import { Link } from "react-router";
 import { IconAlert, IconCheckCircle, IconClock, IconUsers } from "@/components/icons";
 import { InviteButton } from "./InviteButton";
-import { ActiveToggle, InviteLinkButton, RoleSelect } from "./MemberActions";
+import { ActiveToggle, ExtraRoles, InviteLinkButton, RoleSelect } from "./MemberActions";
 import { Stat } from "@/components/ui/Stat";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { PageSkeleton } from "@/components/PageSkeleton";
 import { useViewer } from "@/lib/auth";
 import { ROLE_STEPS, loadPerfSource, measureMember } from "@/lib/performance";
 import { listMembers } from "@/lib/queries";
+import { memberRoles } from "@/lib/roles";
 import { useAsync } from "@/lib/use-async";
 import { cn, currentMonthKey, initials, monthLabel } from "@/lib/utils";
 import type { Member } from "@/lib/types";
@@ -86,7 +87,7 @@ export function TeamPage() {
               const s = statusOf(m);
               const self = m.id === viewer.id;
               const p = perf.get(m.id)!;
-              const owns = (ROLE_STEPS[m.role] ?? []).length > 0;
+              const owns = memberRoles(m).some((r) => (ROLE_STEPS[r] ?? []).length > 0);
 
               return (
                 <tr key={m.id} className={cn(!m.active && "team-row-off")}>
@@ -106,6 +107,15 @@ export function TeamPage() {
                     <RoleSelect
                       id={m.id}
                       role={m.role}
+                      roles={m.roles}
+                      locked={self || !m.active}
+                      onChanged={reload}
+                    />
+                    <ExtraRoles
+                      id={m.id}
+                      name={m.name}
+                      role={m.role}
+                      roles={m.roles}
                       locked={self || !m.active}
                       onChanged={reload}
                     />

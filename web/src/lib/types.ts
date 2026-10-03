@@ -37,6 +37,8 @@ export type Member = {
   agencyId: string;
   name: string;
   role: string;
+  /** Every role held, primary included. Empty means just `role` — see lib/roles. */
+  roles: string[];
   email: string | null;
   accent: string;
   active: boolean;

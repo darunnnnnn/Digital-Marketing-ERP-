@@ -5,6 +5,7 @@
 // whether the person may insert at all, and the foreign keys decide whether an
 // assignee really exists in this agency. This is the friendly first pass.
 
+import { hasRole } from "@/lib/roles";
 import { STEPS, type DeadlineField } from "@/lib/schedule";
 import type { MemberOption } from "./types";
 
@@ -84,7 +85,7 @@ export function validatePlan(v: PlanValues, members: MemberOption[]) {
   }
 
   const has = (id: string, role: string) =>
-    members.some((m) => m.id === id && m.role === role);
+    members.some((m) => m.id === id && hasRole(m, role));
 
   if (v.scriptwriterId && !has(v.scriptwriterId, "scriptwriter")) {
     errors.scriptwriterId = "Pick a scriptwriter from your team.";

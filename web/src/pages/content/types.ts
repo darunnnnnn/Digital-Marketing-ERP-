@@ -15,6 +15,7 @@ export type MemberOption = {
   id: string;
   name: string;
   role: string;
+  roles?: string[] | null;
   accent: string;
 };
 

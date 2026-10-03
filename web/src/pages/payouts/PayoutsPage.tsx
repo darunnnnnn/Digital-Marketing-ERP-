@@ -16,7 +16,7 @@ import { useViewer } from "@/lib/auth";
 import { payTypeLabel, toCsv } from "@/lib/pay-rules";
 import { approvePayout, markPaid, monthPayouts, reopenPayout } from "@/lib/payouts";
 import { shiftMonth } from "@/lib/performance";
-import { ROLE_LABELS, type Role } from "@/lib/pipeline";
+import { rolesLabel } from "@/lib/roles";
 import { useAsync } from "@/lib/use-async";
 import { cn, currentMonthKey, formatDate, formatMoney, initials, monthLabel } from "@/lib/utils";
 import "./PayoutsPage.css";
@@ -85,7 +85,7 @@ export function PayoutsPage() {
       ],
       ...rows.map((r) => [
         r.name,
-        ROLE_LABELS[r.role as Role] ?? r.role,
+        rolesLabel(r),
         payTypeLabel(r.payType),
         r.deliveries,
         r.rate,
@@ -211,7 +211,7 @@ export function PayoutsPage() {
                     <div className="who-text">
                       <p className="who-name truncate">{r.name}</p>
                       <p className="who-email truncate">
-                        {ROLE_LABELS[r.role as Role] ?? r.role}
+                        {rolesLabel(r)}
                         {!r.active && " · deactivated"}
                       </p>
                     </div>

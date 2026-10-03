@@ -9,6 +9,7 @@
 
 import { supabase } from "./supabase";
 import type { DeadlineField } from "./schedule";
+import { memberRoles } from "./roles";
 import { calendarDate, toDate } from "./utils";
 
 type AssignField = "scriptwriterId" | "cameramanId" | "editorId" | "publisherId";
@@ -213,12 +214,13 @@ export async function loadPerfSource(agencyId: string, monthKey: string): Promis
  * Pure: no database, so the team page can measure everyone from one source.
  */
 export function measureMember(
-  member: { id: string; role: string },
+  member: { id: string; role: string; roles?: string[] | null },
   monthKey: string,
   source: PerfSource,
   today = new Date(),
 ): Performance {
-  const steps = ROLE_STEPS[member.role] ?? [];
+  // Someone who writes and edits is measured on both steps.
+  const steps = memberRoles(member).flatMap((r) => ROLE_STEPS[r] ?? []);
   const { start, end } = monthRange(monthKey);
   const todayDay = localDay(today);
   const weekOut = new Date(todayDay.getTime() + 7 * 86_400_000);
@@ -310,7 +312,7 @@ export function measureMember(
 
 /** One person, fetching their own source. Used by the profile page. */
 export async function memberPerformance(
-  member: { id: string; role: string; agencyId: string },
+  member: { id: string; role: string; roles?: string[] | null; agencyId: string },
   monthKey: string,
   today = new Date(),
 ) {

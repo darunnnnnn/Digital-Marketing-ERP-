@@ -1,9 +1,11 @@
 // What one person actually has to do. Creative roles never see the agency
-// board; they get their own queue, built from the single step their role owns.
+// board; they get their own queue, built from the step their role owns. Someone
+// holding several roles gets one queue per role, each on its own page.
 
 import { supabase } from "./supabase";
 import { ROLE_STEPS, loadPerfSource, measureMember } from "./performance";
 import { stageIndex } from "./pipeline";
+import { CRAFTS, craftsOf } from "./roles";
 import { calendarDate, currentMonthKey, toDate } from "./utils";
 
 /** The panel on the video page that this role fills in. */
@@ -39,8 +41,15 @@ type Row = Record<string, unknown> & {
   client: { name: string } | null;
 };
 
-export async function myWork(user: { id: string; role: string; agencyId: string }) {
-  const step = (ROLE_STEPS[user.role] ?? [])[0];
+/**
+ * One queue. `role` picks which of their roles to build it for, and defaults to
+ * their primary one.
+ */
+export async function myWork(
+  user: { id: string; role: string; agencyId: string },
+  role: string = user.role,
+) {
+  const step = (ROLE_STEPS[role] ?? [])[0];
   if (!step || !step.assign) return null;
 
   // Their queue and their month's numbers are independent — fetch together.
@@ -58,7 +67,8 @@ export async function myWork(user: { id: string; role: string; agencyId: string 
 
   if (queue.error) throw new Error(`Couldn't load your work: ${queue.error.message}`);
   const rows = (queue.data ?? []) as unknown as Row[];
-  const { summary } = measureMember(user, currentMonthKey(), source);
+  // Only this role's step: their month as an editor, not everything they did.
+  const { summary } = measureMember({ id: user.id, role, roles: [role] }, currentMonthKey(), source);
 
   const mine = stageIndex(step.stage);
   const map = (r: Row): WorkItem => ({
@@ -72,7 +82,7 @@ export async function myWork(user: { id: string; role: string; agencyId: string 
 
   return {
     step,
-    task: ROLE_TASK[user.role],
+    task: ROLE_TASK[role],
     month: summary,
     /** On their desk right now. */
     todo: rows.filter((r) => r.stage === step.stage).map(map),
@@ -81,6 +91,40 @@ export async function myWork(user: { id: string; role: string; agencyId: string 
     /** Already handed on — with the CEO or someone else. */
     handedOn: rows.filter((r) => stageIndex(r.stage) > mine).map(map),
   };
+}
+
+/**
+ * How many videos are on each of their desks right now, keyed by craft slug —
+ * the numbers beside Scripts, Shoot and Edit in the sidebar. One small query
+ * for all of them: the videos assigned to this person in any field.
+ */
+export async function deskCounts(user: {
+  id: string;
+  role: string;
+  roles?: string[] | null;
+  agencyId: string;
+}): Promise<Record<string, number>> {
+  const crafts = craftsOf(user);
+  if (crafts.length === 0) return {};
+
+  const { data, error } = await supabase
+    .from("ContentItem")
+    .select(`stage, ${CRAFTS.map((c) => c.assign).join(", ")}`)
+    .eq("agencyId", user.agencyId)
+    .in(
+      "stage",
+      crafts.map((c) => c.stage),
+    )
+    .or(crafts.map((c) => `${c.assign}.eq.${user.id}`).join(","));
+  if (error) throw new Error(`Couldn't load your work: ${error.message}`);
+
+  const rows = (data ?? []) as unknown as Record<string, string | null>[];
+  return Object.fromEntries(
+    crafts.map((c) => [
+      c.slug,
+      rows.filter((r) => r.stage === c.stage && r[c.assign] === user.id).length,
+    ]),
+  );
 }
 
 export type Urgency = "overdue" | "today" | "week" | "later" | "undated";
