@@ -38,7 +38,10 @@ const ITEM_WITH_NAMES = `
 
 // ------------------------------------------------------------------ clients
 
-export async function listClients(agencyId: string, opts: { q?: string; status?: string } = {}) {
+export async function listClients(
+  agencyId: string,
+  opts: { q?: string; status?: string } = {},
+) {
   let query = supabase.from("Client").select("*").eq("agencyId", agencyId);
 
   if (opts.status && opts.status !== "all") query = query.eq("status", opts.status);
@@ -102,7 +105,7 @@ export async function listContent(
   if (filters.owner) {
     const o = filters.owner;
     query = query.or(
-      `scriptwriterId.eq.${o},cameramanId.eq.${o},editorId.eq.${o},publisherId.eq.${o}`,
+      `scriptwriterId.eq.${o},cameramanId.eq.${o},voiceoverId.eq.${o},editorId.eq.${o},publisherId.eq.${o}`,
     );
   }
 
@@ -133,7 +136,9 @@ export async function listEvents(contentId: string) {
 }
 
 async function logEvent(contentId: string, kind: string, message: string, actor?: string) {
-  await supabase.from("ContentEvent").insert({ contentId, kind, message, actor: actor ?? null });
+  await supabase
+    .from("ContentEvent")
+    .insert({ contentId, kind, message, actor: actor ?? null });
 }
 
 export async function countPublished(agencyId: string, monthKey = currentMonthKey()) {
@@ -282,16 +287,68 @@ function leaveStage(from: Stage): Record<string, string | null> {
 }
 
 export async function advanceStage(item: ContentItem, actor?: string) {
-  const to = nextStage(item.stage);
+  let to = nextStage(item.stage);
   if (!to) return;
+
+  const patch: Record<string, unknown> = {};
+  if (item.stage === "shooting") {
+    // A manager moving the video on counts both parts as delivered. A video
+    // with no shoot has no footage to review, so it goes straight to the editor.
+    const shoot = item.shootNeeded !== false;
+    to = shoot ? "footage_review" : "editing";
+    if (!shoot && !item.editorId) fail("Assign an editor first", null);
+    if (shoot && !item.shootCompletedAt) patch.shootCompletedAt = new Date().toISOString();
+    if (item.voNeeded && !item.voCompletedAt) patch.voCompletedAt = new Date().toISOString();
+    if (!shoot) patch.editStartedAt = new Date().toISOString();
+  } else {
+    Object.assign(patch, enterStage(to));
+  }
 
   const { error } = await supabase
     .from("ContentItem")
-    .update({ stage: to, ...enterStage(to) })
+    .update({ stage: to, ...patch })
     .eq("id", item.id);
   if (error) fail("Couldn't move this video on", error);
 
   await logEvent(item.id, "stage", `Moved to ${stageConfig(to).label}`, actor);
+}
+
+/**
+ * The cameraman and the voice over person each finish their own part. The video
+ * stays on the shoot stage until every part it needs is in, then moves on: to
+ * the CEO's footage review, or — when the shoot was skipped and only the voice
+ * over was needed — straight to the editor the CEO already chose.
+ */
+export async function completeTrack(item: ContentItem, track: "shoot" | "vo", actor?: string) {
+  const now = new Date().toISOString();
+  const shootNeeded = item.shootNeeded !== false;
+
+  const shootDone = track === "shoot" || !shootNeeded || Boolean(item.shootCompletedAt);
+  const voDone = track === "vo" || !item.voNeeded || Boolean(item.voCompletedAt);
+
+  const patch: Record<string, unknown> =
+    track === "shoot" ? { shootCompletedAt: now } : { voCompletedAt: now };
+
+  let to: Stage | null = null;
+  if (shootDone && voDone) {
+    to = shootNeeded ? "footage_review" : "editing";
+    if (to === "editing" && !item.editorId) fail("Assign an editor first", null);
+    patch.stage = to;
+    // shootCompletedAt already holds when the footage came in; stamping it again
+    // here would make an on-time shoot look late just because the voice over was last.
+    if (to === "editing") patch.editStartedAt = now;
+  }
+
+  const { error } = await supabase.from("ContentItem").update(patch).eq("id", item.id);
+  if (error) fail("Couldn't save that", error);
+
+  const part = track === "shoot" ? "Footage" : "Voice over";
+  if (to) {
+    await logEvent(item.id, "stage", `${part} in — moved to ${stageConfig(to).label}`, actor);
+  } else {
+    const waiting = track === "shoot" ? "the voice over" : "the shoot";
+    await logEvent(item.id, "stage", `${part} in — waiting on ${waiting}`, actor);
+  }
 }
 
 /** Drag and drop on the board. Only needs where the card is and where it landed. */
@@ -332,7 +389,9 @@ export async function sendBack(item: ContentItem, note: string, actor?: string) 
   await logEvent(
     item.id,
     "revision",
-    note ? `Sent back to ${stageConfig(to).label}: ${note}` : `Sent back to ${stageConfig(to).label}`,
+    note
+      ? `Sent back to ${stageConfig(to).label}: ${note}`
+      : `Sent back to ${stageConfig(to).label}`,
     actor,
   );
 }
@@ -383,6 +442,103 @@ export async function handOff(
   return null;
 }
 
+export type ScriptGateInput = {
+  /** False reuses footage that already exists, so the video skips shooting. */
+  shootNeeded: boolean;
+  cameramanId: string;
+  shootDue: string;
+  /** Where the editor finds the existing footage. Only used when there is no shoot. */
+  footageUrl: string;
+  editorId: string;
+  editDue: string;
+  voiceoverId: string;
+  voDue: string;
+  note?: string;
+  actor?: string;
+};
+
+/**
+ * Approving a script. Unlike the other two gates this one decides how the video
+ * is made: whether it needs a shoot at all, and who does the voice over if the
+ * scriptwriter asked for one. Everything chosen here is set in one write, so a
+ * video never moves on missing a person or a date it needs.
+ */
+export async function approveScript(item: ContentItem, input: ScriptGateInput, team: Member[]) {
+  if (item.stage !== "script_review") return "This script isn't waiting for approval.";
+
+  const person = (id: string, role: string, label: string) => {
+    const m = team.find((t) => t.id === id);
+    if (!m || !m.active || !hasRole(m, role))
+      return { error: `Pick a ${label} from your team.` };
+    return { member: m };
+  };
+  const date = (value: string, what: string) => {
+    const d = parseDateInput(value);
+    return d ? { d } : { error: `Set a deadline for ${what}.` };
+  };
+
+  const now = new Date().toISOString();
+  const patch: Record<string, unknown> = {
+    scriptApprovedAt: now,
+    shootNeeded: input.shootNeeded,
+  };
+  const parts: string[] = [];
+
+  if (input.shootNeeded) {
+    const who = person(input.cameramanId, "cameraman", "cameraman");
+    const due = date(input.shootDue, "the shoot");
+    if ("error" in who) return who.error;
+    if ("error" in due) return due.error;
+    patch.cameramanId = who.member.id;
+    patch.shootDue = due.d.toISOString();
+    parts.push(`shoot: ${who.member.name} by ${input.shootDue}`);
+  } else {
+    // No shoot means no footage review either, so the editor is chosen here.
+    const url = input.footageUrl.trim();
+    if (url && !/^https?:\/\//i.test(url))
+      return "Links need to start with http:// or https://";
+    const who = person(input.editorId, "editor", "editor");
+    const due = date(input.editDue, "the edit");
+    if ("error" in who) return who.error;
+    if ("error" in due) return due.error;
+    patch.cameramanId = null;
+    patch.shootDue = null;
+    patch.shootCompletedAt = null;
+    patch.footageUrl = url || null;
+    patch.editorId = who.member.id;
+    patch.editDue = due.d.toISOString();
+    parts.push(
+      `no shoot, using existing footage; editor: ${who.member.name} by ${input.editDue}`,
+    );
+  }
+
+  if (item.voNeeded) {
+    const who = person(input.voiceoverId, "voiceover", "voice over person");
+    const due = date(input.voDue, "the voice over");
+    if ("error" in who) return who.error;
+    if ("error" in due) return due.error;
+    patch.voiceoverId = who.member.id;
+    patch.voDue = due.d.toISOString();
+    parts.push(`voice over: ${who.member.name} by ${input.voDue}`);
+  }
+
+  // With neither a shoot nor a voice over there is nothing to wait for.
+  const to: Stage = input.shootNeeded || item.voNeeded ? "shooting" : "editing";
+  patch.stage = to;
+  if (to === "editing") patch.editStartedAt = now;
+
+  const { error } = await supabase.from("ContentItem").update(patch).eq("id", item.id);
+  if (error) return error.message;
+
+  await logEvent(
+    item.id,
+    "stage",
+    `Approve script — ${parts.join("; ")}${input.note ? `: ${input.note}` : ""}`,
+    input.actor,
+  );
+  return null;
+}
+
 export async function setAssignee(
   item: ContentItem,
   field: string,
@@ -409,6 +565,7 @@ export async function setAssignee(
 
 const LINK_FIELDS = [
   "footageUrl",
+  "voUrl",
   "editUrl",
   "publishedUrl",
   "thumbnailUrl",
@@ -445,6 +602,11 @@ export async function saveContentPanel(
     const title = get("title");
     if (title) data.title = title;
     data.scriptBody = get("scriptBody") || null;
+    data.referenceUrl = get("referenceUrl") || null;
+    data.voNeeded = get("voNeeded") === "yes";
+  } else if (panel === "vo") {
+    data.voNotes = get("voNotes") || null;
+    data.voUrl = get("voUrl") || null;
   } else if (panel === "shoot") {
     data.shootDate = parseDateInput(get("shootDate"))?.toISOString() ?? null;
     data.shootLocation = get("shootLocation") || null;
@@ -537,7 +699,9 @@ export async function listPayouts(agencyId: string, monthKey: string) {
   return (data ?? []) as Payout[];
 }
 
-export async function createPayout(row: Omit<Payout, "id" | "approvedAt" | "paidAt" | "status">) {
+export async function createPayout(
+  row: Omit<Payout, "id" | "approvedAt" | "paidAt" | "status">,
+) {
   const { error } = await supabase.from("Payout").insert(row);
   if (error) fail("Couldn't approve that payout", error);
 }

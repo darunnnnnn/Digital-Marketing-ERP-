@@ -50,6 +50,14 @@ export const CRAFTS: Craft[] = [
     stage: "shooting",
   },
   {
+    role: "voiceover",
+    slug: "voiceover",
+    label: "Voice over",
+    assign: "voiceoverId",
+    panel: "vo",
+    stage: "shooting",
+  },
+  {
     role: "editor",
     slug: "edit",
     label: "Edit",
@@ -125,7 +133,25 @@ export function craftFor(
   item: Record<string, unknown> & { stage: string },
 ): Craft | null {
   const held = CRAFTS.filter((c) => item[c.assign] === m.id);
-  return held.find((c) => c.stage === item.stage) ?? held[0] ?? null;
+  return (
+    held.find((c) => craftIsOpen(c, item)) ??
+    held.find((c) => c.stage === item.stage) ??
+    held[0] ??
+    null
+  );
+}
+
+/**
+ * Whether a video is still waiting on this craft, not merely sitting in its
+ * stage. The shoot and the voice over share a stage and finish independently,
+ * so a video can be in "shooting" with the footage already in and only the
+ * voice over left.
+ */
+export function craftIsOpen(c: Craft, item: Record<string, unknown> & { stage: string }) {
+  if (item.stage !== c.stage) return false;
+  if (c.role === "cameraman") return item.shootNeeded !== false && !item.shootCompletedAt;
+  if (c.role === "voiceover") return item.voNeeded === true && !item.voCompletedAt;
+  return true;
 }
 
 /**

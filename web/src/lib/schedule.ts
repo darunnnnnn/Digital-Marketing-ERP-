@@ -14,11 +14,18 @@ import { calendarDate } from "./utils";
 
 export type DeadlineField = "scriptDue" | "shootDue" | "editDue" | "publishDue";
 
+/**
+ * A deadline a step can be measured against. The voice over has one of its own,
+ * set when the script is approved, but it is not one of the four planned dates.
+ */
+export type StepDue = DeadlineField | "voDue";
+
 /** The timestamp that marks a step as done. */
 export type DoneField =
   | "scriptSubmittedAt"
   | "scriptApprovedAt"
   | "shootCompletedAt"
+  | "voCompletedAt"
   | "editSubmittedAt"
   | "editApprovedAt"
   | "publishedAt";
@@ -78,6 +85,20 @@ export const STAGE_DEADLINE: Record<string, DeadlineField | null> = {
   footage_review: "shootDue",
   edit_review: "editDue",
 };
+
+/**
+ * The deadline a particular video is working against right now. Usually the
+ * stage decides it, except a video with no shoot, which is waiting on the voice
+ * over alone and so runs to that date instead.
+ */
+export function deadlineFor(item: {
+  stage: string;
+  shootNeeded?: boolean;
+  voNeeded?: boolean;
+}): StepDue | null {
+  if (item.stage === "shooting" && item.shootNeeded === false && item.voNeeded) return "voDue";
+  return STAGE_DEADLINE[item.stage] ?? null;
+}
 
 function addDays(d: Date, days: number) {
   const out = new Date(d);

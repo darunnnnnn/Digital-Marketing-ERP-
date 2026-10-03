@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/Button";
 import { Card, CardHeader } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Field, Input, Select, Textarea } from "@/components/ui/Field";
+import { YesNoField } from "@/components/ui/YesNoField";
 import { LinkButton } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { PageSkeleton } from "@/components/PageSkeleton";
@@ -38,16 +39,9 @@ import {
   stageProgress,
 } from "@/lib/pipeline";
 import { accent } from "@/lib/theme";
-import { STAGE_DEADLINE, STEPS, stepStatus } from "@/lib/schedule";
+import { STEPS, deadlineFor, stepStatus } from "@/lib/schedule";
 import { useAsync } from "@/lib/use-async";
-import {
-  cn,
-  dateInputValue,
-  dueLabel,
-  formatCalendar,
-  formatDate,
-  toDate,
-} from "@/lib/utils";
+import { cn, dateInputValue, dueLabel, formatCalendar, formatDate, toDate } from "@/lib/utils";
 import { useNavigate } from "react-router";
 import "./ContentDetailPage.css";
 
@@ -100,7 +94,9 @@ function DeleteContentButton({ id, title }: { id: string; title: string }) {
 
 /** A panel's small right-hand status line — "Approved 12 Sep", "Not live". */
 function PanelStatus({ done, tone = "ok" }: { done: string | null; tone?: "ok" | "quiet" }) {
-  return <span className={cn("panel-status", tone === "quiet" && "panel-status-quiet")}>{done}</span>;
+  return (
+    <span className={cn("panel-status", tone === "quiet" && "panel-status-quiet")}>{done}</span>
+  );
 }
 
 export function ContentDetailPage() {
@@ -166,7 +162,7 @@ export function ContentDetailPage() {
 
   const stage = stageConfig(item.stage);
   const clientAccent = accent(item.client?.accent);
-  const stepField = STAGE_DEADLINE[item.stage];
+  const stepField = deadlineFor(item);
   const stepDue = stepField ? toDate(item[stepField]) : null;
   const late = isOverdue(stepDue, item.stage);
   const p = priority(item.priority);
@@ -181,12 +177,35 @@ export function ContentDetailPage() {
         who: gate.who,
         options: byRole(gate.role),
         defaultMemberId: (item[gate.assign] as string | null) ?? "",
-        defaultDue: dateInputValue(toDate(item[gate.deadline as keyof typeof item] as string | null)),
+        defaultDue: dateInputValue(
+          toDate(item[gate.deadline as keyof typeof item] as string | null),
+        ),
+        // The script gate also decides whether there is a shoot, and who does the voice over.
+        script:
+          item.stage === "script_review"
+            ? {
+                voNeeded: item.voNeeded,
+                editors: byRole("editor"),
+                voiceovers: byRole("voiceover"),
+                defaults: {
+                  cameramanId: item.cameramanId ?? "",
+                  shootDue: dateInputValue(toDate(item.shootDue)),
+                  editorId: item.editorId ?? "",
+                  editDue: dateInputValue(toDate(item.editDue)),
+                  voiceoverId: item.voiceoverId ?? "",
+                  voDue: dateInputValue(toDate(item.voDue)),
+                  footageUrl: item.footageUrl ?? "",
+                },
+              }
+            : undefined,
       }
     : null;
 
   const meta = [
-    { label: "Format", value: FORMATS.find((f) => f.key === item.format)?.label ?? item.format },
+    {
+      label: "Format",
+      value: FORMATS.find((f) => f.key === item.format)?.label ?? item.format,
+    },
     { label: "This step due", value: dueLabel(stepDue) ?? "—", danger: late },
     { label: "Posting by", value: formatCalendar(toDate(item.publishDue)) ?? "Not scheduled" },
     { label: "Revisions", value: String(item.revisions) },
@@ -418,6 +437,20 @@ export function ContentDetailPage() {
                   className="panel-script"
                 />
               </Field>
+              <Field label="Reference link" hint="optional — an example video to work from">
+                <Input
+                  name="referenceUrl"
+                  type="url"
+                  defaultValue={item.referenceUrl ?? ""}
+                  placeholder="https://instagram.com/reel/…"
+                />
+              </Field>
+              <YesNoField
+                label="Voice over needed?"
+                hint="if yes, the CEO assigns someone when approving"
+                name="voNeeded"
+                defaultValue={item.voNeeded}
+              />
             </PanelForm>
           </Card>
 
@@ -426,8 +459,12 @@ export function ContentDetailPage() {
             <CardHeader
               title="Shoot"
               action={
-                item.shootCompletedAt ? (
-                  <PanelStatus done={`Footage in ${formatDate(toDate(item.shootCompletedAt))}`} />
+                item.shootNeeded === false ? (
+                  <PanelStatus done="Skipped — existing footage" tone="quiet" />
+                ) : item.shootCompletedAt ? (
+                  <PanelStatus
+                    done={`Footage in ${formatDate(toDate(item.shootCompletedAt))}`}
+                  />
                 ) : (
                   <PanelStatus done="Not shot yet" tone="quiet" />
                 )
@@ -448,18 +485,11 @@ export function ContentDetailPage() {
                   />
                 </Field>
                 <Field label="Location">
-                  <Input
-                    name="shootLocation"
-                    defaultValue={item.shootLocation ?? ""}
-                  />
+                  <Input name="shootLocation" defaultValue={item.shootLocation ?? ""} />
                 </Field>
               </div>
               <Field label="Shoot requirements" hint="props, talent, shot list">
-                <Textarea
-                  name="shootNotes"
-                  rows={3}
-                  defaultValue={item.shootNotes ?? ""}
-                />
+                <Textarea name="shootNotes" rows={3} defaultValue={item.shootNotes ?? ""} />
               </Field>
               <Field label="Raw footage link">
                 <Input
@@ -471,6 +501,40 @@ export function ContentDetailPage() {
               </Field>
             </PanelForm>
           </Card>
+
+          {/* Voice over: only for videos the scriptwriter marked as needing one */}
+          {(item.voNeeded || item.voiceoverId) && (
+            <Card>
+              <CardHeader
+                title="Voice over"
+                action={
+                  item.voCompletedAt ? (
+                    <PanelStatus done={`In ${formatDate(toDate(item.voCompletedAt))}`} />
+                  ) : (
+                    <PanelStatus done="Not recorded yet" tone="quiet" />
+                  )
+                }
+              />
+              <PanelForm
+                id={item.id}
+                panel="vo"
+                editable={canEditPanel(viewer, item, "vo")}
+                onSaved={reload}
+              >
+                <Field label="Voice over notes" hint="tone, takes, anything the editor needs">
+                  <Textarea name="voNotes" rows={3} defaultValue={item.voNotes ?? ""} />
+                </Field>
+                <Field label="Voice over file link">
+                  <Input
+                    name="voUrl"
+                    type="url"
+                    defaultValue={item.voUrl ?? ""}
+                    placeholder="https://drive.google.com/…"
+                  />
+                </Field>
+              </PanelForm>
+            </Card>
+          )}
 
           {/* Edit */}
           <Card>
@@ -493,11 +557,7 @@ export function ContentDetailPage() {
               onSaved={reload}
             >
               <Field label="Editing instructions" hint="pace, captions, music, branding">
-                <Textarea
-                  name="editBrief"
-                  rows={3}
-                  defaultValue={item.editBrief ?? ""}
-                />
+                <Textarea name="editBrief" rows={3} defaultValue={item.editBrief ?? ""} />
               </Field>
               <Field label="Edited video link">
                 <Input
@@ -545,18 +605,11 @@ export function ContentDetailPage() {
                 </Field>
               </div>
               <Field label="Caption">
-                <Textarea
-                  name="caption"
-                  rows={3}
-                  defaultValue={item.caption ?? ""}
-                />
+                <Textarea name="caption" rows={3} defaultValue={item.caption ?? ""} />
               </Field>
               <div className="panel-pair">
                 <Field label="Hashtags">
-                  <Input
-                    name="hashtags"
-                    defaultValue={item.hashtags ?? ""}
-                  />
+                  <Input name="hashtags" defaultValue={item.hashtags ?? ""} />
                 </Field>
                 <Field label="Thumbnail link">
                   <Input
@@ -594,32 +647,42 @@ export function ContentDetailPage() {
                 [
                   ["scriptwriterId", "Scriptwriter", ["scriptwriter", "manager"]],
                   ["cameramanId", "Cameraman", ["cameraman"]],
+                  ["voiceoverId", "Voice over", ["voiceover"]],
                   ["editorId", "Editor", ["editor"]],
                   ["publisherId", "Posting", ["publisher", "manager"]],
                 ] as const
-              ).map(([field, label, roles]) => (
-                <AssigneeSelect
-                  key={field}
-                  item={item}
-                  field={field}
-                  label={label}
-                  options={byRole(...roles)}
-                  team={team}
-                  actor={viewer.name}
-                  disabled={!canAssign(viewer)}
-                  highlight={stage.assign === field}
-                  onChanged={reload}
-                />
-              ))}
+              )
+                .filter(
+                  ([field]) => field !== "voiceoverId" || item.voNeeded || item.voiceoverId,
+                )
+                .map(([field, label, roles]) => (
+                  <AssigneeSelect
+                    key={field}
+                    item={item}
+                    field={field}
+                    label={label}
+                    options={byRole(...roles)}
+                    team={team}
+                    actor={viewer.name}
+                    disabled={!canAssign(viewer)}
+                    highlight={stage.assign === field}
+                    onChanged={reload}
+                  />
+                ))}
             </div>
           </Card>
 
-          {(item.referenceUrl || item.footageUrl || item.editUrl || item.publishedUrl) && (
+          {(item.referenceUrl ||
+            item.voUrl ||
+            item.footageUrl ||
+            item.editUrl ||
+            item.publishedUrl) && (
             <Card>
               <CardHeader title="Links" />
               <div className="links">
                 {[
                   { label: "Reference", href: item.referenceUrl },
+                  { label: "Voice over", href: item.voUrl },
                   { label: "Raw footage", href: item.footageUrl },
                   { label: "Edited cut", href: item.editUrl },
                   { label: "Live post", href: item.publishedUrl },

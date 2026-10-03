@@ -8,16 +8,17 @@
 // trips no matter how many people are on the team.
 
 import { supabase } from "./supabase";
-import type { DeadlineField } from "./schedule";
+import type { StepDue } from "./schedule";
 import { memberRoles } from "./roles";
 import { calendarDate, toDate } from "./utils";
 
-type AssignField = "scriptwriterId" | "cameramanId" | "editorId" | "publisherId";
+type AssignField = "scriptwriterId" | "cameramanId" | "voiceoverId" | "editorId" | "publisherId";
 type DoneField =
   | "editStartedAt"
   | "scriptSubmittedAt"
   | "scriptApprovedAt"
   | "shootCompletedAt"
+  | "voCompletedAt"
   | "editSubmittedAt"
   | "editApprovedAt"
   | "publishedAt";
@@ -28,9 +29,14 @@ export type RoleStep = {
   /** Null for the CEO, whose approvals cover the whole agency. */
   assign: AssignField | null;
   done: DoneField;
-  due: DeadlineField;
+  due: StepDue;
   /** The stage a video sits in while this step is still to do. */
   stage: string;
+  /**
+   * Narrows "in this stage" to "still waiting on this step", for steps that
+   * share a stage with another: the shoot and the voice over run side by side.
+   */
+  open?: (item: Record<string, unknown>) => boolean;
   /** How a send-back to this step is written in the activity log. */
   sentBackTo: string | null;
 };
@@ -53,7 +59,19 @@ export const ROLE_STEPS: Record<string, RoleStep[]> = {
       done: "shootCompletedAt",
       due: "shootDue",
       stage: "shooting",
-      sentBackTo: "Shooting",
+      open: (i) => i.shootNeeded !== false && !i.shootCompletedAt,
+      sentBackTo: "Shoot & VO",
+    },
+  ],
+  voiceover: [
+    {
+      label: "Voice overs delivered",
+      assign: "voiceoverId",
+      done: "voCompletedAt",
+      due: "voDue",
+      stage: "shooting",
+      open: (i) => i.voNeeded === true && !i.voCompletedAt,
+      sentBackTo: null,
     },
   ],
   editor: [
@@ -166,10 +184,11 @@ function daysLate(due: Date | null, at: Date) {
 /** The columns performance needs — not the whole row, since scripts are long. */
 const PERF_COLUMNS = `
   id, ref, title, stage, revisions,
-  scriptwriterId, cameramanId, editorId, publisherId,
-  scriptSubmittedAt, scriptApprovedAt, shootCompletedAt,
+  scriptwriterId, cameramanId, voiceoverId, editorId, publisherId,
+  shootNeeded, voNeeded,
+  scriptSubmittedAt, scriptApprovedAt, shootCompletedAt, voCompletedAt,
   editStartedAt, editSubmittedAt, editApprovedAt, publishedAt,
-  scriptDue, shootDue, editDue, publishDue,
+  scriptDue, shootDue, voDue, editDue, publishDue,
   client:Client(name)
 `;
 
@@ -253,7 +272,7 @@ export function measureMember(
         completed.push({ ...base, due, doneAt, lateDays: daysLate(due, doneAt) });
       }
       // Sitting on this step right now, whichever month it was planned for.
-      if (item.stage === step.stage) {
+      if (item.stage === step.stage && (!step.open || step.open(item))) {
         open.push({ ...base, due, doneAt: null, lateDays: daysLate(due, today) });
       }
     }

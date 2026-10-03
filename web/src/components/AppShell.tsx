@@ -12,6 +12,7 @@ import {
   IconFilm,
   IconGrid,
   IconLogout,
+  IconMic,
   IconPencil,
   IconScissors,
   IconSend,
@@ -40,6 +41,7 @@ type NavItem = {
 const CRAFT_ICONS: Record<string, NavItem["icon"]> = {
   script: IconPencil,
   shoot: IconCamera,
+  voiceover: IconMic,
   edit: IconScissors,
   post: IconSend,
 };

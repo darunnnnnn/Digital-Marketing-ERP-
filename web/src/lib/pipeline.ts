@@ -30,6 +30,7 @@ export const ROLES = [
   "manager",
   "scriptwriter",
   "cameraman",
+  "voiceover",
   "editor",
   "publisher",
 ] as const;
@@ -41,12 +42,18 @@ export const ROLE_LABELS: Record<Role, string> = {
   manager: "Social media manager",
   scriptwriter: "Scriptwriter",
   cameraman: "Cameraman",
+  voiceover: "Voice over",
   editor: "Editor",
   publisher: "Posting",
 };
 
 /** Which assignment field the stage's owner comes from. */
-export type AssignField = "scriptwriterId" | "cameramanId" | "editorId" | "publisherId";
+export type AssignField =
+  | "scriptwriterId"
+  | "cameramanId"
+  | "voiceoverId"
+  | "editorId"
+  | "publisherId";
 
 export type StageConfig = {
   key: Stage;
@@ -115,11 +122,12 @@ export const STAGE_CONFIG: Record<Stage, StageConfig> = {
   },
   shooting: {
     key: "shooting",
-    label: "Shooting",
+    label: "Shoot & VO",
     short: "Shoot",
     owner: "cameraman",
     assign: "cameramanId",
-    blurb: "Script approved. Schedule the shoot, then upload the raw footage.",
+    blurb:
+      "Script approved. The shoot and any voice over run side by side. It moves on once both are in.",
     advance: "Send footage to CEO",
     sendBack: null,
     dot: "var(--brand-500)",
@@ -216,7 +224,7 @@ export const HANDOFFS: Record<
     role: "cameraman",
     deadline: "shootDue",
     who: "cameraman",
-    verb: "Approve script & assign the shoot",
+    verb: "Approve script & assign",
   },
   footage_review: {
     assign: "editorId",

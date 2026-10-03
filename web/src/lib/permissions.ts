@@ -11,6 +11,7 @@ type Assignable = {
   stage: string;
   scriptwriterId: string | null;
   cameramanId: string | null;
+  voiceoverId?: string | null;
   editorId: string | null;
   publisherId: string | null;
 };
@@ -19,9 +20,13 @@ export const isCeo = (v: Viewer) => v.role === "ceo";
 export const isManager = (v: Viewer) => v.role === "ceo" || v.role === "manager";
 
 function assignedTo(v: Viewer, item: Assignable) {
-  return [item.scriptwriterId, item.cameramanId, item.editorId, item.publisherId].includes(
-    v.id,
-  );
+  return [
+    item.scriptwriterId,
+    item.cameramanId,
+    item.voiceoverId,
+    item.editorId,
+    item.publisherId,
+  ].includes(v.id);
 }
 
 export function canSeeItem(v: Viewer, item: Assignable) {
@@ -40,7 +45,8 @@ export function canAdvance(v: Viewer, item: Assignable) {
     case "edit_review":
       return isCeo(v); // the three CEO gates
     case "shooting":
-      return isManager(v) || item.cameramanId === v.id;
+      // The shoot and the voice over each have their own person.
+      return isManager(v) || item.cameramanId === v.id || item.voiceoverId === v.id;
     case "editing":
       return isManager(v) || item.editorId === v.id;
     case "ready":
@@ -87,6 +93,8 @@ export function canEditPanel(v: Viewer, item: Assignable, panel: string) {
       return item.scriptwriterId === v.id;
     case "shoot":
       return item.cameramanId === v.id;
+    case "vo":
+      return item.voiceoverId === v.id;
     case "edit":
       return item.editorId === v.id;
     case "post":

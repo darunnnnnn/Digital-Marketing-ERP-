@@ -115,6 +115,94 @@ await expect(
   true,
 );
 
+// ---- voice over: the new columns, and what the voice over person may do ------
+await expect(
+  "the voice over foreign key is named the way PostgREST will look for it",
+  `select count(*) from pg_constraint where conname = 'ContentItem_voiceoverId_fkey'`,
+  1,
+);
+await expect(
+  "the old five-argument visibility function is gone",
+  `select count(*) from pg_proc where proname = 'app_can_see_item' and pronargs = 5`,
+  0,
+);
+await expect(
+  "a new video needs a shoot and no voice over until someone says otherwise",
+  `select "shootNeeded" and not "voNeeded" from "ContentItem" limit 1`,
+  true,
+);
+
+await db.exec(`
+  insert into "Member"("agencyId", name, role, email)
+    select id, 'Priya', 'voiceover', 'priya@x.com' from "Agency" limit 1;
+  insert into "Member"("agencyId", name, role, email)
+    select id, 'Sanjo', 'editor', 'sanjo@x.com' from "Agency" limit 1;
+  -- Fixture only: no one is signed in here, so the guards would refuse it.
+  alter table "ContentItem" disable trigger user;
+  update "ContentItem" set stage = 'shooting', "voNeeded" = true,
+    "voiceoverId" = (select id from "Member" where email = 'priya@x.com');
+  alter table "ContentItem" enable trigger user;
+  grant usage on schema public to authenticated;
+  grant select, update on all tables in schema public to authenticated;
+`);
+
+async function as(email, sql) {
+  await db.exec(`set role authenticated; select set_config('request.jwt.claims', '{"email":"${email}"}', false);`);
+  try {
+    return await db.query(sql);
+  } finally {
+    await db.exec(`reset role`);
+  }
+}
+async function asFails(label, email, sql, fragment) {
+  try {
+    await as(email, sql);
+    failed = true;
+    console.log(`FAIL  ${label}  (it was allowed)`);
+  } catch (e) {
+    const ok = String(e.message).includes(fragment);
+    if (!ok) failed = true;
+    console.log(`${ok ? "PASS" : "FAIL"}  ${label}${ok ? "" : `  (${String(e.message).split("\n")[0]})`}`);
+  }
+}
+
+await expect(
+  "the voice over person sees the video they are assigned",
+  `select count(*) from "ContentItem"`,
+  1,
+); // run as the superuser: baseline, so the next lines mean something
+{
+  const seen = (await as("priya@x.com", `select count(*)::int as n from "ContentItem"`)).rows[0].n;
+  const ok = seen === 1;
+  if (!ok) failed = true;
+  console.log(`${ok ? "PASS" : "FAIL"}  the voice over person can open their video${ok ? "" : `  (sees ${seen})`}`);
+}
+{
+  const seen = (await as("sanjo@x.com", `select count(*)::int as n from "ContentItem"`)).rows[0].n;
+  const ok = seen === 0;
+  if (!ok) failed = true;
+  console.log(`${ok ? "PASS" : "FAIL"}  an editor not on that video cannot${ok ? "" : `  (sees ${seen})`}`);
+}
+await asFails(
+  "the voice over person cannot assign themselves to other work",
+  "priya@x.com",
+  `update "ContentItem" set "voiceoverId" = (select id from "Member" where email = 'sanjo@x.com')`,
+  "Only the CEO or a manager can assign people",
+);
+await asFails(
+  "the voice over person cannot decide a shoot is not needed",
+  "priya@x.com",
+  `update "ContentItem" set "shootNeeded" = false`,
+  "Only the CEO or a manager can decide whether a shoot is needed",
+);
+await as(
+  "priya@x.com",
+  `update "ContentItem" set "voCompletedAt" = now(), "voUrl" = 'https://example.com/vo'`,
+);
+console.log("PASS  the voice over person can upload their own part");
+await as("priya@x.com", `update "ContentItem" set stage = 'footage_review'`);
+console.log("PASS  the voice over person can move the video off the shoot stage");
+
 console.log();
 console.log(failed ? "RESULT: FAILURES ABOVE" : "RESULT: setup.sql is good");
 process.exit(failed ? 1 : 0);

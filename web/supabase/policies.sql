@@ -72,14 +72,15 @@ create or replace function app_can_see_item(
   p_scriptwriter_id text,
   p_cameraman_id text,
   p_editor_id text,
-  p_publisher_id text
+  p_publisher_id text,
+  p_voiceover_id text
 ) returns boolean
 language sql stable security definer set search_path = public as $$
   select p_agency_id = app_agency_id()
      and (
        app_is_manager()
        or app_member_id() in (
-         p_scriptwriter_id, p_cameraman_id, p_editor_id, p_publisher_id
+         p_scriptwriter_id, p_cameraman_id, p_editor_id, p_publisher_id, p_voiceover_id
        )
      )
 $$;
@@ -126,7 +127,12 @@ create policy member_write on "Member" for all
 drop policy if exists member_touch_self on "Member";
 create policy member_touch_self on "Member" for update
   using (id = app_member_id())
-  with check (id = app_member_id() and role = app_role() and "agencyId" = app_agency_id());
+  with check (
+    id = app_member_id()
+    and role = app_role()
+    and roles = (app_member()).roles
+    and "agencyId" = app_agency_id()
+  );
 
 -- ContentItem: creatives see and edit only what is assigned to them. Which
 -- stage transitions they may make is checked by the trigger below, because a
@@ -134,7 +140,7 @@ create policy member_touch_self on "Member" for update
 drop policy if exists content_read on "ContentItem";
 create policy content_read on "ContentItem" for select
   using (app_can_see_item(
-    "agencyId", "scriptwriterId", "cameramanId", "editorId", "publisherId"
+    "agencyId", "scriptwriterId", "cameramanId", "editorId", "publisherId", "voiceoverId"
   ));
 
 drop policy if exists content_insert on "ContentItem";
@@ -144,7 +150,7 @@ create policy content_insert on "ContentItem" for insert
 drop policy if exists content_update on "ContentItem";
 create policy content_update on "ContentItem" for update
   using (app_can_see_item(
-    "agencyId", "scriptwriterId", "cameramanId", "editorId", "publisherId"
+    "agencyId", "scriptwriterId", "cameramanId", "editorId", "publisherId", "voiceoverId"
   ))
   with check ("agencyId" = app_agency_id());
 
@@ -161,7 +167,8 @@ create policy event_read on "ContentEvent" for select
     select 1 from "ContentItem" c
     where c.id = "ContentEvent"."contentId"
       and app_can_see_item(
-        c."agencyId", c."scriptwriterId", c."cameramanId", c."editorId", c."publisherId"
+        c."agencyId", c."scriptwriterId", c."cameramanId", c."editorId", c."publisherId",
+        c."voiceoverId"
       )
   ));
 
@@ -171,7 +178,8 @@ create policy event_insert on "ContentEvent" for insert
     select 1 from "ContentItem" c
     where c.id = "ContentEvent"."contentId"
       and app_can_see_item(
-        c."agencyId", c."scriptwriterId", c."cameramanId", c."editorId", c."publisherId"
+        c."agencyId", c."scriptwriterId", c."cameramanId", c."editorId", c."publisherId",
+        c."voiceoverId"
       )
   ));
 
@@ -220,6 +228,7 @@ begin
   -- Creative roles may only move the video off their own step.
   if (old.stage = 'scripting'  and old."scriptwriterId" = me)
   or (old.stage = 'shooting'   and old."cameramanId"    = me)
+  or (old.stage = 'shooting'   and old."voiceoverId"     = me)
   or (old.stage = 'editing'    and old."editorId"       = me)
   or (old.stage = 'ready'      and old."publisherId"    = me) then
     return new;
@@ -249,8 +258,13 @@ begin
   if new."scriptwriterId" is distinct from old."scriptwriterId"
   or new."cameramanId"    is distinct from old."cameramanId"
   or new."editorId"       is distinct from old."editorId"
-  or new."publisherId"    is distinct from old."publisherId" then
+  or new."publisherId"    is distinct from old."publisherId"
+  or new."voiceoverId"    is distinct from old."voiceoverId" then
     raise exception 'Only the CEO or a manager can assign people';
+  end if;
+
+  if new."shootNeeded" is distinct from old."shootNeeded" then
+    raise exception 'Only the CEO or a manager can decide whether a shoot is needed';
   end if;
 
   if new."scriptDue"         is distinct from old."scriptDue"
@@ -258,7 +272,8 @@ begin
   or new."shootDue"          is distinct from old."shootDue"
   or new."editDue"           is distinct from old."editDue"
   or new."finalApprovalDue"  is distinct from old."finalApprovalDue"
-  or new."publishDue"        is distinct from old."publishDue" then
+  or new."publishDue"        is distinct from old."publishDue"
+  or new."voDue"             is distinct from old."voDue" then
     raise exception 'Only the CEO or a manager can change deadlines';
   end if;
 
@@ -270,5 +285,7 @@ drop trigger if exists content_field_guard on "ContentItem";
 create trigger content_field_guard
   before update on "ContentItem"
   for each row execute function app_check_content_fields();
+
+drop function if exists app_can_see_item(text, text, text, text, text);
 
 commit;

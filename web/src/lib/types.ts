@@ -90,6 +90,16 @@ export type ContentItem = {
   shootCompletedAt: string | null;
   footageUrl: string | null;
 
+  /** Set by the scriptwriter. A video that needs one has a voice over step. */
+  voNeeded: boolean;
+  /** Set by the CEO when approving the script. False means existing footage is reused. */
+  shootNeeded: boolean;
+  voiceoverId: string | null;
+  voDue: string | null;
+  voNotes: string | null;
+  voUrl: string | null;
+  voCompletedAt: string | null;
+
   editBrief: string | null;
   editStartedAt: string | null;
   editSubmittedAt: string | null;

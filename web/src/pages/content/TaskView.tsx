@@ -3,13 +3,14 @@ import { Link } from "react-router";
 import { IconChevronLeft } from "@/components/icons";
 import { Card, CardHeader } from "@/components/ui/Card";
 import { Field, Input, Textarea } from "@/components/ui/Field";
+import { YesNoField } from "@/components/ui/YesNoField";
 import { ROLE_TASK } from "@/lib/my-work";
 import { isOverdue, refLabel, stageConfig } from "@/lib/pipeline";
-import { STAGE_DEADLINE } from "@/lib/schedule";
+import { deadlineFor } from "@/lib/schedule";
 import { cn, dateInputValue, dueLabel, formatCalendar, timeAgo, toDate } from "@/lib/utils";
 import type { ContentEvent, ContentItemWithNames } from "@/lib/types";
 import { PanelForm } from "./PanelForm";
-import { StageActions } from "./StageActions";
+import { StageActions, TrackActions } from "./StageActions";
 import "./TaskView.css";
 
 /** Read-only material the person needs in order to do their step. */
@@ -50,11 +51,14 @@ export function TaskView({
   backTo?: string;
 }) {
   const stage = stageConfig(item.stage);
-  const dueField = STAGE_DEADLINE[item.stage];
+  const dueField = deadlineFor(item);
   const due = dueField ? toDate(item[dueField]) : null;
   const late = isOverdue(due, item.stage);
   const task = ROLE_TASK[role];
   const mine = panel === "script" ? item.stage === "scripting" : canSubmit;
+  // The shoot and the voice over finish separately, each with its own button.
+  const track =
+    item.stage === "shooting" && (panel === "shoot" || panel === "vo") ? panel : null;
 
   // The most recent thing the CEO said, so changes asked for aren't buried.
   const message = events.find((e) => e.kind === "revision" || e.kind === "note");
@@ -70,7 +74,8 @@ export function TaskView({
       {/* What and when */}
       <div className="card task-head">
         <p className="task-head-client">
-          {item.client?.name ?? "—"} · <span className="task-head-ref">{refLabel(item.ref)}</span>
+          {item.client?.name ?? "—"} ·{" "}
+          <span className="task-head-ref">{refLabel(item.ref)}</span>
         </p>
         <h1 className="task-head-title">{item.title}</h1>
 
@@ -86,7 +91,8 @@ export function TaskView({
         {!mine && (
           <p className="task-done">
             {task ? `Your ${task.noun} is done.` : "Your part is done."} This is with{" "}
-            {stage.owner === "ceo" ? "the CEO" : `the ${stage.owner}`} now — nothing for you to do.
+            {stage.owner === "ceo" ? "the CEO" : `the ${stage.owner}`} now — nothing for you to
+            do.
           </p>
         )}
 
@@ -108,29 +114,33 @@ export function TaskView({
       {(item.idea ||
         item.referenceUrl ||
         item.scriptBody ||
+        item.voUrl ||
         item.footageUrl ||
         item.shootNotes ||
         item.editBrief) && (
         <Card>
           <CardHeader title="1 · What you need" />
           <div className="refs">
-            {panel === "script" && item.idea && <Reference label="The idea">{item.idea}</Reference>}
-
-            {/* The reference is what the writer and the camera team work from. */}
-            {(panel === "script" || panel === "shoot") && item.referenceUrl && (
-              <Reference label="Reference video">
-                <a
-                  href={item.referenceUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="ref-link"
-                >
-                  Open the reference
-                </a>
-              </Reference>
+            {(panel === "script" || panel === "vo") && item.idea && (
+              <Reference label="The idea">{item.idea}</Reference>
             )}
 
-            {(panel === "shoot" || panel === "edit") && item.scriptBody && (
+            {/* The reference is what the writer and the camera team work from. */}
+            {(panel === "script" || panel === "shoot" || panel === "vo") &&
+              item.referenceUrl && (
+                <Reference label="Reference video">
+                  <a
+                    href={item.referenceUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="ref-link"
+                  >
+                    Open the reference
+                  </a>
+                </Reference>
+              )}
+
+            {(panel === "shoot" || panel === "vo" || panel === "edit") && item.scriptBody && (
               <Reference label="Approved script">
                 <pre className="ref-script">{item.scriptBody}</pre>
               </Reference>
@@ -140,8 +150,24 @@ export function TaskView({
               <Reference label="Shoot requirements">{item.shootNotes}</Reference>
             )}
 
+            {panel === "edit" && item.voUrl && (
+              <Reference label="Voice over">
+                <a
+                  href={item.voUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="ref-link"
+                >
+                  Open the voice over
+                </a>
+                {item.voNotes && <p className="ref-note">{item.voNotes}</p>}
+              </Reference>
+            )}
+
             {panel === "edit" && item.footageUrl && (
-              <Reference label="Raw footage">
+              <Reference
+                label={item.shootNeeded === false ? "Existing footage" : "Raw footage"}
+              >
                 <a
                   href={item.footageUrl}
                   target="_blank"
@@ -189,6 +215,39 @@ export function TaskView({
                   defaultValue={item.scriptBody ?? ""}
                   placeholder={"HOOK\n…\n\nBODY\n…\n\nCTA\n…"}
                   className="task-script"
+                />
+              </Field>
+              <Field label="Reference link" hint="optional — an example video to work from">
+                <Input
+                  name="referenceUrl"
+                  type="url"
+                  defaultValue={item.referenceUrl ?? ""}
+                  placeholder="https://instagram.com/reel/…"
+                />
+              </Field>
+              <YesNoField
+                label="Voice over needed?"
+                hint="if yes, the CEO assigns someone when approving"
+                name="voNeeded"
+                defaultValue={item.voNeeded}
+              />
+            </>
+          )}
+
+          {panel === "vo" && (
+            <>
+              <Field
+                label="Voice over notes"
+                hint="optional — tone, takes, anything the editor needs"
+              >
+                <Textarea name="voNotes" rows={3} defaultValue={item.voNotes ?? ""} />
+              </Field>
+              <Field label="Voice over file link" hint="Google Drive, Dropbox, anywhere">
+                <Input
+                  name="voUrl"
+                  type="url"
+                  defaultValue={item.voUrl ?? ""}
+                  placeholder="https://drive.google.com/…"
                 />
               </Field>
             </>
@@ -275,17 +334,23 @@ export function TaskView({
       {mine && (
         <div className="task-send">
           <p className="task-send-note">
-            <strong>3 · Send it on.</strong> Save your work first — it then goes to the CEO for
-            approval.
+            <strong>3 · Send it on.</strong>{" "}
+            {track
+              ? "Save your work first. The video moves on once everything it needs is in."
+              : "Save your work first — it then goes to the CEO for approval."}
           </p>
-          <StageActions
-            item={item}
-            canForward={canSubmit}
-            canBack={canSendBack}
-            team={[]}
-            actor={actor}
-            onChanged={onChanged}
-          />
+          {track ? (
+            <TrackActions item={item} track={track} actor={actor} onChanged={onChanged} />
+          ) : (
+            <StageActions
+              item={item}
+              canForward={canSubmit}
+              canBack={canSendBack}
+              team={[]}
+              actor={actor}
+              onChanged={onChanged}
+            />
+          )}
         </div>
       )}
     </div>

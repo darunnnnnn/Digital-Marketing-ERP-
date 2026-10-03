@@ -5,13 +5,14 @@
 import { supabase } from "./supabase";
 import { ROLE_STEPS, loadPerfSource, measureMember } from "./performance";
 import { stageIndex } from "./pipeline";
-import { CRAFTS, craftsOf } from "./roles";
+import { CRAFTS, craftByRole, craftIsOpen, craftsOf } from "./roles";
 import { calendarDate, currentMonthKey, toDate } from "./utils";
 
 /** The panel on the video page that this role fills in. */
 export const ROLE_PANEL: Record<string, string> = {
   scriptwriter: "script",
   cameraman: "shoot",
+  voiceover: "vo",
   editor: "edit",
   publisher: "post",
 };
@@ -20,6 +21,7 @@ export const ROLE_PANEL: Record<string, string> = {
 export const ROLE_TASK: Record<string, { noun: string; verb: string }> = {
   scriptwriter: { noun: "script", verb: "Write the script" },
   cameraman: { noun: "shoot", verb: "Shoot and upload the footage" },
+  voiceover: { noun: "voice over", verb: "Record and upload the voice over" },
   editor: { noun: "edit", verb: "Edit the video" },
   publisher: { noun: "post", verb: "Caption, schedule and post" },
 };
@@ -56,7 +58,9 @@ export async function myWork(
   const [queue, source] = await Promise.all([
     supabase
       .from("ContentItem")
-      .select(`id, ref, title, stage, ${step.due}, client:Client(name)`)
+      .select(
+        `id, ref, title, stage, ${step.due}, shootNeeded, shootCompletedAt, voNeeded, voCompletedAt, client:Client(name)`,
+      )
       .eq("agencyId", user.agencyId)
       .eq(step.assign, user.id)
       .neq("stage", "published")
@@ -68,9 +72,17 @@ export async function myWork(
   if (queue.error) throw new Error(`Couldn't load your work: ${queue.error.message}`);
   const rows = (queue.data ?? []) as unknown as Row[];
   // Only this role's step: their month as an editor, not everything they did.
-  const { summary } = measureMember({ id: user.id, role, roles: [role] }, currentMonthKey(), source);
+  const { summary } = measureMember(
+    { id: user.id, role, roles: [role] },
+    currentMonthKey(),
+    source,
+  );
 
   const mine = stageIndex(step.stage);
+  const craft = craftByRole(role);
+  // In the stage is not enough: the shoot and the voice over share one, and a
+  // video with the footage already in is no longer on the cameraman's desk.
+  const onDesk = (r: Row) => (craft ? craftIsOpen(craft, r) : r.stage === step.stage);
   const map = (r: Row): WorkItem => ({
     id: r.id,
     ref: r.ref,
@@ -85,11 +97,13 @@ export async function myWork(
     task: ROLE_TASK[role],
     month: summary,
     /** On their desk right now. */
-    todo: rows.filter((r) => r.stage === step.stage).map(map),
+    todo: rows.filter(onDesk).map(map),
     /** Assigned to them, but an earlier step is still running. */
     upcoming: rows.filter((r) => stageIndex(r.stage) < mine).map(map),
     /** Already handed on — with the CEO or someone else. */
-    handedOn: rows.filter((r) => stageIndex(r.stage) > mine).map(map),
+    handedOn: rows
+      .filter((r) => stageIndex(r.stage) > mine || (r.stage === step.stage && !onDesk(r)))
+      .map(map),
   };
 }
 
@@ -109,7 +123,9 @@ export async function deskCounts(user: {
 
   const { data, error } = await supabase
     .from("ContentItem")
-    .select(`stage, ${CRAFTS.map((c) => c.assign).join(", ")}`)
+    .select(
+      `stage, shootNeeded, shootCompletedAt, voNeeded, voCompletedAt, ${CRAFTS.map((c) => c.assign).join(", ")}`,
+    )
     .eq("agencyId", user.agencyId)
     .in(
       "stage",
@@ -118,11 +134,11 @@ export async function deskCounts(user: {
     .or(crafts.map((c) => `${c.assign}.eq.${user.id}`).join(","));
   if (error) throw new Error(`Couldn't load your work: ${error.message}`);
 
-  const rows = (data ?? []) as unknown as Record<string, string | null>[];
+  const rows = (data ?? []) as unknown as (Record<string, unknown> & { stage: string })[];
   return Object.fromEntries(
     crafts.map((c) => [
       c.slug,
-      rows.filter((r) => r.stage === c.stage && r[c.assign] === user.id).length,
+      rows.filter((r) => r[c.assign] === user.id && craftIsOpen(c, r)).length,
     ]),
   );
 }

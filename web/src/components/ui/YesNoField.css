@@ -1,0 +1,55 @@
+.yesno {
+  display: inline-flex;
+  gap: var(--sp-2);
+}
+
+.yesno-option {
+  position: relative;
+  cursor: pointer;
+}
+
+/* Visually hidden, still focusable and keyboard-operable. */
+.yesno-option input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  margin: 0;
+  cursor: pointer;
+}
+
+.yesno-pill {
+  display: inline-flex;
+  min-width: 4.5rem;
+  height: 2.5rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--stone-200);
+  background: var(--stone-50);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--stone-600);
+  transition:
+    border-color 0.15s,
+    background-color 0.15s,
+    color 0.15s;
+}
+
+.yesno-option:hover .yesno-pill {
+  color: var(--stone-900);
+}
+
+.yesno-option input:checked + .yesno-pill {
+  border-color: var(--brand-800);
+  background: var(--brand-800);
+  color: #fff;
+}
+
+.yesno-option input:focus-visible + .yesno-pill {
+  outline: 2px solid var(--brand-500);
+  outline-offset: 2px;
+}
+
+.yesno-option input:disabled + .yesno-pill {
+  opacity: 0.6;
+}

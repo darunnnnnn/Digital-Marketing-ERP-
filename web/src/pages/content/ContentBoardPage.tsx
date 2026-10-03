@@ -13,7 +13,7 @@ import { useViewer } from "@/lib/auth";
 import { myWork } from "@/lib/my-work";
 import { canDrag, canPlan, isCeo, isManager } from "@/lib/permissions";
 import { isOverdue, stageConfig } from "@/lib/pipeline";
-import { STAGE_DEADLINE } from "@/lib/schedule";
+import { deadlineFor } from "@/lib/schedule";
 import { countPublished, listContent, listMembers, listClients } from "@/lib/queries";
 import { useAsync } from "@/lib/use-async";
 import { currentMonthKey, monthLabel, toDate } from "@/lib/utils";
@@ -57,10 +57,10 @@ export function ContentBoardPage() {
 
   // A scriptwriter, cameraman, editor or posting person has one job: their own
   // queue. The agency board, filters and other people's work are not for them.
-  const mine = useAsync(() => (manager ? Promise.resolve(null) : myWork(viewer)), [
-    viewer.id,
-    manager,
-  ]);
+  const mine = useAsync(
+    () => (manager ? Promise.resolve(null) : myWork(viewer)),
+    [viewer.id, manager],
+  );
 
   const board = useAsync(async () => {
     if (!manager && mine.data) return null;
@@ -86,24 +86,30 @@ export function ContentBoardPage() {
   // Creative roles: their own queue, and nothing else.
   if (mine.data) return <MyWork name={viewer.name} work={mine.data} onChanged={mine.reload} />;
 
-  if (board.error) return <EmptyState title="Couldn't load the pipeline" description={board.error} />;
+  if (board.error)
+    return <EmptyState title="Couldn't load the pipeline" description={board.error} />;
 
   const { clients = [], members = [], rows = [], published = 0 } = board.data ?? {};
 
   const items: BoardItem[] = rows.map((row) => {
-    const field = stageConfig(row.stage).assign;
+    // A video with no shoot is on the shoot stage waiting for the voice over alone.
+    const voOnly = row.stage === "shooting" && !row.shootNeeded && row.voNeeded;
+    const field = voOnly ? "voiceoverId" : stageConfig(row.stage).assign;
+    const voice = members.find((m) => m.id === row.voiceoverId);
     const ownerMember =
-      field === "scriptwriterId"
-        ? row.scriptwriter
-        : field === "cameramanId"
-          ? row.cameraman
-          : field === "editorId"
-            ? row.editor
-            : field === "publisherId"
-              ? row.publisher
-              : null;
+      field === "voiceoverId"
+        ? (voice ?? null)
+        : field === "scriptwriterId"
+          ? row.scriptwriter
+          : field === "cameramanId"
+            ? row.cameraman
+            : field === "editorId"
+              ? row.editor
+              : field === "publisherId"
+                ? row.publisher
+                : null;
 
-    const deadlineField = STAGE_DEADLINE[row.stage];
+    const deadlineField = deadlineFor(row);
 
     return {
       id: row.id,
