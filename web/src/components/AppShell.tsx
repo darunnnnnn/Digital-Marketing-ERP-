@@ -1,7 +1,9 @@
 import type { ReactElement, ReactNode } from "react";
 import { Link, useLocation } from "react-router";
 import { useAuth } from "@/lib/auth";
+import { approvalCount } from "@/lib/approvals";
 import { deskCounts } from "@/lib/my-work";
+import { canApprove } from "@/lib/permissions";
 import { rolesLabel, workPortals } from "@/lib/roles";
 import { useAsync } from "@/lib/use-async";
 import { cn, initials } from "@/lib/utils";
@@ -9,6 +11,7 @@ import {
   IconBell,
   IconCamera,
   IconChart,
+  IconCheckCircle,
   IconFilm,
   IconGrid,
   IconLogout,
@@ -52,6 +55,13 @@ const NAV: NavItem[] = [
   { to: "/dashboard", label: "Dashboard", title: "Dashboard", icon: IconGrid, soon: true, roles: MANAGERS },
   { to: "/clients", label: "Clients", title: "Client Management", icon: IconUsers, roles: MANAGERS },
   { to: "/content", label: "Content", title: "Content Pipeline", icon: IconFilm },
+  {
+    to: "/approvals",
+    label: "Approvals",
+    title: "Approvals",
+    icon: IconCheckCircle,
+    roles: ["ceo"],
+  },
   { to: "/team", label: "Team", title: "Team", icon: IconSpark, roles: ["ceo"] },
   { to: "/reports", label: "Reports", title: "Reports", icon: IconChart, soon: true, roles: MANAGERS },
   { to: "/payouts", label: "Payouts", title: "Payouts", icon: IconWallet, roles: ["ceo"] },
@@ -75,6 +85,13 @@ export function AppShell({
     [user.id, portals.length, pathname],
   );
 
+  // The same badge treatment as a desk count: how many videos are stopped
+  // waiting on the CEO, refetched on every navigation so approving one shows.
+  const waiting = useAsync(
+    () => (canApprove(user) ? approvalCount(user.agencyId) : Promise.resolve(0)),
+    [user.id, user.role, pathname],
+  );
+
   const nav = NAV.filter((n) => !n.roles || n.roles.includes(user.role)).flatMap((n) =>
     // Someone with several roles gets a desk per role in place of the one queue.
     n.to === "/content" && portals.length
@@ -86,7 +103,9 @@ export function AppShell({
           caption: c.label,
           count: counts.data?.[c.slug],
         }))
-      : [n],
+      : n.to === "/approvals"
+        ? [{ ...n, count: waiting.data ?? undefined }]
+        : [n],
   );
   const section = nav.find((n) => !n.soon && pathname.startsWith(n.to));
   const roleLabel = rolesLabel(user);

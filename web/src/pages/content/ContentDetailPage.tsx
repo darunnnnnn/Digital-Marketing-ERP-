@@ -2,7 +2,8 @@ import { useState } from "react";
 import { Link, useParams } from "react-router";
 import { AssigneeSelect } from "./AssigneeSelect";
 import { PanelForm } from "./PanelForm";
-import { StageActions, type HandoffInfo } from "./StageActions";
+import { StageActions } from "./StageActions";
+import { buildHandoff } from "./handoff-info";
 import { StageRail } from "./StageRail";
 import { TaskView } from "./TaskView";
 import { Timeline } from "./Timeline";
@@ -31,7 +32,6 @@ import {
 import { deleteContent, getContent, listEvents, listMembers } from "@/lib/queries";
 import {
   FORMATS,
-  handoff,
   isOverdue,
   priority,
   refLabel,
@@ -170,36 +170,7 @@ export function ContentDetailPage() {
   // At a CEO gate, approving also picks the next person and their deadline.
   // Only built for someone who can actually approve, so the team list and
   // default assignee never reach anyone else's page.
-  const gate = canAdvance(viewer, item) ? handoff(item.stage) : null;
-  const handoffInfo: HandoffInfo | null = gate
-    ? {
-        verb: gate.verb,
-        who: gate.who,
-        options: byRole(gate.role),
-        defaultMemberId: (item[gate.assign] as string | null) ?? "",
-        defaultDue: dateInputValue(
-          toDate(item[gate.deadline as keyof typeof item] as string | null),
-        ),
-        // The script gate also decides whether there is a shoot, and who does the voice over.
-        script:
-          item.stage === "script_review"
-            ? {
-                voNeeded: item.voNeeded,
-                editors: byRole("editor"),
-                voiceovers: byRole("voiceover"),
-                defaults: {
-                  cameramanId: item.cameramanId ?? "",
-                  shootDue: dateInputValue(toDate(item.shootDue)),
-                  editorId: item.editorId ?? "",
-                  editDue: dateInputValue(toDate(item.editDue)),
-                  voiceoverId: item.voiceoverId ?? "",
-                  voDue: dateInputValue(toDate(item.voDue)),
-                  footageUrl: item.footageUrl ?? "",
-                },
-              }
-            : undefined,
-      }
-    : null;
+  const handoffInfo = canAdvance(viewer, item) ? buildHandoff(item, team) : null;
 
   const meta = [
     {

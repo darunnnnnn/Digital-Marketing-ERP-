@@ -82,6 +82,8 @@ export const canAssign = (v: Viewer) => isManager(v);
 export const canDeleteContent = (v: Viewer) => isManager(v);
 export const canManageClients = (v: Viewer) => isManager(v);
 export const canManageTeam = (v: Viewer) => isCeo(v);
+/** The approvals queue: the three gates, all of which are the CEO's alone. */
+export const canApprove = (v: Viewer) => isCeo(v);
 /** Money: rates, approvals and marking paid. */
 export const canManagePayouts = (v: Viewer) => isCeo(v);
 

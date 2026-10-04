@@ -3,13 +3,14 @@ import { Navigate, Route, Routes, useLocation } from "react-router";
 import { AppShell } from "@/components/AppShell";
 import { PageSkeleton } from "@/components/PageSkeleton";
 import { useAuth, useViewer } from "@/lib/auth";
-import { canManageClients, canManagePayouts, canManageTeam } from "@/lib/permissions";
+import { canApprove, canManageClients, canManagePayouts, canManageTeam } from "@/lib/permissions";
 import { workPortals } from "@/lib/roles";
 import { LoginPage } from "@/pages/LoginPage";
 import { InvitePage } from "@/pages/InvitePage";
 import { ClientsPage } from "@/pages/clients/ClientsPage";
 import { ClientFormPage } from "@/pages/clients/ClientFormPage";
 import { ClientDetailPage } from "@/pages/clients/ClientDetailPage";
+import { ApprovalsPage } from "@/pages/approvals/ApprovalsPage";
 import { ContentBoardPage } from "@/pages/content/ContentBoardPage";
 import { ContentNewPage } from "@/pages/content/ContentNewPage";
 import { ContentDetailPage } from "@/pages/content/ContentDetailPage";
@@ -105,6 +106,15 @@ function AppRoutes() {
       <Route path="work/:craft" element={<WorkPage />} />
       <Route path="content/new" element={<ContentNewPage />} />
       <Route path="content/:id" element={<ContentDetailPage />} />
+
+      <Route
+        path="approvals"
+        element={
+          <RoleGate allow={canApprove(viewer)}>
+            <ApprovalsPage />
+          </RoleGate>
+        }
+      />
 
       <Route
         path="team"

@@ -1,0 +1,375 @@
+/*
+ * The approvals queue. Built from the same tokens as every other page: frosted
+ * cards, mist greys, evergreen for what is interactive, red only for late.
+ *
+ * One row carries three things stacked — what the video is, who sent it, and
+ * what they sent — with the approve buttons last, so the eye reaches them only
+ * after the thing it is approving.
+ */
+
+/* ---- the "you are holding work up" line -------------------------------- */
+/* Same shape as .pay-notice on the payouts page: a quiet brand-tinted strip. */
+
+.appr-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-3);
+  border-radius: var(--radius-lg);
+  background: rgb(238 246 243 / 0.7);
+  box-shadow: inset 0 0 0 1px var(--brand-100);
+  padding: 0.875rem var(--sp-4);
+  font-size: 0.875rem;
+  color: var(--brand-800);
+}
+
+.appr-notice svg {
+  flex-shrink: 0;
+  width: 1.125rem;
+  height: 1.125rem;
+  margin-top: 0.0625rem;
+  color: var(--brand-600);
+}
+
+/* ---- one gate's section ------------------------------------------------ */
+
+.appr-section-count {
+  display: grid;
+  place-items: center;
+  min-width: 1.5rem;
+  height: 1.5rem;
+  padding: 0 var(--sp-2);
+  border-radius: var(--radius-full);
+  background: var(--brand-50);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--brand-700);
+  box-shadow: inset 0 0 0 1px var(--brand-100);
+}
+
+.appr-section-note {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0 var(--sp-6) var(--sp-4);
+  font-size: 0.875rem;
+  color: var(--stone-500);
+}
+
+.appr-section-note svg {
+  flex-shrink: 0;
+  width: 0.875rem;
+  height: 0.875rem;
+  color: var(--stone-400);
+}
+
+/* ---- the list ---------------------------------------------------------- */
+
+.appr-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid rgb(227 231 228 / 0.7);
+}
+
+.appr {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+  padding: var(--sp-5) var(--sp-6);
+}
+
+.appr + .appr {
+  border-top: 1px solid rgb(227 231 228 / 0.7);
+}
+
+/* ---- which video ------------------------------------------------------- */
+
+.appr-head {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-4);
+}
+
+.appr-ref {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: var(--radius-full);
+  background: var(--brand-50);
+  font-family: ui-monospace, "SFMono-Regular", monospace;
+  font-size: 0.75rem;
+  color: var(--brand-800);
+}
+
+.appr-ref-late {
+  background: var(--red-50);
+  color: var(--red-700);
+}
+
+.appr-head-main {
+  min-width: 0;
+  flex: 1;
+}
+
+.appr-title {
+  font-size: 1.0625rem;
+  font-weight: 500;
+  color: var(--stone-900);
+  transition: color 0.15s;
+}
+
+.appr-title:hover {
+  color: var(--brand-800);
+}
+
+.appr-tags {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-2);
+  margin-top: 0.25rem;
+}
+
+.appr-client {
+  font-size: 0.875rem;
+  color: var(--stone-500);
+}
+
+.appr-when {
+  flex-shrink: 0;
+  text-align: right;
+}
+
+.appr-wait {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--stone-700);
+}
+
+.appr-wait-late {
+  color: var(--red-600);
+}
+
+.appr-due {
+  margin-top: 0.125rem;
+  font-size: 0.75rem;
+  color: var(--stone-400);
+}
+
+/* ---- who sent it ------------------------------------------------------- */
+
+.appr-sender {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+}
+
+.appr-sender-name {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--stone-900);
+}
+
+.appr-sender-also {
+  font-weight: 400;
+  color: var(--stone-500);
+}
+
+.appr-sender-meta {
+  margin-top: 0.125rem;
+  font-size: 0.75rem;
+  color: var(--stone-500);
+}
+
+/* ---- what they sent ---------------------------------------------------- */
+
+.appr-sent {
+  border-radius: var(--radius-lg);
+  background: rgb(255 255 255 / 0.95);
+  box-shadow: inset 0 0 0 1px rgb(227 231 228 / 0.9);
+  padding: var(--sp-4);
+}
+
+.appr-sent > * + * {
+  margin-top: var(--sp-3);
+}
+
+.appr-nothing {
+  border-radius: var(--radius-lg);
+  background: var(--stone-100);
+  padding: 0.75rem var(--sp-4);
+  font-size: 0.875rem;
+  color: var(--stone-600);
+}
+
+.appr-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+}
+
+/* A file to open, not a page to navigate to — hence the outward arrow. */
+.appr-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  border-radius: var(--radius-full);
+  background: var(--brand-50);
+  box-shadow: inset 0 0 0 1px var(--brand-100);
+  padding: 0.375rem 0.75rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--brand-800);
+  transition:
+    background-color 0.15s,
+    color 0.15s;
+}
+
+.appr-link:hover {
+  background: var(--brand-800);
+  color: #fff;
+}
+
+.appr-link svg {
+  width: 0.75rem;
+  height: 0.75rem;
+}
+
+.appr-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2) var(--sp-5);
+  margin: 0;
+}
+
+.appr-fact dt {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--stone-400);
+}
+
+.appr-fact dd {
+  margin: 0.125rem 0 0;
+  font-size: 0.875rem;
+  color: var(--stone-800);
+}
+
+.appr-note-label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--stone-400);
+}
+
+.appr-note-text {
+  margin-top: 0.125rem;
+  font-size: 0.875rem;
+  line-height: 1.55;
+  color: var(--stone-700);
+  white-space: pre-wrap;
+}
+
+/* ---- the folded script ------------------------------------------------- */
+/* The drawer from the video page, reused so the gesture reads the same. */
+
+.appr-read-summary {
+  display: inline-flex;
+  cursor: pointer;
+  list-style: none;
+  align-items: center;
+  gap: var(--sp-2);
+  border-radius: var(--radius-full);
+  background: rgb(238 246 243 / 0.7);
+  padding: 0.375rem 0.875rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--brand-800);
+  transition: background-color 0.15s;
+}
+
+.appr-read-summary::-webkit-details-marker {
+  display: none;
+}
+
+.appr-read-summary:hover {
+  background: rgb(214 235 227 / 0.7);
+}
+
+.appr-read-open,
+.appr-read[open] .appr-read-closed {
+  display: none;
+}
+
+.appr-read[open] .appr-read-open {
+  display: inline;
+}
+
+/* A script reads better monospaced — the beats line up, as on the video page. */
+.appr-body {
+  max-height: 22rem;
+  overflow: auto;
+  margin: var(--sp-3) 0 0;
+  border-radius: var(--radius);
+  background: var(--stone-50);
+  box-shadow: inset 0 0 0 1px var(--stone-200);
+  padding: var(--sp-4);
+  font-family: ui-monospace, "SFMono-Regular", monospace;
+  font-size: 0.75rem;
+  line-height: 1.625;
+  color: var(--stone-700);
+  white-space: pre-wrap;
+}
+
+/* ---- approve, or send it back ------------------------------------------ */
+
+.appr-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-3);
+}
+
+.appr-open {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  margin-left: auto;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--stone-500);
+  transition: color 0.15s;
+}
+
+.appr-open:hover {
+  color: var(--stone-900);
+}
+
+.appr-open svg {
+  width: 0.875rem;
+  height: 0.875rem;
+}
+
+@media (max-width: 640px) {
+  .appr {
+    padding: var(--sp-5) var(--sp-4);
+  }
+
+  /* On a phone the waiting time goes under the title rather than beside it. */
+  .appr-head {
+    flex-wrap: wrap;
+  }
+
+  .appr-when {
+    width: 100%;
+    text-align: left;
+  }
+
+  .appr-open {
+    margin-left: 0;
+  }
+}
