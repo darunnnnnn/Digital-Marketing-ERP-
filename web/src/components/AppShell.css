@@ -52,6 +52,7 @@
 }
 
 .rail-link {
+  position: relative;
   display: grid;
   place-items: center;
   width: 3rem;

@@ -1,7 +1,9 @@
+import { useState } from "react";
 import { Link } from "react-router";
 import {
   IconCamera,
   IconCheckCircle,
+  IconChevronLeft,
   IconClock,
   IconPencil,
   IconScissors,
@@ -159,58 +161,71 @@ function ApprovalRow({
   viewer: Viewer;
   onChanged: () => void;
 }) {
-  const { item, late, due } = approval;
+  const { item, late, due, sender } = approval;
   const p = priority(item.priority);
+  const [open, setOpen] = useState(false);
 
   return (
-    <li className="appr">
-      <div className="appr-head">
+    <li className={cn("appr", open && "appr-open-row")}>
+      {/* The gist: enough to know what it is and who sent it. Click for the rest. */}
+      <button
+        type="button"
+        className="appr-gist"
+        aria-expanded={open}
+        onClick={() => setOpen((o) => !o)}
+      >
         <span className={cn("appr-ref", late && "appr-ref-late")}>{refLabel(item.ref)}</span>
 
-        <div className="appr-head-main">
-          <Link to={`/content/${item.id}`} className="appr-title">
-            {item.title}
-          </Link>
-          <div className="appr-tags">
-            {item.client && <span className="appr-client">{item.client.name}</span>}
-            {item.priority !== "normal" && (
-              <Badge className={p.chip}>{p.label} priority</Badge>
-            )}
-            {late && <Badge className="chip-alert">Overdue</Badge>}
+        <span className="appr-gist-main">
+          <span className="appr-title">{item.title}</span>
+          <span className="appr-gist-sub truncate">
+            {[item.client?.name, sender ? `from ${sender.name}` : null]
+              .filter(Boolean)
+              .join(" · ")}
+          </span>
+        </span>
+
+        <span className="appr-gist-tags">
+          {item.priority !== "normal" && <Badge className={p.chip}>{p.label}</Badge>}
+          {late && <Badge className="chip-alert">Overdue</Badge>}
+        </span>
+
+        <span className="appr-when">
+          <span className={cn("appr-wait", late && "appr-wait-late")}>{waitLabel(approval)}</span>
+          <span className="appr-due">
+            {due ? `Deadline ${dueLabel(due)}` : "No deadline set"}
+          </span>
+        </span>
+
+        <span className="appr-chevron" aria-hidden>
+          <IconChevronLeft />
+        </span>
+      </button>
+
+      {open && (
+        <div className="appr-details">
+          <Sender approval={approval} />
+          <Submission approval={approval} />
+
+          <div className="appr-foot">
+            {/* The same buttons and dialogs as the video page; the checks are
+                asked for rather than assumed. */}
+            <StageActions
+              item={item}
+              canForward={canAdvance(viewer, item)}
+              canBack={canSendBack(viewer, item)}
+              handoff={buildHandoff(item, team)}
+              team={team}
+              actor={viewer.name}
+              onChanged={onChanged}
+            />
+            <Link to={`/content/${item.id}`} className="appr-open">
+              Open the video
+              <OpenIcon />
+            </Link>
           </div>
         </div>
-
-        <div className="appr-when">
-          <p className={cn("appr-wait", late && "appr-wait-late")}>{waitLabel(approval)}</p>
-          <p className="appr-due">
-            {/* A gate has no deadline of its own: this is the deadline of the
-                step being reviewed, which keeps running while it waits here. */}
-            {due ? `Deadline ${dueLabel(due)}` : "No deadline set"}
-          </p>
-        </div>
-      </div>
-
-      <Sender approval={approval} />
-      <Submission approval={approval} />
-
-      <div className="appr-foot">
-        {/* The same buttons and dialogs as the video page. The page is already
-            CEO-only, but the checks are asked for anyway rather than assumed —
-            one place decides who may approve, and it isn't this component. */}
-        <StageActions
-          item={item}
-          canForward={canAdvance(viewer, item)}
-          canBack={canSendBack(viewer, item)}
-          handoff={buildHandoff(item, team)}
-          team={team}
-          actor={viewer.name}
-          onChanged={onChanged}
-        />
-        <Link to={`/content/${item.id}`} className="appr-open">
-          Open the video
-          <OpenIcon />
-        </Link>
-      </div>
+      )}
     </li>
   );
 }
