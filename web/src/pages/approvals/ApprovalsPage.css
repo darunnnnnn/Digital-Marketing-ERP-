@@ -155,223 +155,7 @@
   color: var(--stone-400);
 }
 
-/* ---- who sent it ------------------------------------------------------- */
-
-.appr-sender {
-  display: flex;
-  align-items: center;
-  gap: var(--sp-3);
-}
-
-.appr-sender-name {
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: var(--stone-900);
-}
-
-.appr-sender-also {
-  font-weight: 400;
-  color: var(--stone-500);
-}
-
-.appr-sender-meta {
-  margin-top: 0.125rem;
-  font-size: 0.75rem;
-  color: var(--stone-500);
-}
-
-/* ---- what they sent ---------------------------------------------------- */
-
-.appr-sent {
-  border-radius: var(--radius-lg);
-  background: rgb(255 255 255 / 0.95);
-  box-shadow: inset 0 0 0 1px rgb(227 231 228 / 0.9);
-  padding: var(--sp-4);
-}
-
-.appr-sent > * + * {
-  margin-top: var(--sp-3);
-}
-
-.appr-nothing {
-  border-radius: var(--radius-lg);
-  background: var(--stone-100);
-  padding: 0.75rem var(--sp-4);
-  font-size: 0.875rem;
-  color: var(--stone-600);
-}
-
-.appr-links {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--sp-2);
-}
-
-/* A file to open, not a page to navigate to — hence the outward arrow. */
-.appr-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.375rem;
-  border-radius: var(--radius-full);
-  background: var(--brand-50);
-  box-shadow: inset 0 0 0 1px var(--brand-100);
-  padding: 0.375rem 0.75rem;
-  font-size: 0.8125rem;
-  font-weight: 500;
-  color: var(--brand-800);
-  transition:
-    background-color 0.15s,
-    color 0.15s;
-}
-
-.appr-link:hover {
-  background: var(--brand-800);
-  color: #fff;
-}
-
-.appr-link svg {
-  width: 0.75rem;
-  height: 0.75rem;
-}
-
-.appr-facts {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--sp-2) var(--sp-5);
-  margin: 0;
-}
-
-.appr-fact dt {
-  font-size: 0.6875rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--stone-400);
-}
-
-.appr-fact dd {
-  margin: 0.125rem 0 0;
-  font-size: 0.875rem;
-  color: var(--stone-800);
-}
-
-.appr-note-label {
-  font-size: 0.6875rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--stone-400);
-}
-
-.appr-note-text {
-  margin-top: 0.125rem;
-  font-size: 0.875rem;
-  line-height: 1.55;
-  color: var(--stone-700);
-  white-space: pre-wrap;
-}
-
-/* ---- the folded script ------------------------------------------------- */
-/* The drawer from the video page, reused so the gesture reads the same. */
-
-.appr-read-summary {
-  display: inline-flex;
-  cursor: pointer;
-  list-style: none;
-  align-items: center;
-  gap: var(--sp-2);
-  border-radius: var(--radius-full);
-  background: rgb(238 246 243 / 0.7);
-  padding: 0.375rem 0.875rem;
-  font-size: 0.8125rem;
-  font-weight: 500;
-  color: var(--brand-800);
-  transition: background-color 0.15s;
-}
-
-.appr-read-summary::-webkit-details-marker {
-  display: none;
-}
-
-.appr-read-summary:hover {
-  background: rgb(214 235 227 / 0.7);
-}
-
-.appr-read-open,
-.appr-read[open] .appr-read-closed {
-  display: none;
-}
-
-.appr-read[open] .appr-read-open {
-  display: inline;
-}
-
-/* A script reads better monospaced — the beats line up, as on the video page. */
-.appr-body {
-  max-height: 22rem;
-  overflow: auto;
-  margin: var(--sp-3) 0 0;
-  border-radius: var(--radius);
-  background: var(--stone-50);
-  box-shadow: inset 0 0 0 1px var(--stone-200);
-  padding: var(--sp-4);
-  font-family: ui-monospace, "SFMono-Regular", monospace;
-  font-size: 0.75rem;
-  line-height: 1.625;
-  color: var(--stone-700);
-  white-space: pre-wrap;
-}
-
-/* ---- approve, or send it back ------------------------------------------ */
-
-.appr-foot {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--sp-3);
-}
-
-.appr-open {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.375rem;
-  margin-left: auto;
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: var(--stone-500);
-  transition: color 0.15s;
-}
-
-.appr-open:hover {
-  color: var(--stone-900);
-}
-
-.appr-open svg {
-  width: 0.875rem;
-  height: 0.875rem;
-}
-
-@media (max-width: 640px) {
-  .appr {
-    padding: var(--sp-5) var(--sp-4);
-  }
-
-  /* On a phone the waiting time goes under the title rather than beside it. */
-  .appr-head {
-    flex-wrap: wrap;
-  }
-
-  .appr-when {
-    width: 100%;
-    text-align: left;
-  }
-
-  .appr-open {
-    margin-left: 0;
-  }
-}
-
-/* ---- the gist row, and what opens beneath it --------------------------- */
+/* ---- the gist row ------------------------------------------------------ */
 
 .appr-gist {
   display: flex;
@@ -386,8 +170,7 @@
   transition: background-color 0.15s;
 }
 
-.appr-gist:hover,
-.appr-open-row .appr-gist {
+.appr-gist:hover {
   background: rgb(238 246 243 / 0.5);
 }
 
@@ -426,34 +209,21 @@
   transition: transform 0.15s, background-color 0.15s, color 0.15s;
 }
 
+/* Pointing right: this opens a sheet, it no longer unfolds in place. */
 .appr-chevron svg {
   width: 1rem;
   height: 1rem;
-  transform: rotate(-90deg);
-}
-
-.appr-open-row .appr-chevron {
-  background: var(--brand-800);
-  color: #fff;
   transform: rotate(180deg);
 }
 
-.appr-details {
-  display: flex;
-  flex-direction: column;
-  gap: var(--sp-4);
-  padding: var(--sp-4) var(--sp-6) var(--sp-5);
-  background: rgb(238 246 243 / 0.25);
-  border-top: 1px solid rgb(227 231 228 / 0.7);
+.appr-gist:hover .appr-chevron {
+  background: var(--brand-800);
+  color: #fff;
 }
 
 @media (max-width: 640px) {
   .appr-gist {
     flex-wrap: wrap;
-    padding: var(--sp-4);
-  }
-
-  .appr-details {
     padding: var(--sp-4);
   }
 

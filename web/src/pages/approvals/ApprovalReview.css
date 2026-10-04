@@ -1,0 +1,394 @@
+/*
+ * The full-size review sheet. Same tokens and frosted-white surface as the
+ * rest of the app, sized for reading rather than glancing.
+ *
+ * Three bands: a header that stays, a body that scrolls however long the
+ * script is, and a footer with the decision pinned to the bottom. Nested
+ * dialogs (the approve hand-off, "request changes") sit at z-index 50, so this
+ * sheet deliberately sits below them at 40.
+ */
+
+.review-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 0;
+}
+
+@media (min-width: 640px) {
+  .review-layer {
+    align-items: center;
+    padding: var(--sp-6);
+  }
+}
+
+.review-scrim {
+  position: fixed;
+  inset: 0;
+  background: rgb(22 51 43 / 0.25);
+  backdrop-filter: blur(4px);
+}
+
+.review {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 58rem;
+  /* On a phone it comes up as a sheet; on a desktop it is a centred panel. */
+  max-height: 94vh;
+  border-radius: 1.75rem 1.75rem 0 0;
+  background: #fff;
+  box-shadow: 0 25px 60px -15px rgb(22 51 43 / 0.35);
+  overflow: hidden;
+}
+
+@media (min-width: 640px) {
+  .review {
+    max-height: 88vh;
+    border-radius: 1.75rem;
+  }
+}
+
+/* ---- header ------------------------------------------------------------ */
+
+.review-head {
+  flex-shrink: 0;
+  padding: var(--sp-5) var(--sp-6) var(--sp-4);
+  border-bottom: 1px solid var(--stone-200);
+}
+
+.review-head-top {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-4);
+}
+
+.review-ref {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: var(--radius-full);
+  background: var(--brand-50);
+  font-family: ui-monospace, "SFMono-Regular", monospace;
+  font-size: 0.75rem;
+  color: var(--brand-800);
+}
+
+.review-ref-late {
+  background: var(--red-50);
+  color: var(--red-700);
+}
+
+.review-head-main {
+  min-width: 0;
+  flex: 1;
+}
+
+.review-title {
+  font-size: 1.375rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--stone-900);
+}
+
+.review-head-sub {
+  margin-top: 0.125rem;
+  font-size: 0.875rem;
+  color: var(--stone-500);
+}
+
+/* ---- walking the queue ------------------------------------------------- */
+
+.review-steps {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: var(--sp-1);
+}
+
+.review-step {
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border: 0;
+  border-radius: var(--radius-full);
+  background: var(--stone-100);
+  color: var(--stone-600);
+  cursor: pointer;
+  transition:
+    background-color 0.15s,
+    color 0.15s;
+}
+
+.review-step:hover:not(:disabled) {
+  background: var(--brand-800);
+  color: #fff;
+}
+
+.review-step:disabled {
+  color: var(--stone-300);
+  cursor: default;
+}
+
+.review-step svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.review-step svg.flip {
+  transform: rotate(180deg);
+}
+
+/* Fixed width so the arrows don't shift as the numbers change length. */
+.review-count {
+  min-width: 4.5rem;
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--stone-500);
+  font-variant-numeric: tabular-nums;
+}
+
+.review-close {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 2rem;
+  height: 2rem;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--stone-400);
+  cursor: pointer;
+  transition:
+    background-color 0.15s,
+    color 0.15s;
+}
+
+.review-close:hover {
+  background: var(--stone-100);
+  color: var(--stone-700);
+}
+
+.review-close svg {
+  width: 1.125rem;
+  height: 1.125rem;
+}
+
+/* ---- who sent it ------------------------------------------------------- */
+
+.review-head-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  margin-top: var(--sp-4);
+}
+
+.review-sender {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  min-width: 0;
+}
+
+.review-sender-name {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--stone-900);
+}
+
+.review-sender-also {
+  font-weight: 400;
+  color: var(--stone-500);
+}
+
+.review-sender-meta {
+  margin-top: 0.125rem;
+  font-size: 0.75rem;
+  color: var(--stone-500);
+}
+
+.review-chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.review-wait {
+  font-size: 0.75rem;
+  color: var(--stone-500);
+}
+
+.review-wait-late {
+  color: var(--red-600);
+  font-weight: 500;
+}
+
+/* ---- what they sent, the part that scrolls ----------------------------- */
+
+.review-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: var(--sp-5) var(--sp-6);
+}
+
+.review-body > * + * {
+  margin-top: var(--sp-5);
+}
+
+.review-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+}
+
+/* A file to open, not a page to navigate to — hence the outward arrow. */
+.review-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  border-radius: var(--radius-full);
+  background: var(--brand-50);
+  box-shadow: inset 0 0 0 1px var(--brand-100);
+  padding: 0.5rem 0.875rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--brand-800);
+  transition:
+    background-color 0.15s,
+    color 0.15s;
+}
+
+.review-link:hover {
+  background: var(--brand-800);
+  color: #fff;
+}
+
+.review-link svg {
+  width: 0.875rem;
+  height: 0.875rem;
+}
+
+.review-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-3) var(--sp-6);
+  margin: 0;
+  border-radius: var(--radius-lg);
+  background: var(--stone-50);
+  box-shadow: inset 0 0 0 1px var(--stone-200);
+  padding: var(--sp-3) var(--sp-4);
+}
+
+.review-fact dt {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--stone-400);
+}
+
+.review-fact dd {
+  margin: 0.125rem 0 0;
+  font-size: 0.875rem;
+  color: var(--stone-800);
+}
+
+.review-note-label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--stone-400);
+}
+
+.review-note-text {
+  margin-top: var(--sp-2);
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: var(--stone-700);
+  white-space: pre-wrap;
+}
+
+/* The full script, set like the one on the video page. No height cap: the
+   sheet's body is what scrolls, so the text is read in one column. */
+.review-note-script {
+  border-radius: var(--radius);
+  background: var(--stone-50);
+  box-shadow: inset 0 0 0 1px var(--stone-200);
+  padding: var(--sp-4);
+  font-family: ui-monospace, "SFMono-Regular", monospace;
+  font-size: 0.8125rem;
+  line-height: 1.7;
+}
+
+.review-nothing {
+  border-radius: var(--radius-lg);
+  background: var(--stone-100);
+  padding: 0.75rem var(--sp-4);
+  font-size: 0.875rem;
+  color: var(--stone-600);
+}
+
+/* ---- the decision ------------------------------------------------------ */
+
+.review-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-3);
+  flex-shrink: 0;
+  padding: var(--sp-4) var(--sp-6);
+  border-top: 1px solid var(--stone-200);
+  background: rgb(238 246 243 / 0.4);
+}
+
+.review-open {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  margin-left: auto;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--stone-500);
+  transition: color 0.15s;
+}
+
+.review-open:hover {
+  color: var(--stone-900);
+}
+
+.review-open svg {
+  width: 0.875rem;
+  height: 0.875rem;
+}
+
+@media (max-width: 640px) {
+  .review-head,
+  .review-body,
+  .review-foot {
+    padding-left: var(--sp-4);
+    padding-right: var(--sp-4);
+  }
+
+  /* The counter is the first thing to go when the header gets tight. */
+  .review-count {
+    display: none;
+  }
+
+  .review-open {
+    margin-left: 0;
+  }
+}

@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { Link } from "react-router";
 import {
   IconCamera,
   IconCheckCircle,
@@ -15,14 +14,11 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { Stat } from "@/components/ui/Stat";
 import { useViewer } from "@/lib/auth";
 import { APPROVAL_STAGES, GATES, listApprovals, type Approval } from "@/lib/approvals";
-import { canAdvance, canSendBack } from "@/lib/permissions";
 import { priority, refLabel } from "@/lib/pipeline";
 import { listMembers } from "@/lib/queries";
 import { useAsync } from "@/lib/use-async";
-import { cn, dueLabel, formatDateTime, initials } from "@/lib/utils";
-import { StageActions } from "@/pages/content/StageActions";
-import { buildHandoff } from "@/pages/content/handoff-info";
-import type { Member, Viewer } from "@/lib/types";
+import { cn, dueLabel } from "@/lib/utils";
+import { ApprovalReview } from "./ApprovalReview";
 import "./ApprovalsPage.css";
 import "../content/MyWork.css";
 import "../team/TeamPage.css";
@@ -34,21 +30,6 @@ const GATE_ICONS: Record<string, typeof IconPencil> = {
   edit_review: IconScissors,
 };
 
-function OpenIcon() {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M14 5h5v5M19 5l-8 8M18 14v4a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4" />
-    </svg>
-  );
-}
-
 /** How long it has been sitting here, in the words the CEO cares about. */
 function waitLabel(a: Approval) {
   if (a.waiting === null) return "Waiting";
@@ -57,123 +38,21 @@ function waitLabel(a: Approval) {
   return `Waiting ${a.waiting} days`;
 }
 
-/** Who sent it, and anyone else whose work is in the same submission. */
-function Sender({ approval }: { approval: Approval }) {
-  const { sender, alsoFrom, sentAt } = approval;
-
-  return (
-    <div className="appr-sender">
-      <span className="who-avatar">{initials(sender?.name ?? "?")}</span>
-      <div className="who-text">
-        <p className="appr-sender-name truncate">
-          {sender?.name ?? "Nobody assigned"}
-          {alsoFrom.map((p) => (
-            <span key={p.name} className="appr-sender-also">
-              {" + "}
-              {p.name}
-            </span>
-          ))}
-        </p>
-        <p className="appr-sender-meta truncate">
-          {sender?.role ?? "assignment cleared"}
-          {sentAt ? ` · sent ${formatDateTime(sentAt)}` : ""}
-        </p>
-      </div>
-    </div>
-  );
-}
-
-/**
- * What they sent. Links open in a new tab, because reviewing footage means
- * leaving the page and coming back to the same queue; a script is read in
- * place, folded away so twenty rows stay scannable.
- */
-function Submission({ approval }: { approval: Approval }) {
-  const { links, notes, facts } = approval;
-
-  if (links.length === 0 && notes.length === 0 && facts.length === 0) {
-    return (
-      <p className="appr-nothing">
-        They sent this on without attaching anything. Open the video to see the whole trail.
-      </p>
-    );
-  }
-
-  return (
-    <div className="appr-sent">
-      {links.length > 0 && (
-        <div className="appr-links">
-          {links.map((l) => (
-            <a
-              key={l.label}
-              href={l.href}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="appr-link"
-            >
-              {l.label}
-              <OpenIcon />
-            </a>
-          ))}
-        </div>
-      )}
-
-      {facts.length > 0 && (
-        <dl className="appr-facts">
-          {facts.map((f) => (
-            <div key={f.label} className="appr-fact">
-              <dt>{f.label}</dt>
-              <dd>{f.value}</dd>
-            </div>
-          ))}
-        </dl>
-      )}
-
-      {notes.map((n) =>
-        // A script runs to pages; a shoot note is a line or two and reads better open.
-        n.text.length > 240 ? (
-          <details key={n.label} className="appr-read">
-            <summary className="appr-read-summary">
-              <span className="appr-read-closed">Read the {n.label.toLowerCase()}</span>
-              <span className="appr-read-open">Hide the {n.label.toLowerCase()}</span>
-            </summary>
-            <pre className="appr-body">{n.text}</pre>
-          </details>
-        ) : (
-          <div key={n.label} className="appr-note">
-            <p className="appr-note-label">{n.label}</p>
-            <p className="appr-note-text">{n.text}</p>
-          </div>
-        ),
-      )}
-    </div>
-  );
-}
-
 function ApprovalRow({
   approval,
-  team,
-  viewer,
-  onChanged,
+  onOpen,
 }: {
   approval: Approval;
-  team: Member[];
-  viewer: Viewer;
-  onChanged: () => void;
+  onOpen: () => void;
 }) {
   const { item, late, due, sender } = approval;
   const p = priority(item.priority);
-  const [open, setOpen] = useState(false);
 
   return (
-    <li className={cn("appr", open && "appr-open-row")}>
-      {/* The gist: enough to know what it is and who sent it. Click for the rest. */}
-      <button
-        type="button"
-        className="appr-gist"
-        aria-expanded={open}
-        onClick={() => setOpen((o) => !o)}
-      >
+    <li className="appr">
+      {/* The gist: enough to know what it is and who sent it. The submission
+          itself opens full size, because a script is read, not glanced at. */}
+      <button type="button" className="appr-gist" onClick={onOpen}>
         <span className={cn("appr-ref", late && "appr-ref-late")}>{refLabel(item.ref)}</span>
 
         <span className="appr-gist-main">
@@ -201,37 +80,13 @@ function ApprovalRow({
           <IconChevronLeft />
         </span>
       </button>
-
-      {open && (
-        <div className="appr-details">
-          <Sender approval={approval} />
-          <Submission approval={approval} />
-
-          <div className="appr-foot">
-            {/* The same buttons and dialogs as the video page; the checks are
-                asked for rather than assumed. */}
-            <StageActions
-              item={item}
-              canForward={canAdvance(viewer, item)}
-              canBack={canSendBack(viewer, item)}
-              handoff={buildHandoff(item, team)}
-              team={team}
-              actor={viewer.name}
-              onChanged={onChanged}
-            />
-            <Link to={`/content/${item.id}`} className="appr-open">
-              Open the video
-              <OpenIcon />
-            </Link>
-          </div>
-        </div>
-      )}
     </li>
   );
 }
 
 export function ApprovalsPage() {
   const viewer = useViewer();
+  const [openId, setOpenId] = useState<string | null>(null);
 
   const { data, loading, error, reload } = useAsync(async () => {
     // The team list is needed either way — to name the voice over person on a
@@ -248,6 +103,15 @@ export function ApprovalsPage() {
   const overdue = approvals.filter((a) => a.late).length;
   const longest = approvals.reduce((max, a) => Math.max(max, a.waiting ?? 0), 0);
   const count = (stage: string) => approvals.filter((a) => a.item.stage === stage).length;
+
+  // The queue in the order the page lists it, so the sheet's prev/next arrows
+  // move the way the eye does. An approved video drops out of `approvals` on
+  // reload, which closes the sheet by itself — there is nothing left to review.
+  const ordered = APPROVAL_STAGES.flatMap((stage) =>
+    approvals.filter((a) => a.item.stage === stage),
+  );
+  const openIndex = ordered.findIndex((a) => a.item.id === openId);
+  const open = openIndex === -1 ? null : ordered[openIndex];
 
   return (
     <div className="stack-8">
@@ -334,15 +198,28 @@ export function ApprovalsPage() {
                   <ApprovalRow
                     key={a.item.id}
                     approval={a}
-                    team={team}
-                    viewer={viewer}
-                    onChanged={reload}
+                    onOpen={() => setOpenId(a.item.id)}
                   />
                 ))}
               </ul>
             </Card>
           );
         })
+      )}
+
+      {open && (
+        <ApprovalReview
+          approval={open}
+          position={{ index: openIndex, total: ordered.length }}
+          team={team}
+          viewer={viewer}
+          onClose={() => setOpenId(null)}
+          onStep={(delta) => {
+            const next = ordered[openIndex + delta];
+            if (next) setOpenId(next.item.id);
+          }}
+          onChanged={reload}
+        />
       )}
     </div>
   );
