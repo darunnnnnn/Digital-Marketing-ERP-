@@ -2,7 +2,7 @@ import { handoff } from "@/lib/pipeline";
 import { hasRole } from "@/lib/roles";
 import type { ContentItem, Member } from "@/lib/types";
 import { dateInputValue, toDate } from "@/lib/utils";
-import type { HandoffInfo } from "./StageActions";
+import type { HandoffInfo } from "./gate-forms";
 
 /**
  * What the approve dialog needs at a CEO gate: who the video can be handed to,

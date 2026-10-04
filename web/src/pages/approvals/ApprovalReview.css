@@ -38,7 +38,7 @@
   display: flex;
   flex-direction: column;
   width: 100%;
-  max-width: 58rem;
+  max-width: 72rem;
   /* On a phone it comes up as a sheet; on a desktop it is a centred panel. */
   max-height: 94vh;
   border-radius: 1.75rem 1.75rem 0 0;
@@ -182,15 +182,60 @@
   height: 1.125rem;
 }
 
+/* ---- the two columns --------------------------------------------------- */
+
+.review-cols {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+/* Side by side once there is room for a readable measure plus the form.
+   Below that they stack and the sheet scrolls as one. */
+@media (min-width: 60rem) {
+  .review-cols {
+    flex-direction: row;
+  }
+
+  .review-main {
+    flex: 1;
+    min-width: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  .review-side {
+    width: 24rem;
+    flex-shrink: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    border-left: 1px solid var(--stone-200);
+    border-top: 0;
+  }
+}
+
+.review-main {
+  padding: var(--sp-5) var(--sp-6);
+}
+
+.review-main > * + * {
+  margin-top: var(--sp-5);
+}
+
+.review-side {
+  background: rgb(250 251 250 / 0.9);
+  border-top: 1px solid var(--stone-200);
+}
+
 /* ---- who sent it ------------------------------------------------------- */
 
-.review-head-meta {
+.review-sender-row {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: var(--sp-3);
-  margin-top: var(--sp-4);
 }
 
 .review-sender {
@@ -232,20 +277,6 @@
 .review-wait-late {
   color: var(--red-600);
   font-weight: 500;
-}
-
-/* ---- what they sent, the part that scrolls ----------------------------- */
-
-.review-body {
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  padding: var(--sp-5) var(--sp-6);
-}
-
-.review-body > * + * {
-  margin-top: var(--sp-5);
 }
 
 .review-links {
@@ -342,24 +373,88 @@
   color: var(--stone-600);
 }
 
-/* ---- the decision ------------------------------------------------------ */
+/* ---- the decision panel ------------------------------------------------ */
 
-.review-foot {
+.decide {
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--sp-3);
-  flex-shrink: 0;
-  padding: var(--sp-4) var(--sp-6);
-  border-top: 1px solid var(--stone-200);
-  background: rgb(238 246 243 / 0.4);
+  flex-direction: column;
+  min-height: 100%;
+}
+
+/* One switch, because approving and sending back are one choice. */
+.decide-switch {
+  display: flex;
+  gap: var(--sp-1);
+  padding: var(--sp-4) var(--sp-5) 0;
+}
+
+.decide-tab {
+  flex: 1;
+  border: 0;
+  border-radius: var(--radius-full);
+  background: var(--stone-100);
+  padding: 0.5rem 0.875rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--stone-600);
+  cursor: pointer;
+  transition:
+    background-color 0.15s,
+    color 0.15s;
+}
+
+.decide-tab:hover:not(:disabled):not(.decide-tab-on):not(.decide-tab-off-on) {
+  background: var(--stone-200);
+}
+
+.decide-tab:disabled {
+  color: var(--stone-300);
+  cursor: default;
+}
+
+.decide-tab-on {
+  background: var(--brand-800);
+  color: #fff;
+}
+
+/* Sending back is destructive, so the selected state says so. */
+.decide-tab-off-on {
+  background: var(--red-50);
+  color: var(--red-700);
+  box-shadow: inset 0 0 0 1px var(--red-200);
+}
+
+.decide-body {
+  padding: var(--sp-4) var(--sp-5) var(--sp-5);
+}
+
+.decide-note {
+  margin-bottom: var(--sp-4);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--stone-500);
+}
+
+/* In a column the fields stack and the button spans the width, so the form
+   never needs the two-up grid the dialog uses. */
+.decide-body .panel-pair {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.gate-actions {
+  display: flex;
+  margin-top: var(--sp-5);
+}
+
+.gate-actions .btn {
+  width: 100%;
+  justify-content: center;
 }
 
 .review-open {
   display: inline-flex;
   align-items: center;
   gap: 0.375rem;
-  margin-left: auto;
   font-size: 0.875rem;
   font-weight: 500;
   color: var(--stone-500);
@@ -377,8 +472,13 @@
 
 @media (max-width: 640px) {
   .review-head,
-  .review-body,
-  .review-foot {
+  .review-main {
+    padding-left: var(--sp-4);
+    padding-right: var(--sp-4);
+  }
+
+  .decide-switch,
+  .decide-body {
     padding-left: var(--sp-4);
     padding-right: var(--sp-4);
   }
@@ -388,7 +488,4 @@
     display: none;
   }
 
-  .review-open {
-    margin-left: 0;
-  }
 }
