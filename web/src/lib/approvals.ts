@@ -107,6 +107,8 @@ export const GATES: Record<string, Gate> = {
         { label: "Edited cut", href: item.editUrl },
         { label: "Raw footage", href: item.footageUrl },
         { label: "Voice over", href: item.voUrl },
+        // The cut is judged against the example it was modelled on.
+        { label: "Reference", href: item.referenceUrl },
       ]),
     notes: (item) => notes([{ label: "Editing instructions", text: item.editBrief }]),
     facts: (item) =>

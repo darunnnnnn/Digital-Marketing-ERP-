@@ -125,20 +125,21 @@ export function TaskView({
               <Reference label="The idea">{item.idea}</Reference>
             )}
 
-            {/* The reference is what the writer and the camera team work from. */}
-            {(panel === "script" || panel === "shoot" || panel === "vo") &&
-              item.referenceUrl && (
-                <Reference label="Reference video">
-                  <a
-                    href={item.referenceUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="ref-link"
-                  >
-                    Open the reference
-                  </a>
-                </Reference>
-              )}
+            {/* The example the whole video is modelled on. Everyone who makes
+                part of it works from it — the editor most of all, since
+                matching the reference's cut and music is the edit. */}
+            {item.referenceUrl && (
+              <Reference label="Reference video">
+                <a
+                  href={item.referenceUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="ref-link"
+                >
+                  Open the reference
+                </a>
+              </Reference>
+            )}
 
             {(panel === "shoot" || panel === "vo" || panel === "edit") && item.scriptBody && (
               <Reference label="Approved script">
