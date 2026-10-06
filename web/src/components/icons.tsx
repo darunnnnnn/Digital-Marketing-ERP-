@@ -213,3 +213,17 @@ export const IconMic = (p: P) => (
     <path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v3" />
   </svg>
 );
+
+export const IconPlay = (p: P) => (
+  <svg {...base} {...p}>
+    <circle cx="12" cy="12" r="9" />
+    <path d="M10.2 8.6 15.5 12l-5.3 3.4V8.6Z" />
+  </svg>
+);
+
+export const IconExternal = (p: P) => (
+  <svg {...base} {...p}>
+    <path d="M14 4h6v6M20 4l-8.5 8.5" />
+    <path d="M18 14.5V18a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h3.5" />
+  </svg>
+);

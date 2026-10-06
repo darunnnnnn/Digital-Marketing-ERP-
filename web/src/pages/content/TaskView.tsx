@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { Link } from "react-router";
-import { IconChevronLeft } from "@/components/icons";
+import { IconChevronLeft, IconExternal, IconPlay } from "@/components/icons";
 import { Card, CardHeader } from "@/components/ui/Card";
 import { Field, Input, Textarea } from "@/components/ui/Field";
 import { YesNoField } from "@/components/ui/YesNoField";
@@ -16,10 +16,23 @@ import "./TaskView.css";
 /** Read-only material the person needs in order to do their step. */
 function Reference({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <div>
+    <div className="ref">
       <p className="ref-label">{label}</p>
       <div className="ref-body">{children}</div>
     </div>
+  );
+}
+
+/* Material that lives somewhere else — the reference, the voice over, the
+   footage — is a button they can hit, not a line of underlined text sitting in
+   the middle of the page looking like part of the prose. */
+function OpenLink({ href, children }: { href: string; children: ReactNode }) {
+  return (
+    <a href={href} target="_blank" rel="noopener noreferrer" className="ref-open">
+      <IconPlay className="ref-open-play" />
+      <span>{children}</span>
+      <IconExternal className="ref-open-out" />
+    </a>
   );
 }
 
@@ -130,14 +143,7 @@ export function TaskView({
                 matching the reference's cut and music is the edit. */}
             {item.referenceUrl && (
               <Reference label="Reference video">
-                <a
-                  href={item.referenceUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="ref-link"
-                >
-                  Open the reference
-                </a>
+                <OpenLink href={item.referenceUrl}>Watch the reference video</OpenLink>
               </Reference>
             )}
 
@@ -153,14 +159,7 @@ export function TaskView({
 
             {panel === "edit" && item.voUrl && (
               <Reference label="Voice over">
-                <a
-                  href={item.voUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="ref-link"
-                >
-                  Open the voice over
-                </a>
+                <OpenLink href={item.voUrl}>Play the voice over</OpenLink>
                 {item.voNotes && <p className="ref-note">{item.voNotes}</p>}
               </Reference>
             )}
@@ -169,14 +168,7 @@ export function TaskView({
               <Reference
                 label={item.shootNeeded === false ? "Existing footage" : "Raw footage"}
               >
-                <a
-                  href={item.footageUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="ref-link"
-                >
-                  Open the footage
-                </a>
+                <OpenLink href={item.footageUrl}>Open the footage</OpenLink>
               </Reference>
             )}
 
@@ -186,14 +178,7 @@ export function TaskView({
 
             {panel === "post" && item.editUrl && (
               <Reference label="Final video">
-                <a
-                  href={item.editUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="ref-link"
-                >
-                  Open the edit
-                </a>
+                <OpenLink href={item.editUrl}>Watch the final video</OpenLink>
               </Reference>
             )}
           </div>

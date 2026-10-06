@@ -94,11 +94,16 @@
 /* ---- what they were given ---------------------------------------------- */
 
 .refs {
-  padding: var(--sp-1) var(--sp-6) var(--sp-6);
+  padding: var(--sp-2) var(--sp-6) var(--sp-7);
 }
 
-.refs > * + * {
-  margin-top: var(--sp-4);
+/* One piece of material per band, with a hairline between them: at a glance
+   you can tell where the reference ends and the script begins, instead of
+   reading one grey run of text. */
+.ref + .ref {
+  margin-top: var(--sp-5);
+  border-top: 1px solid var(--stone-200);
+  padding-top: var(--sp-5);
 }
 
 .ref-label {
@@ -129,6 +134,59 @@
   font-weight: 500;
   color: var(--brand-700);
   text-decoration: underline;
+}
+
+/* Anything stored elsewhere opens from a real button. It is sized for a thumb,
+   it says what it opens, and the arrow warns that it leaves this page. */
+.ref-open {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  margin-top: var(--sp-1);
+  border: 1px solid var(--stone-200);
+  border-radius: var(--radius);
+  background: var(--stone-50);
+  padding: 0.625rem var(--sp-4);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--stone-800);
+  text-decoration: none;
+  box-shadow: var(--shadow-sm);
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.ref-open:hover {
+  border-color: var(--brand-300);
+  background: var(--brand-50);
+  color: var(--brand-800);
+}
+
+.ref-open:focus-visible {
+  outline: 2px solid var(--brand-500);
+  outline-offset: 2px;
+}
+
+.ref-open-play {
+  width: 18px;
+  height: 18px;
+  flex: none;
+  color: var(--brand-600);
+}
+
+/* A note that comes with a file sits under its button, not beside it. */
+.ref-note {
+  margin-top: var(--sp-2);
+  font-size: 0.875rem;
+  color: var(--stone-600);
+}
+
+/* The leaves-this-page arrow is a hint, not a second label. */
+.ref-open-out {
+  width: 14px;
+  height: 14px;
+  flex: none;
+  margin-left: var(--sp-1);
+  color: var(--stone-400);
 }
 
 /* ---- their own work ---------------------------------------------------- */
