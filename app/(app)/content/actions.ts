@@ -14,6 +14,7 @@ import {
   saveContentPanel,
   sendContentBack,
   setAssignee,
+  setContentPrice,
 } from "@/lib/content-ops";
 import {
   canAdvance,
@@ -23,10 +24,12 @@ import {
   canEditPanel,
   canNote,
   canPlan,
+  canPriceContent,
   canSeeItem,
   canSendBack,
 } from "@/lib/permissions";
-import type { AssignField } from "@/lib/pipeline";
+import { handoff, type AssignField } from "@/lib/pipeline";
+import { parsePrice } from "@/lib/pricing";
 import { STEPS } from "@/lib/schedule";
 import { parseDateInput } from "@/lib/utils";
 
@@ -213,12 +216,24 @@ export async function handOffStage(
     return { errors: { memberId: "You can't approve this step." } };
   }
 
+  // The price question is opt-in: without the checkbox ticked the field is
+  // ignored entirely, so approving never silently rewrites what a video is
+  // worth. Only the CEO is offered it, and only the CEO is trusted with it.
+  const gate = handoff(item.stage);
+  let price: number | null | undefined;
+  if (gate && text(formData, "repriced") === "1" && canPriceContent(user)) {
+    const parsed = parsePrice(text(formData, "price"));
+    if (parsed.error) return { errors: { price: parsed.error } };
+    price = parsed.value;
+  }
+
   const error = await handOffContent({
     id: item.id,
     memberId: text(formData, "memberId"),
     due: text(formData, "due"),
     note: text(formData, "note"),
     actor: user.name,
+    price,
   });
 
   if (error) {
@@ -263,6 +278,29 @@ export async function saveStageDetails(
   const error = await saveContentPanel(item.id, panel, (key) => text(formData, key));
   if (error) return { errors: { link: error } };
 
+  refresh(item.id);
+  return {};
+}
+
+/** Repricing a single video, outside the gates. CEO only. */
+export async function setPrice(
+  _prev: ContentFormState,
+  formData: FormData,
+): Promise<ContentFormState> {
+  const { user, item } = await loadItem(text(formData, "id"));
+  if (!item || !canPriceContent(user)) {
+    return { errors: { price: "Only the CEO can change what a video is worth." } };
+  }
+
+  const field = text(formData, "field");
+  if (field !== "videoPrice" && field !== "scriptPrice") {
+    return { errors: { price: "Unknown price." } };
+  }
+
+  const parsed = parsePrice(text(formData, "price"));
+  if (parsed.error) return { errors: { price: parsed.error } };
+
+  await setContentPrice(item.id, field, parsed.value ?? null, user.name);
   refresh(item.id);
   return {};
 }

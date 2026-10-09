@@ -67,7 +67,7 @@ export default async function ClientDetailPage({
   ].filter((c) => c.value);
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 sm:space-y-8">
       <Link
         href="/clients"
         className="inline-flex items-center gap-1.5 text-sm font-medium text-stone-500 transition-colors hover:text-stone-900"
@@ -89,7 +89,7 @@ export default async function ClientDetailPage({
 
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2.5">
-            <h1 className="text-4xl font-semibold tracking-tight text-stone-900">
+            <h1 className="text-2xl font-semibold tracking-tight text-stone-900 sm:text-3xl lg:text-4xl">
               {client.name}
             </h1>
             <Badge className={s.className}>{s.label}</Badge>
@@ -108,11 +108,36 @@ export default async function ClientDetailPage({
             {client.monthlyPostTarget > 0 && (
               <>
                 {" · "}
-                <span className="font-medium text-stone-700">{client.monthlyPostTarget}</span>{" "}
+                <span className="font-medium text-stone-700">
+                  {client.monthlyPostTarget}
+                </span>{" "}
                 posts/month
               </>
             )}
           </p>
+
+          {/* The agreed rates, if any. These seed the price on every video
+              planned for this client. */}
+          {(client.videoPrice > 0 || client.scriptPrice > 0) && (
+            <p className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-stone-500">
+              {client.videoPrice > 0 && (
+                <span>
+                  <span className="font-semibold tabular-nums text-stone-700">
+                    {formatMoney(client.videoPrice)}
+                  </span>{" "}
+                  per video
+                </span>
+              )}
+              {client.scriptPrice > 0 && (
+                <span>
+                  <span className="font-semibold tabular-nums text-stone-700">
+                    {formatMoney(client.scriptPrice)}
+                  </span>{" "}
+                  per script
+                </span>
+              )}
+            </p>
+          )}
           {services.length > 0 && (
             <div className="mt-3 flex flex-wrap gap-1.5">
               {services.map((svc) => (

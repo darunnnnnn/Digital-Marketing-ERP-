@@ -45,6 +45,12 @@ model Client {
   retainer      Int    @default(0)
   services      String @default("")
 
+  /// What this client pays per piece, used as the starting price on every video
+  /// planned for them. Both are optional: 0 means "no price agreed", and a
+  /// video then shows no price at all rather than a misleading 0.
+  videoPrice  Int @default(0)
+  scriptPrice Int @default(0)
+
   notes     String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -166,6 +172,13 @@ model ContentItem {
   /// How many times this piece has been sent back for changes.
   revisions Int     @default(0)
   notes     String?
+
+  // What this one piece is worth. Seeded from the client's price when the video
+  // is planned, then adjustable by the CEO at each of their gates — a video
+  // that turned into a three-day shoot is not worth what the client's standard
+  // rate says. null means no price has ever been set.
+  videoPrice  Int?
+  scriptPrice Int?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

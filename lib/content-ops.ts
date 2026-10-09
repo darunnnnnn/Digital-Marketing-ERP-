@@ -12,6 +12,7 @@ import {
   type AssignField,
   type Stage,
 } from "./pipeline";
+import { PRICE_FIELDS, priceLabel, type PriceField } from "./pricing";
 import { STEPS, scheduleFrom, type DeadlineField } from "./schedule";
 import { currentMonthKey, parseDateInput } from "./utils";
 
@@ -134,6 +135,10 @@ export async function planContent(input: PlanInput) {
         ...schedule,
         dueDate: schedule.publishDue ?? null,
         monthKey,
+        // Seeded from the client so a video arrives already priced; 0 on the
+        // client means no price agreed, which stays null here.
+        videoPrice: client.videoPrice > 0 ? client.videoPrice : null,
+        scriptPrice: client.scriptPrice > 0 ? client.scriptPrice : null,
         scriptwriterId: input.scriptwriterId || null,
         cameramanId: input.assignees?.cameramanId || null,
         editorId: input.assignees?.editorId || null,
@@ -215,6 +220,12 @@ export async function handOffContent(input: {
   due: string;
   note?: string;
   actor?: string;
+  /**
+   * The CEO's answer to "does the price need changing?". Left undefined when
+   * they did not ask to change it, which leaves the stored price untouched —
+   * distinct from null, which clears it.
+   */
+  price?: number | null;
 }) {
   const item = await db.contentItem.findUnique({ where: { id: input.id } });
   if (!item) return "That video no longer exists." as const;
@@ -227,16 +238,23 @@ export async function handOffContent(input: {
   if (!member || member.agencyId !== item.agencyId || !member.active) {
     return `Pick a ${gate.who} from your team.` as const;
   }
-  if (member.role !== gate.role) return `${member.name} isn't a ${gate.who}.` as const;
+  if (!gate.roles.includes(member.role)) {
+    return `${member.name} isn't a ${gate.who}.` as const;
+  }
 
   const due = parseDateInput(input.due);
   if (!due) return "Set a deadline for this step." as const;
+
+  // Only touched when the CEO explicitly chose to change it at this gate.
+  const repriced = input.price !== undefined && input.price !== item[gate.price];
+  const priceChange = input.price === undefined ? {} : { [gate.price]: input.price };
 
   await db.contentItem.update({
     where: { id: item.id },
     data: {
       stage: to,
       ...enterStage(to),
+      ...priceChange,
       [gate.assign]: member.id,
       [gate.deadline]: due,
       // The posting date is the overall due date, and decides which month the
@@ -245,18 +263,68 @@ export async function handOffContent(input: {
         ? { dueDate: due, monthKey: currentMonthKey(due) }
         : {}),
       events: {
-        create: {
-          kind: "stage",
-          message: input.note
-            ? `${stageConfig(item.stage).advance} — ${member.name} by ${input.due}: ${input.note}`
-            : `${stageConfig(item.stage).advance} — assigned to ${member.name}, due ${input.due}`,
-          actor: input.actor,
-        },
+        create: [
+          {
+            kind: "stage",
+            message: input.note
+              ? `${stageConfig(item.stage).advance} — ${member.name} by ${input.due}: ${input.note}`
+              : `${stageConfig(item.stage).advance} — assigned to ${member.name}, due ${input.due}`,
+            actor: input.actor,
+          },
+          // A separate entry: a price change is its own fact, and burying it in
+          // the hand-off message would hide it from anyone scanning the log.
+          ...(repriced
+            ? [
+                {
+                  kind: "price" as const,
+                  message: `${PRICE_FIELDS[gate.price].label} set to ${priceLabel(
+                    input.price ?? null,
+                  )}`,
+                  actor: input.actor,
+                },
+              ]
+            : []),
+        ],
       },
     },
   });
 
   return null;
+}
+
+/**
+ * Sets one of a video's two prices outright, for the CEO who wants to reprice
+ * without waiting for the next gate. `null` clears it, which makes the video
+ * fall back to the client's standard rate.
+ */
+export async function setContentPrice(
+  id: string,
+  field: PriceField,
+  price: number | null,
+  actor?: string,
+) {
+  const item = await db.contentItem.findUnique({ where: { id } });
+  if (!item) return false;
+  if (item[field] === price) return false;
+
+  await db.contentItem.update({
+    where: { id },
+    data: {
+      [field]: price,
+      events: {
+        create: {
+          kind: "price",
+          message:
+            price === null
+              ? `${PRICE_FIELDS[field].label} cleared — back to the client's rate`
+              : `${PRICE_FIELDS[field].label} set to ${priceLabel(price)}`,
+          actor,
+        },
+      },
+    },
+  });
+
+  return true;
 }
 
 /** Sends a piece back one stage and counts a revision against it. */

@@ -4,6 +4,7 @@ import { saveStageDetails } from "@/app/(app)/content/actions";
 import { AssigneeSelect } from "@/components/content/assignee-select";
 import { DeleteContentButton } from "@/components/content/delete-content-button";
 import { PanelForm } from "@/components/content/panel-form";
+import { PriceCard } from "@/components/content/price-card";
 import { StageActions } from "@/components/content/stage-actions";
 import { StageRail } from "@/components/content/stage-rail";
 import { TaskView } from "@/components/content/task-view";
@@ -18,6 +19,7 @@ import {
   canAssign,
   canDeleteContent,
   canEditPanel,
+  canPriceContent,
   canSeeItem,
   canSendBack,
   isManager,
@@ -32,6 +34,7 @@ import {
   stageConfig,
   stageProgress,
 } from "@/lib/pipeline";
+import { effectivePrice } from "@/lib/pricing";
 import { accent } from "@/lib/theme";
 import { STAGE_DEADLINE, STEPS, stepStatus } from "@/lib/schedule";
 import { cn, dateInputValue, dueLabel, formatCalendar, formatDate } from "@/lib/utils";
@@ -96,9 +99,14 @@ export default async function ContentDetailPage({
     ? {
         verb: gate.verb,
         who: gate.who,
-        options: byRole(gate.role),
+        options: byRole(...gate.roles),
         defaultMemberId: (item[gate.assign] as string | null) ?? "",
         defaultDue: dateInputValue(item[gate.deadline as keyof typeof item] as Date | null),
+        // The price question rides along with the approval, but only for the
+        // CEO — a manager approving a script is not setting what it sells for.
+        price: canPriceContent(user)
+          ? { field: gate.price, ...effectivePrice(item, item.client, gate.price) }
+          : null,
       }
     : null;
 
@@ -113,7 +121,7 @@ export default async function ContentDetailPage({
   ];
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 sm:space-y-8">
       <Link
         href="/content"
         className="inline-flex items-center gap-1.5 text-sm font-medium text-stone-500 transition-colors hover:text-stone-900"
@@ -123,7 +131,7 @@ export default async function ContentDetailPage({
       </Link>
 
       {/* Header */}
-      <div className="surface p-7">
+      <div className="surface p-5 sm:p-7">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-start">
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
@@ -155,7 +163,7 @@ export default async function ContentDetailPage({
               )}
             </div>
 
-            <h1 className="mt-3 text-3xl font-semibold leading-tight tracking-tight text-stone-900">
+            <h1 className="mt-3 text-2xl font-semibold leading-tight tracking-tight text-stone-900 sm:text-3xl">
               {item.title}
             </h1>
 
@@ -172,7 +180,7 @@ export default async function ContentDetailPage({
             </p>
           </div>
 
-          <div className="flex shrink-0 items-center gap-1.5">
+          <div className="flex shrink-0 flex-wrap items-center gap-1.5">
             <StageActions
               id={item.id}
               stage={item.stage}
@@ -188,7 +196,7 @@ export default async function ContentDetailPage({
           <StageRail item={item} />
         </div>
 
-        <div className="mt-5 grid grid-cols-2 gap-4 sm:grid-cols-4">
+        <div className="mt-5 grid grid-cols-2 gap-2.5 sm:grid-cols-4 sm:gap-4">
           {meta.map((m) => (
             <div key={m.label} className="rounded-xl bg-stone-50 px-3 py-2.5">
               <p className="text-[11px] font-medium text-stone-400">{m.label}</p>
@@ -200,8 +208,8 @@ export default async function ContentDetailPage({
         </div>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        <div className="space-y-6 lg:col-span-2">
+      <div className="grid gap-5 sm:gap-6 lg:grid-cols-3">
+        <div className="space-y-5 sm:space-y-6 lg:col-span-2">
           {/* Schedule */}
           <Card>
             <CardHeader
@@ -222,7 +230,7 @@ export default async function ContentDetailPage({
                   <li
                     key={step.field}
                     className={cn(
-                      "flex items-center gap-4 px-5 py-3.5",
+                      "flex items-center gap-3 px-4 py-3.5 sm:gap-4 sm:px-5",
                       current && "bg-brand-50/60",
                     )}
                   >
@@ -526,7 +534,7 @@ export default async function ContentDetailPage({
         </div>
 
         {/* Right rail */}
-        <div className="space-y-6">
+        <div className="space-y-5 sm:space-y-6">
           <Card>
             <CardHeader
               title="Who is on this"
@@ -574,6 +582,28 @@ export default async function ContentDetailPage({
                 highlight={stage.assign === "publisherId"}
               />
             </div>
+          </Card>
+
+          <Card>
+            <CardHeader
+              title="What this is worth"
+              action={
+                <Link
+                  href={`/clients/${item.client.id}/edit`}
+                  className="text-[11px] font-medium text-stone-400 transition-colors hover:text-brand-700"
+                >
+                  Client rates
+                </Link>
+              }
+            />
+            <PriceCard
+              id={item.id}
+              editable={canPriceContent(user)}
+              asks={(["videoPrice", "scriptPrice"] as const).map((field) => ({
+                field,
+                ...effectivePrice(item, item.client, field),
+              }))}
+            />
           </Card>
 
           {(item.footageUrl || item.editUrl || item.publishedUrl) && (

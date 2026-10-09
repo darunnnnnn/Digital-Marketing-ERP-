@@ -1,3 +1,4 @@
+import type { PriceField } from "./pricing";
 import { calendarDate } from "./utils";
 
 // The spine of Agency OS. Every board column, badge and action button reads
@@ -207,28 +208,56 @@ export const STAGE_LABELS = Object.fromEntries(
  */
 export const HANDOFFS: Record<
   string,
-  { assign: AssignField; role: string; deadline: string; who: string; verb: string }
+  {
+    assign: AssignField;
+    /**
+     * Who may be handed this step. A list, because the sidebar already lets a
+     * manager cover scripting and posting — a gate that refused them would
+     * contradict the assignment it sits next to.
+     */
+    roles: string[];
+    deadline: string;
+    who: string;
+    verb: string;
+    /**
+     * Which price the CEO is offered a chance to change here. Commissioning the
+     * script is when the script fee is decided; from the shoot onward the
+     * number that matters is what the finished video is worth.
+     */
+    price: PriceField;
+  }
 > = {
+  planned: {
+    assign: "scriptwriterId",
+    roles: ["scriptwriter", "manager"],
+    deadline: "scriptDue",
+    who: "scriptwriter",
+    verb: "Send to scriptwriter",
+    price: "scriptPrice",
+  },
   script_review: {
     assign: "cameramanId",
-    role: "cameraman",
+    roles: ["cameraman"],
     deadline: "shootDue",
     who: "cameraman",
     verb: "Approve script & assign the shoot",
+    price: "videoPrice",
   },
   footage_review: {
     assign: "editorId",
-    role: "editor",
+    roles: ["editor"],
     deadline: "editDue",
     who: "editor",
     verb: "Approve footage & assign the edit",
+    price: "videoPrice",
   },
   edit_review: {
     assign: "publisherId",
-    role: "publisher",
+    roles: ["publisher", "manager"],
     deadline: "publishDue",
     who: "posting team",
     verb: "Approve final video & assign posting",
+    price: "videoPrice",
   },
 };
 

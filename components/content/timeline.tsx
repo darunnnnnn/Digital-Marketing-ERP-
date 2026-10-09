@@ -9,6 +9,7 @@ const KIND_STYLES: Record<string, { dot: string; label: string }> = {
   assign: { dot: "bg-brand-500", label: "Assigned" },
   note: { dot: "bg-stone-300", label: "Note" },
   publish: { dot: "bg-brand-600", label: "Published" },
+  price: { dot: "bg-brand-700", label: "Price" },
 };
 
 export function Timeline({
@@ -25,7 +26,7 @@ export function Timeline({
   }[];
 }) {
   return (
-    <div className="p-5">
+    <div className="p-4 sm:p-5">
       <form action={addNote} className="flex gap-2">
         <input type="hidden" name="id" value={id} />
         <input
@@ -33,7 +34,7 @@ export function Timeline({
           required
           maxLength={280}
           placeholder="Add a note for the team…"
-          className="min-w-0 flex-1 rounded-lg border border-stone-200 bg-stone-50 px-3 py-2 text-sm outline-none transition-colors placeholder:text-stone-400 focus:border-brand-600 focus:ring-1 focus:ring-brand-600"
+          className="min-w-0 flex-1 rounded-lg border border-stone-200 bg-stone-50 px-3 py-2.5 text-base outline-none transition-colors placeholder:text-stone-400 focus:border-brand-600 focus:ring-1 focus:ring-brand-600 sm:py-2 sm:text-sm"
         />
         <Button type="submit" variant="secondary" size="md">
           Post

@@ -6,6 +6,7 @@ import { handOffStage, type ContentFormState } from "@/app/(app)/content/actions
 import { Button } from "@/components/ui/button";
 import { Field, Input, Select, Textarea } from "@/components/ui/field";
 import { Modal } from "@/components/ui/modal";
+import { PriceQuestion, type PriceAsk } from "./price-question";
 import type { MemberOption } from "./types";
 
 export type HandoffInfo = {
@@ -14,6 +15,8 @@ export type HandoffInfo = {
   options: MemberOption[];
   defaultMemberId: string;
   defaultDue: string;
+  /** Omitted for anyone who is not the CEO: only they set prices. */
+  price?: PriceAsk | null;
 };
 
 function Submit({ label }: { label: string }) {
@@ -57,6 +60,8 @@ function HandoffForm({
         </Field>
       </div>
 
+      {info.price && <PriceQuestion ask={info.price} error={err.price} />}
+
       <Field label="Note for them" hint="optional, shows in the activity log">
         <Textarea name="note" rows={2} placeholder="Shoot at golden hour, two angles…" />
       </Field>
@@ -67,7 +72,7 @@ function HandoffForm({
         </p>
       )}
 
-      <div className="flex justify-end gap-2.5">
+      <div className="flex flex-col-reverse gap-2.5 sm:flex-row sm:justify-end">
         <Button type="button" variant="ghost" onClick={onDone}>
           Cancel
         </Button>
@@ -82,7 +87,7 @@ export function HandoffButton({ id, info }: { id: string; info: HandoffInfo }) {
 
   return (
     <>
-      <Button onClick={() => setOpen(true)}>
+      <Button onClick={() => setOpen(true)} className="h-auto min-h-11 py-2 text-left">
         {info.verb}
         <svg
           viewBox="0 0 24 24"

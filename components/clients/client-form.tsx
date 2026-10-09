@@ -19,6 +19,8 @@ export type ClientDefaults = {
   monthlyTarget?: number;
   monthlyPostTarget?: number;
   retainer?: number;
+  videoPrice?: number;
+  scriptPrice?: number;
   services?: string;
   notes?: string | null;
 };
@@ -102,11 +104,7 @@ export function ClientForm({
           />
         </Field>
 
-        <Field
-          label="Monthly post target"
-          hint="posts / month"
-          error={err.monthlyPostTarget}
-        >
+        <Field label="Monthly post target" hint="posts / month" error={err.monthlyPostTarget}>
           <Input
             name="monthlyPostTarget"
             type="number"
@@ -133,6 +131,34 @@ export function ClientForm({
             placeholder="Reels, Shoots, Post design, Ads"
           />
         </Field>
+      </div>
+
+      <div className="rounded-xl border border-stone-200 p-4">
+        <p className="text-[11px] font-medium text-stone-400">Standard rates</p>
+        <p className="mb-3 mt-0.5 text-xs text-stone-500">
+          Optional. Every video planned for this client starts at these prices, and the CEO can
+          change the price on any single video later. Leave them at 0 if nothing is agreed yet.
+        </p>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="Price per video" hint="₹, optional" error={err.videoPrice}>
+            <Input
+              name="videoPrice"
+              type="number"
+              min={0}
+              step={500}
+              defaultValue={prev.videoPrice ?? defaults.videoPrice ?? 0}
+            />
+          </Field>
+          <Field label="Price per script" hint="₹, optional" error={err.scriptPrice}>
+            <Input
+              name="scriptPrice"
+              type="number"
+              min={0}
+              step={250}
+              defaultValue={prev.scriptPrice ?? defaults.scriptPrice ?? 0}
+            />
+          </Field>
+        </div>
       </div>
 
       <div className="rounded-xl border border-stone-200 p-4">
@@ -172,7 +198,7 @@ export function ClientForm({
         />
       </Field>
 
-      <div className="flex items-center justify-end gap-2.5 border-t border-stone-200 pt-4">
+      <div className="flex flex-col-reverse gap-2.5 border-t border-stone-200 pt-4 sm:flex-row sm:items-center sm:justify-end">
         {onCancel && (
           <Button type="button" variant="ghost" onClick={onCancel}>
             Cancel

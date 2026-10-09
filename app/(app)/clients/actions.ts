@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { requireRole } from "@/lib/auth";
 import { canManageClients } from "@/lib/permissions";
 import { db } from "@/lib/db";
+import { parsePrice } from "@/lib/pricing";
 import { ACCENT_KEYS } from "@/lib/theme";
 
 export type ClientFormState = {
@@ -30,6 +31,8 @@ function parse(fd: FormData) {
     monthlyTarget: text(fd, "monthlyTarget"),
     monthlyPostTarget: text(fd, "monthlyPostTarget"),
     retainer: text(fd, "retainer"),
+    videoPrice: text(fd, "videoPrice"),
+    scriptPrice: text(fd, "scriptPrice"),
     services: text(fd, "services"),
     notes: text(fd, "notes"),
   };
@@ -58,6 +61,13 @@ function parse(fd: FormData) {
     errors.retainer = "Enter a positive amount.";
   }
 
+  // Both rates are optional; 0 is the honest "nothing agreed yet".
+  const videoPrice = parsePrice(values.videoPrice);
+  if (videoPrice.error) errors.videoPrice = videoPrice.error;
+
+  const scriptPrice = parsePrice(values.scriptPrice);
+  if (scriptPrice.error) errors.scriptPrice = scriptPrice.error;
+
   if (!STATUSES.includes(values.status)) values.status = "active";
   if (!ACCENT_KEYS.includes(values.accent as never)) values.accent = "default";
 
@@ -75,6 +85,8 @@ function parse(fd: FormData) {
       monthlyTarget: target,
       monthlyPostTarget: postTarget,
       retainer: Math.round(retainer),
+      videoPrice: videoPrice.value ?? 0,
+      scriptPrice: scriptPrice.value ?? 0,
       services: values.services,
       notes: values.notes || null,
     },
