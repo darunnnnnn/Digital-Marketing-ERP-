@@ -33,7 +33,7 @@ export function RoleSelect({
         name="role"
         defaultValue={role}
         onChange={() => ref.current?.requestSubmit()}
-        className="cursor-pointer rounded-full border border-stone-200 bg-stone-50 px-3 py-1.5 text-sm text-stone-800 outline-none focus:border-brand-500"
+        className="h-10 cursor-pointer rounded-full border border-stone-200 bg-stone-50 px-3 text-base text-stone-800 outline-none focus:border-brand-500 sm:h-auto sm:py-1.5 sm:text-sm"
       >
         {ROLES.map((r) => (
           <option key={r} value={r}>
@@ -60,7 +60,7 @@ export function LinkButton({ id, pending }: { id: string; pending: boolean }) {
         <input type="hidden" name="id" value={id} />
         <button
           type="submit"
-          className="rounded-full px-3 py-1.5 text-sm font-medium text-brand-700 transition-colors hover:bg-brand-50"
+          className="inline-flex h-10 items-center rounded-full px-3 text-sm font-medium text-brand-700 transition-colors hover:bg-brand-50 sm:h-auto sm:py-1.5"
         >
           {pending ? "Invite link" : "Reset link"}
         </button>
@@ -90,8 +90,8 @@ export function ActiveToggle({ id, active }: { id: string; active: boolean }) {
         type="submit"
         className={
           active
-            ? "rounded-full bg-red-50 px-3 py-1.5 text-sm font-medium text-red-600 transition-colors hover:bg-red-100"
-            : "rounded-full bg-brand-50 px-3 py-1.5 text-sm font-medium text-brand-700 transition-colors hover:bg-brand-100"
+            ? "inline-flex h-10 items-center rounded-full bg-red-50 px-3 text-sm font-medium text-red-600 transition-colors hover:bg-red-100 sm:h-auto sm:py-1.5"
+            : "inline-flex h-10 items-center rounded-full bg-brand-50 px-3 text-sm font-medium text-brand-700 transition-colors hover:bg-brand-100 sm:h-auto sm:py-1.5"
         }
       >
         {active ? "Deactivate" : "Reactivate"}

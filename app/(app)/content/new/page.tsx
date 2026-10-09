@@ -55,8 +55,10 @@ export default async function PlanContentPage({
       </Link>
 
       <div>
-        <h1 className="text-4xl font-semibold tracking-tight text-stone-900">Plan content</h1>
-        <p className="mt-2 text-base text-stone-500">
+        <h1 className="text-2xl font-semibold tracking-tight text-stone-900 sm:text-3xl lg:text-4xl">
+          Plan content
+        </h1>
+        <p className="mt-1.5 text-sm text-stone-500 sm:mt-2 sm:text-base">
           Drop in a week&apos;s worth of ideas at once — one line per video.
         </p>
       </div>
@@ -68,8 +70,12 @@ export default async function PlanContentPage({
           action={<LinkButton href="/clients/new">Add a client</LinkButton>}
         />
       ) : (
-        <Card className="p-6">
-          <PlanForm clients={clientOptions} members={members} defaultClientId={defaultClientId} />
+        <Card className="p-4 sm:p-6">
+          <PlanForm
+            clients={clientOptions}
+            members={members}
+            defaultClientId={defaultClientId}
+          />
         </Card>
       )}
     </div>

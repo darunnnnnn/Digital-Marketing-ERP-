@@ -1,8 +1,8 @@
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
-    <main className="grid min-h-screen place-items-center px-5 py-12">
+    <main className="grid min-h-screen place-items-center px-4 py-8 sm:px-5 sm:py-12">
       <div className="w-full max-w-md">
-        <div className="mb-8 text-center">
+        <div className="mb-6 text-center sm:mb-8">
           <span className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-white font-serif text-3xl text-brand-800 shadow-sm ring-1 ring-stone-200">
             A
           </span>

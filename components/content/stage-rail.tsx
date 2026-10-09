@@ -55,7 +55,7 @@ export function StageRail({
   const current = stageIndex(item.stage);
 
   return (
-    <ol className="flex items-start gap-1 overflow-x-auto pb-1">
+    <ol className="rail -mx-1 items-start gap-1 px-1 pb-1">
       {STAGES.map((stage, i) => {
         const config = STAGE_CONFIG[stage];
         const done = i < current;
@@ -63,7 +63,10 @@ export function StageRail({
         const when = done || active ? stamp(stage, item) : null;
 
         return (
-          <li key={stage} className="flex min-w-0 flex-1 flex-col items-center gap-1.5">
+          <li
+            key={stage}
+            className="flex w-[68px] shrink-0 flex-col items-center gap-1.5 sm:w-auto sm:min-w-0 sm:flex-1"
+          >
             <div className="flex w-full items-center gap-1">
               <span
                 className={cn(

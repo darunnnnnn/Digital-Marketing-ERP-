@@ -10,7 +10,7 @@ export function EmptyState({
   action?: React.ReactNode;
 }) {
   return (
-    <div className="surface flex flex-col items-center justify-center px-6 py-16 text-center">
+    <div className="surface flex flex-col items-center justify-center px-5 py-10 text-center sm:px-6 sm:py-16">
       <span className="grid h-10 w-10 place-items-center rounded-2xl bg-brand-50 text-brand-600">
         <IconEmpty className="h-5 w-5" />
       </span>

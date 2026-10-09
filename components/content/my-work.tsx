@@ -27,11 +27,11 @@ function TaskRow({ item, verb, tone }: { item: WorkItem; verb: string; tone: str
     <li>
       <Link
         href={`/content/${item.id}`}
-        className="group flex items-center gap-4 px-5 py-4 transition-colors hover:bg-brand-50/50"
+        className="group flex items-center gap-3 px-4 py-3.5 transition-colors hover:bg-brand-50/50 sm:gap-4 sm:px-5 sm:py-4"
       >
         <span
           className={cn(
-            "grid h-11 w-11 shrink-0 place-items-center rounded-full font-mono text-xs",
+            "grid h-10 w-10 shrink-0 place-items-center rounded-full font-mono text-[11px] sm:h-11 sm:w-11 sm:text-xs",
             tone === "alert"
               ? "bg-red-50 text-red-700"
               : tone === "now"
@@ -43,10 +43,10 @@ function TaskRow({ item, verb, tone }: { item: WorkItem; verb: string; tone: str
         </span>
 
         <span className="min-w-0 flex-1">
-          <span className="block truncate text-base font-medium text-stone-900">
+          <span className="block truncate text-sm font-medium text-stone-900 sm:text-base">
             {item.title}
           </span>
-          <span className="mt-0.5 block truncate text-sm text-stone-500">
+          <span className="mt-0.5 block truncate text-xs text-stone-500 sm:text-sm">
             {item.client} · {verb}
           </span>
         </span>
@@ -54,16 +54,16 @@ function TaskRow({ item, verb, tone }: { item: WorkItem; verb: string; tone: str
         <span className="shrink-0 text-right">
           <span
             className={cn(
-              "block text-sm font-medium",
+              "block text-xs font-medium sm:text-sm",
               tone === "alert" ? "text-red-600" : "text-stone-700",
             )}
           >
             {daysLabel(item.due, tone)}
           </span>
-          <span className="block text-xs text-stone-400">deadline</span>
+          <span className="hidden text-xs text-stone-400 sm:block">deadline</span>
         </span>
 
-        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-stone-100 text-stone-500 transition-colors group-hover:bg-brand-800 group-hover:text-white">
+        <span className="hidden h-9 w-9 shrink-0 place-items-center rounded-full bg-stone-100 text-stone-500 transition-colors group-hover:bg-brand-800 group-hover:text-white sm:grid">
           <svg
             viewBox="0 0 24 24"
             className="h-4 w-4"
@@ -120,14 +120,14 @@ export function MyWork({ name, work }: { name: string; work: Work }) {
   });
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 sm:space-y-8">
       {/* Greeting */}
       <div>
         <p className="text-sm text-stone-500">{today}</p>
-        <h1 className="mt-1 text-4xl font-semibold tracking-tight text-stone-900">
+        <h1 className="mt-1 text-2xl font-semibold tracking-tight text-stone-900 sm:text-3xl lg:text-4xl">
           Hello, {name.split(" ")[0]}
         </h1>
-        <p className="mt-2 text-base text-stone-500">
+        <p className="mt-1.5 text-sm text-stone-500 sm:mt-2 sm:text-base">
           {work.todo.length === 0
             ? "Nothing is waiting on you right now."
             : `You have ${work.todo.length} ${work.todo.length === 1 ? noun : `${noun}s`} to finish.`}
@@ -135,7 +135,7 @@ export function MyWork({ name, work }: { name: string; work: Work }) {
       </div>
 
       {/* Today at a glance */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
         <Stat
           icon={IconAlert}
           label="Overdue"
@@ -168,11 +168,11 @@ export function MyWork({ name, work }: { name: string; work: Work }) {
         />
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-3">
+      <div className="grid gap-5 sm:gap-6 lg:grid-cols-3">
         {/* The work itself */}
         <div className="space-y-5 lg:col-span-2">
           {work.todo.length === 0 ? (
-            <div className="surface px-6 py-16 text-center">
+            <div className="surface px-5 py-12 text-center sm:px-6 sm:py-16">
               <span className="mx-auto grid h-12 w-12 place-items-center rounded-2xl bg-brand-50 text-brand-600">
                 <IconCheckCircle className="h-6 w-6" />
               </span>

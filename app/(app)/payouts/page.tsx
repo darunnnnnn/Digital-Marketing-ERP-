@@ -53,18 +53,20 @@ export default async function PayoutsPage({
   const estimates = rows.filter((r) => r.status === "estimate");
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 sm:space-y-8">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
-          <h1 className="text-4xl font-semibold tracking-tight text-stone-900">Payouts</h1>
-          <p className="mt-2 text-base text-stone-500">
+          <h1 className="text-2xl font-semibold tracking-tight text-stone-900 sm:text-3xl lg:text-4xl">
+            Payouts
+          </h1>
+          <p className="mt-1.5 text-sm text-stone-500 sm:mt-2 sm:text-base">
             What each person has earned, worked out from what they actually delivered.
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2.5">
+        <div className="flex flex-col gap-2.5 sm:flex-row sm:flex-wrap sm:items-center">
           {/* Month switcher */}
-          <div className="flex items-center gap-1 rounded-full bg-white/80 p-1 ring-1 ring-stone-200">
+          <div className="flex items-center justify-between gap-1 rounded-full bg-white/80 p-1 ring-1 ring-stone-200 sm:justify-start">
             <Link
               href={`/payouts?month=${shiftMonth(monthKey, -1)}`}
               aria-label="Previous month"
@@ -72,7 +74,7 @@ export default async function PayoutsPage({
             >
               <IconChevronLeft className="h-4 w-4" />
             </Link>
-            <span className="min-w-36 px-2 text-center text-sm font-medium text-stone-900">
+            <span className="flex-1 px-2 text-center text-sm font-medium text-stone-900 sm:min-w-36 sm:flex-none">
               {monthLabel(monthKey)}
             </span>
             {isCurrent ? (
@@ -90,23 +92,26 @@ export default async function PayoutsPage({
             )}
           </div>
 
-          <a
-            href={`/payouts/export?month=${monthKey}`}
-            className="inline-flex h-11 items-center rounded-full bg-white px-5 text-sm font-medium text-stone-700 ring-1 ring-stone-200 transition-colors hover:text-brand-800"
-          >
-            Export CSV
-          </a>
-          {estimates.length > 0 && (
-            <form action={approveAll}>
-              <input type="hidden" name="month" value={monthKey} />
-              <Button type="submit">Approve all {estimates.length}</Button>
-            </form>
-          )}
+          <div className="flex items-center gap-2.5">
+            <a
+              href={`/payouts/export?month=${monthKey}`}
+              className="inline-flex h-11 flex-1 items-center justify-center rounded-full bg-white px-5 text-sm font-medium text-stone-700 ring-1 ring-stone-200 transition-colors hover:text-brand-800 sm:flex-none"
+            >
+              Export CSV
+            </a>
+            {estimates.length > 0 && (
+              <form action={approveAll} className="flex-1 sm:flex-none">
+                <Button type="submit" className="w-full sm:w-auto">
+                  Approve all {estimates.length}
+                </Button>
+              </form>
+            )}
+          </div>
         </div>
       </div>
 
       {isCurrent && (
-        <div className="flex items-start gap-3 rounded-2xl bg-white/70 px-5 py-4 text-sm text-stone-600 ring-1 ring-stone-200">
+        <div className="flex items-start gap-3 rounded-2xl bg-white/70 px-4 py-3.5 text-sm text-stone-600 ring-1 ring-stone-200 sm:px-5 sm:py-4">
           <IconClock className="mt-0.5 h-4 w-4 shrink-0 text-brand-600" />
           <p>
             {monthLabel(monthKey)} is still in progress, so these are running totals that grow
@@ -115,7 +120,7 @@ export default async function PayoutsPage({
         </div>
       )}
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
         <Stat
           icon={IconWallet}
           label="Total payable"
@@ -132,7 +137,140 @@ export default async function PayoutsPage({
         <Stat icon={IconCheckCircle} label="Paid" value={formatMoney(paid)} />
       </div>
 
-      <div className="surface overflow-x-auto">
+      {/* Phones: a card per person. The nine-column table below only works on
+          a wide screen — here the money and the one available action lead. */}
+      <ul className="space-y-3 lg:hidden">
+        {rows.map((r) => (
+          <li key={r.memberId} className={cn("surface p-4", !r.active && "opacity-60")}>
+            <div className="flex items-start gap-3">
+              <Link
+                href={`/team/${r.memberId}?month=${monthKey}`}
+                className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-brand-50 text-sm font-medium text-brand-800"
+              >
+                {initials(r.name)}
+              </Link>
+              <Link href={`/team/${r.memberId}?month=${monthKey}`} className="min-w-0 flex-1">
+                <p className="truncate font-medium text-stone-900">{r.name}</p>
+                <p className="truncate text-sm text-stone-500">
+                  {ROLE_LABELS[r.role as Role] ?? r.role}
+                  {!r.active && " · deactivated"}
+                </p>
+              </Link>
+              <div className="shrink-0 text-right">
+                <p className="text-lg font-semibold tabular-nums text-stone-900">
+                  {formatMoney(r.total)}
+                </p>
+                <span
+                  className={cn(
+                    "mt-0.5 inline-block rounded-full px-2 py-0.5 text-[11px] font-medium",
+                    r.status === "estimate" && "bg-stone-100 text-stone-600",
+                    r.status === "approved" && "bg-brand-50 text-brand-700",
+                    r.status === "paid" && "bg-brand-800 text-white",
+                  )}
+                >
+                  {r.status === "estimate"
+                    ? isCurrent
+                      ? "Running"
+                      : "To approve"
+                    : r.status === "approved"
+                      ? "Approved"
+                      : "Paid"}
+                </span>
+              </div>
+            </div>
+
+            <dl className="mt-3 flex flex-wrap gap-x-4 gap-y-1 border-t border-stone-200/70 pt-3 text-xs">
+              <div className="flex gap-1.5">
+                <dt className="text-stone-400">Pay</dt>
+                <dd className="font-medium text-stone-700">{payTypeLabel(r.payType)}</dd>
+              </div>
+              {r.payType !== "salary" && (
+                <div className="flex gap-1.5">
+                  <dt className="text-stone-400">Delivered</dt>
+                  <dd className="font-medium tabular-nums text-stone-700">
+                    {r.deliveries} × {formatMoney(r.rate)}
+                  </dd>
+                </div>
+              )}
+              {r.payType !== "per_task" && (
+                <div className="flex gap-1.5">
+                  <dt className="text-stone-400">Salary</dt>
+                  <dd className="font-medium tabular-nums text-stone-700">
+                    {formatMoney(r.base)}
+                  </dd>
+                </div>
+              )}
+              {r.adjustment !== 0 && (
+                <div className="flex gap-1.5">
+                  <dt className="text-stone-400">Adjust</dt>
+                  <dd
+                    className={cn(
+                      "font-medium tabular-nums",
+                      r.adjustment > 0 ? "text-brand-700" : "text-red-600",
+                    )}
+                  >
+                    {r.adjustment > 0 ? "+" : "−"}
+                    {formatMoney(Math.abs(r.adjustment))}
+                  </dd>
+                </div>
+              )}
+            </dl>
+
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              {r.status === "estimate" && (
+                <>
+                  <PaySettingsButton
+                    memberId={r.memberId}
+                    name={r.name}
+                    payType={r.payType}
+                    rate={r.rate}
+                    salary={r.salary}
+                  />
+                  <ApproveButton row={r} month={monthKey} />
+                </>
+              )}
+              {r.status === "approved" && (
+                <>
+                  <form action={reopenOne}>
+                    <input type="hidden" name="memberId" value={r.memberId} />
+                    <input type="hidden" name="month" value={monthKey} />
+                    <button
+                      type="submit"
+                      className="inline-flex h-9 items-center rounded-full px-3 text-sm font-medium text-stone-600 ring-1 ring-stone-200"
+                    >
+                      Reopen
+                    </button>
+                  </form>
+                  <form action={payOne} className="ml-auto">
+                    <input type="hidden" name="memberId" value={r.memberId} />
+                    <input type="hidden" name="month" value={monthKey} />
+                    <Button type="submit" size="sm">
+                      Mark paid
+                    </Button>
+                  </form>
+                </>
+              )}
+              {r.status === "paid" && (
+                <span className="text-xs text-stone-400">
+                  Locked · paid {formatDate(r.paidAt)}
+                  {r.approvedBy ? ` · approved by ${r.approvedBy.split(" ")[0]}` : ""}
+                </span>
+              )}
+            </div>
+          </li>
+        ))}
+
+        <li className="flex items-baseline justify-between gap-3 px-4 pt-1 text-sm">
+          <span className="text-stone-500">
+            {rows.length} people · {monthLabel(monthKey)}
+          </span>
+          <span className="text-lg font-semibold tabular-nums text-stone-900">
+            {formatMoney(total)}
+          </span>
+        </li>
+      </ul>
+
+      <div className="surface hidden overflow-x-auto lg:block">
         <table className="w-full min-w-[1000px] text-left">
           <thead>
             <tr className="border-b border-stone-200/70 text-xs font-semibold uppercase tracking-wider text-stone-500">

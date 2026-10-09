@@ -45,11 +45,14 @@ body {
 
 body {
   @apply text-stone-900 antialiased;
+  /* Phones: stop a wide table or board from dragging the whole page sideways,
+     and keep iOS from re-scaling text when the device is turned. */
+  overflow-x: hidden;
+  -webkit-text-size-adjust: 100%;
   background:
     radial-gradient(1100px 520px at 92% -10%, rgb(55 125 103 / 0.16), transparent 60%),
     radial-gradient(900px 480px at 8% -5%, rgb(214 196 160 / 0.2), transparent 55%),
-    radial-gradient(1000px 600px at 50% 115%, rgb(55 125 103 / 0.08), transparent 60%),
-    #f2f4f2;
+    radial-gradient(1000px 600px at 50% 115%, rgb(55 125 103 / 0.08), transparent 60%), #f2f4f2;
   background-attachment: fixed;
 }
 
@@ -70,6 +73,29 @@ body {
   background: rgb(255 255 255 / 0.95);
   border: 1px solid rgb(227 231 228 / 0.9);
   box-shadow: 0 1px 2px rgb(22 51 43 / 0.05);
+}
+
+/*
+ * A row of pills or tabs that is too wide for a phone. It scrolls sideways
+ * under the thumb instead of wrapping into a tall stack, with the scrollbar
+ * hidden because the overflowing content is its own affordance.
+ */
+@utility rail {
+  display: flex;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  scroll-snap-type: x proximity;
+  overscroll-behavior-x: contain;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Honour the iPhone home indicator / Android gesture bar. */
+@utility pb-safe {
+  padding-bottom: max(env(safe-area-inset-bottom), 0px);
 }
 
 ::selection {

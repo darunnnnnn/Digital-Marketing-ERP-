@@ -57,48 +57,48 @@ export default async function ContentPage({ searchParams }: { searchParams: Prom
       select: { id: true, name: true, role: true, accent: true },
     }),
     db.contentItem.findMany({
-    where: {
-      agencyId: agency.id,
-      ...(client ? { clientId: client } : {}),
-      ...(q ? { title: { contains: q, ...insensitive } } : {}),
-      // Kept as an AND list so the two OR groups don't overwrite each other.
-      AND: [
-        // Everything for this month, plus anything older still in flight.
-        { OR: [{ monthKey }, { stage: { not: "published" } }] },
-        // Creative roles only ever see videos they are assigned to.
-        ...(manager
-          ? []
-          : [
-              {
-                OR: [
-                  { scriptwriterId: user.id },
-                  { cameramanId: user.id },
-                  { editorId: user.id },
-                  { publisherId: user.id },
-                ],
-              },
-            ]),
-        ...(owner
-          ? [
-              {
-                OR: [
-                  { scriptwriterId: owner },
-                  { cameramanId: owner },
-                  { editorId: owner },
-                  { publisherId: owner },
-                ],
-              },
-            ]
-          : []),
-      ],
-    },
-    orderBy: [{ dueDate: "asc" }, { ref: "asc" }],
-    include: {
-      client: { select: { id: true, name: true, accent: true } },
-      scriptwriter: { select: { name: true, accent: true, role: true } },
-      cameraman: { select: { name: true, accent: true, role: true } },
-      editor: { select: { name: true, accent: true, role: true } },
-      publisher: { select: { name: true, accent: true, role: true } },
+      where: {
+        agencyId: agency.id,
+        ...(client ? { clientId: client } : {}),
+        ...(q ? { title: { contains: q, ...insensitive } } : {}),
+        // Kept as an AND list so the two OR groups don't overwrite each other.
+        AND: [
+          // Everything for this month, plus anything older still in flight.
+          { OR: [{ monthKey }, { stage: { not: "published" } }] },
+          // Creative roles only ever see videos they are assigned to.
+          ...(manager
+            ? []
+            : [
+                {
+                  OR: [
+                    { scriptwriterId: user.id },
+                    { cameramanId: user.id },
+                    { editorId: user.id },
+                    { publisherId: user.id },
+                  ],
+                },
+              ]),
+          ...(owner
+            ? [
+                {
+                  OR: [
+                    { scriptwriterId: owner },
+                    { cameramanId: owner },
+                    { editorId: owner },
+                    { publisherId: owner },
+                  ],
+                },
+              ]
+            : []),
+        ],
+      },
+      orderBy: [{ dueDate: "asc" }, { ref: "asc" }],
+      include: {
+        client: { select: { id: true, name: true, accent: true } },
+        scriptwriter: { select: { name: true, accent: true, role: true } },
+        cameraman: { select: { name: true, accent: true, role: true } },
+        editor: { select: { name: true, accent: true, role: true } },
+        publisher: { select: { name: true, accent: true, role: true } },
       },
     }),
     db.contentItem.count({
@@ -147,24 +147,22 @@ export default async function ContentPage({ searchParams }: { searchParams: Prom
   const hasAnyContent = items.length > 0;
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 sm:space-y-8">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-4xl font-semibold tracking-tight text-stone-900">
+          <h1 className="text-2xl font-semibold tracking-tight text-stone-900 sm:text-3xl lg:text-4xl">
             Content pipeline
           </h1>
-          <p className="mt-2 text-base text-stone-500">
+          <p className="mt-1.5 text-sm text-stone-500 sm:mt-2 sm:text-base">
             {manager
               ? `${monthLabel(monthKey)} — every video from idea to published link.`
               : `${monthLabel(monthKey)} — the videos assigned to you.`}
           </p>
         </div>
-        {canPlan(user) && (
-          <NewContentButton />
-        )}
+        {canPlan(user) && <NewContentButton />}
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
         <Stat
           icon={IconFilm}
           label="In the pipeline"

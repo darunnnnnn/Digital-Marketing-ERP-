@@ -61,7 +61,7 @@ export function AssigneeSelect({
           disabled={disabled}
           defaultValue={value ?? ""}
           onChange={() => formRef.current?.requestSubmit()}
-          className="-ml-0.5 w-full cursor-pointer truncate rounded-md bg-transparent px-0.5 text-sm font-medium outline-none focus:ring-1 focus:ring-brand-600"
+          className="-ml-0.5 w-full cursor-pointer truncate rounded-md bg-transparent px-0.5 text-base font-medium outline-none focus:ring-1 focus:ring-brand-600 sm:text-sm"
         >
           <option value="">Unassigned</option>
           {options.map((o) => (

@@ -47,7 +47,7 @@ export function StageActions({
   const config = stageConfig(stage);
 
   return (
-    <div className="flex flex-wrap items-center gap-2.5">
+    <div className="flex w-full flex-wrap items-center gap-2.5 sm:w-auto">
       {config.sendBack && canBack && (
         <Button variant="secondary" size="md" onClick={() => setOpen(true)}>
           {config.sendBack}
@@ -91,7 +91,7 @@ export function StageActions({
               autoFocus
             />
           </Field>
-          <div className="flex justify-end gap-2.5 border-t border-stone-200 pt-4">
+          <div className="flex flex-col-reverse gap-2.5 border-t border-stone-200 pt-4 sm:flex-row sm:justify-end">
             <Button type="button" variant="ghost" onClick={() => setOpen(false)}>
               Cancel
             </Button>

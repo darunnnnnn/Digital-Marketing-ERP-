@@ -1,7 +1,12 @@
 import { cn } from "@/lib/utils";
 
-const CONTROL =
-  "w-full rounded-xl border border-stone-200 bg-stone-50 px-3.5 py-2.5 text-sm text-stone-900 outline-none transition-colors placeholder:text-stone-400 focus:border-brand-500 focus:bg-white focus:ring-4 focus:ring-brand-100";
+// text-base below sm is deliberate: iOS Safari zooms the page in when a
+// focused control's text is under 16px, leaving the user pinched in on a
+// half-visible form.
+const CONTROL_BASE =
+  "w-full rounded-xl border border-stone-200 bg-stone-50 px-3.5 text-base text-stone-900 outline-none transition-colors placeholder:text-stone-400 focus:border-brand-500 focus:bg-white focus:ring-4 focus:ring-brand-100 sm:text-sm";
+
+const CONTROL = `${CONTROL_BASE} py-3 sm:py-2.5`;
 
 export function Field({
   label,
@@ -42,13 +47,17 @@ export function Textarea(props: React.TextareaHTMLAttributes<HTMLTextAreaElement
     <textarea
       autoComplete="off"
       {...props}
-      className={cn(CONTROL, "resize-none", props.className)}
+      className={cn(CONTROL_BASE, "py-2.5 resize-none", props.className)}
     />
   );
 }
 
 export function Select(props: React.SelectHTMLAttributes<HTMLSelectElement>) {
   return (
-    <select autoComplete="off" {...props} className={cn(CONTROL, "cursor-pointer", props.className)} />
+    <select
+      autoComplete="off"
+      {...props}
+      className={cn(CONTROL, "cursor-pointer", props.className)}
+    />
   );
 }

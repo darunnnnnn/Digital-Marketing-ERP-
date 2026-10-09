@@ -76,7 +76,7 @@ export function TaskView({
   const message = item.events.find((e) => e.kind === "revision" || e.kind === "note");
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6">
+    <div className="mx-auto max-w-3xl space-y-5 sm:space-y-6">
       <Link
         href="/content"
         className="inline-flex items-center gap-1.5 text-sm font-medium text-stone-500 transition-colors hover:text-stone-900"
@@ -86,11 +86,11 @@ export function TaskView({
       </Link>
 
       {/* What and when */}
-      <div className="surface p-7">
+      <div className="surface p-5 sm:p-7">
         <p className="text-sm text-stone-500">
           {item.client.name} · <span className="font-mono">{refLabel(item.ref)}</span>
         </p>
-        <h1 className="mt-1 text-3xl font-semibold tracking-tight text-stone-900">
+        <h1 className="mt-1 text-2xl font-semibold tracking-tight text-stone-900 sm:text-3xl">
           {item.title}
         </h1>
 
@@ -140,7 +140,7 @@ export function TaskView({
         item.editBrief) && (
         <Card>
           <CardHeader title="1 · What you need" />
-          <div className="space-y-4 px-6 pb-6 pt-1">
+          <div className="space-y-4 px-4 pb-5 pt-1 sm:px-6 sm:pb-6">
             {panel === "script" && item.idea && (
               <Reference label="The idea">{item.idea}</Reference>
             )}
@@ -290,7 +290,7 @@ export function TaskView({
 
       {/* Send it on */}
       {mine && (
-        <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-white/70 px-6 py-5 ring-1 ring-stone-200">
+        <div className="flex flex-col gap-3.5 rounded-2xl bg-white/70 px-4 py-4 ring-1 ring-stone-200 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-4 sm:px-6 sm:py-5">
           <p className="text-sm text-stone-600">
             <span className="font-medium text-stone-900">3 · Send it on.</span> Save your work
             first — it then goes to the CEO for approval.

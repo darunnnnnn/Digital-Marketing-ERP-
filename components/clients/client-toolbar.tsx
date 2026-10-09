@@ -44,24 +44,26 @@ export function ClientToolbar({ counts }: { counts: Record<string, number> }) {
   }
 
   return (
-    <div className="surface p-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-      <div className="inline-flex gap-1 rounded-full bg-stone-100 p-1">
-        {FILTERS.map((f) => (
-          <button
-            key={f.key}
-            type="button"
-            onClick={() => setStatus(f.key)}
-            className={cn(
-              "rounded-full px-3.5 py-1.5 text-xs font-medium transition-colors",
-              status === f.key
-                ? "bg-brand-800 text-white shadow-sm"
-                : "text-stone-500 hover:text-stone-900",
-            )}
-          >
-            {f.label}
-            <span className="ml-1.5 tabular-nums opacity-60">{counts[f.key] ?? 0}</span>
-          </button>
-        ))}
+    <div className="surface flex flex-col gap-2.5 p-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="rail -mx-1 gap-1 px-1 sm:mx-0 sm:inline-flex sm:overflow-visible sm:px-0">
+        <div className="flex shrink-0 gap-1 rounded-full bg-stone-100 p-1">
+          {FILTERS.map((f) => (
+            <button
+              key={f.key}
+              type="button"
+              onClick={() => setStatus(f.key)}
+              className={cn(
+                "shrink-0 whitespace-nowrap rounded-full px-4 py-2 text-xs font-medium transition-colors sm:px-3.5 sm:py-1.5",
+                status === f.key
+                  ? "bg-brand-800 text-white shadow-sm"
+                  : "text-stone-500 hover:text-stone-900",
+              )}
+            >
+              {f.label}
+              <span className="ml-1.5 tabular-nums opacity-60">{counts[f.key] ?? 0}</span>
+            </button>
+          ))}
+        </div>
       </div>
 
       <div className="relative sm:w-72">
@@ -70,7 +72,7 @@ export function ClientToolbar({ counts }: { counts: Record<string, number> }) {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search clients…"
-          className="h-9 w-full rounded-full border border-stone-200 bg-stone-50 pl-9 pr-3 text-sm outline-none transition-colors placeholder:text-stone-400 focus:border-brand-600 focus:ring-1 focus:ring-brand-600"
+          className="h-11 w-full rounded-full border border-stone-200 bg-stone-50 pl-9 pr-3 text-base outline-none transition-colors placeholder:text-stone-400 focus:border-brand-600 focus:ring-1 focus:ring-brand-600 sm:h-9 sm:text-sm"
         />
       </div>
     </div>

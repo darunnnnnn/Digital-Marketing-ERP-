@@ -68,18 +68,20 @@ export default async function ClientsPage({
   );
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 sm:space-y-8">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-4xl font-semibold tracking-tight text-stone-900">Clients</h1>
-          <p className="mt-2 text-base text-stone-500">
+          <h1 className="text-2xl font-semibold tracking-tight text-stone-900 sm:text-3xl lg:text-4xl">
+            Clients
+          </h1>
+          <p className="mt-1.5 text-sm text-stone-500 sm:mt-2 sm:text-base">
             Every account you produce content for, with {monthLabel(monthKey)} at a glance.
           </p>
         </div>
         <NewClientButton />
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
         <Stat
           icon={IconUsers}
           label="Clients"

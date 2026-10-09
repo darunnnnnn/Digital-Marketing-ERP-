@@ -97,7 +97,7 @@ export default async function MemberProfilePage({
       : "Invite pending";
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 sm:space-y-8">
       <Link
         href="/team"
         className="inline-flex items-center gap-1.5 text-sm font-medium text-stone-500 transition-colors hover:text-stone-900"
@@ -107,13 +107,13 @@ export default async function MemberProfilePage({
       </Link>
 
       {/* Header */}
-      <div className="surface flex flex-col gap-6 p-7 lg:flex-row lg:items-center">
-        <span className="grid h-16 w-16 shrink-0 place-items-center rounded-full bg-brand-800 text-xl font-medium text-white shadow-lg shadow-brand-900/20">
+      <div className="surface flex flex-col gap-5 p-5 sm:p-7 lg:flex-row lg:items-center lg:gap-6">
+        <span className="grid h-14 w-14 shrink-0 place-items-center rounded-full bg-brand-800 text-lg font-medium text-white shadow-lg shadow-brand-900/20 sm:h-16 sm:w-16 sm:text-xl">
           {initials(member.name)}
         </span>
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2.5">
-            <h1 className="text-3xl font-semibold tracking-tight text-stone-900">
+            <h1 className="text-2xl font-semibold tracking-tight text-stone-900 sm:text-3xl">
               {member.name}
             </h1>
             <span
@@ -134,7 +134,7 @@ export default async function MemberProfilePage({
         </div>
 
         {/* Month switcher */}
-        <div className="flex shrink-0 items-center gap-1 rounded-full bg-stone-100 p-1">
+        <div className="flex shrink-0 items-center justify-between gap-1 rounded-full bg-stone-100 p-1 lg:justify-start">
           <Link
             href={`/team/${member.id}?month=${shiftMonth(monthKey, -1)}`}
             aria-label="Previous month"
@@ -223,40 +223,64 @@ export default async function MemberProfilePage({
                   Nothing delivered this month.
                 </p>
               ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full min-w-[560px] text-left">
-                    <thead>
-                      <tr className="border-y border-stone-200/70 text-xs font-semibold uppercase tracking-wider text-stone-500">
-                        <th className="px-6 py-3">Video</th>
-                        {steps.length > 1 && <th className="px-3 py-3">Step</th>}
-                        <th className="px-3 py-3">Due</th>
-                        <th className="px-3 py-3">Delivered</th>
-                        <th className="px-6 py-3 text-right">Timing</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-stone-200/70">
-                      {perf.completed.map((row) => (
-                        <tr key={`${row.id}-${row.step}`}>
-                          <td className="max-w-72 px-6 py-3.5">
-                            <WorkLink row={row} />
-                          </td>
-                          {steps.length > 1 && (
-                            <td className="px-3 py-3.5 text-sm text-stone-600">{row.step}</td>
-                          )}
-                          <td className="px-3 py-3.5 text-sm text-stone-600">
-                            {formatCalendar(row.due) ?? "—"}
-                          </td>
-                          <td className="px-3 py-3.5 text-sm text-stone-600">
+                <>
+                  {/* Phones: a list, since five columns cannot share 360px. */}
+                  <ul className="divide-y divide-stone-200/70 border-t border-stone-200/70 lg:hidden">
+                    {perf.completed.map((row) => (
+                      <li
+                        key={`m-${row.id}-${row.step}`}
+                        className="flex items-start gap-3 px-4 py-3"
+                      >
+                        <div className="min-w-0 flex-1">
+                          <WorkLink row={row} />
+                          <p className="mt-1 text-[11px] text-stone-400">
+                            {steps.length > 1 ? `${row.step} · ` : ""}
+                            due {formatCalendar(row.due) ?? "—"} · delivered{" "}
                             {formatDate(row.doneAt)}
-                          </td>
-                          <td className="px-6 py-3.5 text-right">
-                            <LatePill days={row.lateDays} />
-                          </td>
+                          </p>
+                        </div>
+                        <span className="shrink-0">
+                          <LatePill days={row.lateDays} />
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+
+                  <div className="hidden overflow-x-auto lg:block">
+                    <table className="w-full min-w-[560px] text-left">
+                      <thead>
+                        <tr className="border-y border-stone-200/70 text-xs font-semibold uppercase tracking-wider text-stone-500">
+                          <th className="px-6 py-3">Video</th>
+                          {steps.length > 1 && <th className="px-3 py-3">Step</th>}
+                          <th className="px-3 py-3">Due</th>
+                          <th className="px-3 py-3">Delivered</th>
+                          <th className="px-6 py-3 text-right">Timing</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                      </thead>
+                      <tbody className="divide-y divide-stone-200/70">
+                        {perf.completed.map((row) => (
+                          <tr key={`${row.id}-${row.step}`}>
+                            <td className="max-w-72 px-6 py-3.5">
+                              <WorkLink row={row} />
+                            </td>
+                            {steps.length > 1 && (
+                              <td className="px-3 py-3.5 text-sm text-stone-600">{row.step}</td>
+                            )}
+                            <td className="px-3 py-3.5 text-sm text-stone-600">
+                              {formatCalendar(row.due) ?? "—"}
+                            </td>
+                            <td className="px-3 py-3.5 text-sm text-stone-600">
+                              {formatDate(row.doneAt)}
+                            </td>
+                            <td className="px-6 py-3.5 text-right">
+                              <LatePill days={row.lateDays} />
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </>
               )}
             </Card>
 
@@ -275,7 +299,7 @@ export default async function MemberProfilePage({
                   }
                 />
                 <div className="px-6 pb-6 pt-1">
-                  <p className="text-3xl font-semibold tabular-nums tracking-tight text-stone-900">
+                  <p className="text-2xl font-semibold tabular-nums tracking-tight text-stone-900 sm:text-3xl">
                     {formatMoney(pay.total)}
                   </p>
                   <p className="mt-1 text-sm text-stone-500">

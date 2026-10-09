@@ -105,7 +105,7 @@ function ApproveForm({ row, month, onDone }: { row: Row; month: string; onDone: 
         <p className="rounded-xl bg-red-50 px-3.5 py-2.5 text-sm text-red-700">{state.error}</p>
       )}
 
-      <div className="flex justify-end gap-2.5">
+      <div className="flex flex-col-reverse gap-2.5 sm:flex-row sm:justify-end">
         <Button type="button" variant="ghost" onClick={onDone}>
           Cancel
         </Button>

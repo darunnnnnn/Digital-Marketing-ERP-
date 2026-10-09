@@ -25,9 +25,74 @@ export function ContentList({ items }: { items: BoardItem[] }) {
 
           return (
             <li key={item.id}>
+              {/*
+               * Two layouts, not one grid that degrades. Below lg the six
+               * columns would stack into six near-empty lines per video, so a
+               * phone gets a deliberate two-line row instead: what it is on
+               * top, who and when underneath.
+               */}
               <Link
                 href={`/content/${item.id}`}
-                className="grid gap-x-3 gap-y-1.5 px-6 py-4 transition-colors hover:bg-stone-100 lg:grid-cols-[72px_1fr_160px_140px_100px_88px] lg:items-center"
+                className="block px-4 py-3.5 transition-colors hover:bg-stone-100 sm:px-6 lg:hidden"
+              >
+                <div className="flex items-start gap-2">
+                  <span className="min-w-0 flex-1 text-sm font-medium leading-snug tracking-tight text-stone-900">
+                    {item.title}
+                  </span>
+                  <span className="shrink-0 font-mono text-[11px] text-stone-400">
+                    {refLabel(item.ref)}
+                  </span>
+                </div>
+
+                <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1.5">
+                  <span
+                    className={cn(
+                      "rounded-md px-1.5 py-0.5 text-[11px] font-medium ring-1 ring-inset",
+                      stage.chip,
+                    )}
+                  >
+                    {stage.label}
+                  </span>
+                  {item.priority === "high" && (
+                    <span
+                      className={cn(
+                        "rounded-md px-1.5 py-0.5 text-[11px] font-medium ring-1 ring-inset",
+                        priority("high").chip,
+                      )}
+                    >
+                      High
+                    </span>
+                  )}
+                  {item.revisions > 0 && (
+                    <span className="rounded-md bg-stone-100 px-1.5 py-0.5 text-[11px] font-medium text-stone-500 ring-1 ring-inset ring-stone-200">
+                      {item.revisions} rev
+                    </span>
+                  )}
+                  {due && (
+                    <span
+                      className={cn(
+                        "text-[11px] font-medium tabular-nums",
+                        late ? "text-red-600" : "text-stone-400",
+                      )}
+                    >
+                      {due}
+                    </span>
+                  )}
+                </div>
+
+                <div className="mt-1.5 flex items-center gap-1.5 text-[11px] text-stone-500">
+                  <span className={cn("h-1.5 w-1.5 shrink-0 rounded-full", clientAccent.dot)} />
+                  <span className="truncate font-semibold">{item.client.name}</span>
+                  <span className="text-stone-300">·</span>
+                  <span className="truncate">
+                    {item.owner ? item.owner.name.split(" ")[0] : "Unassigned"}
+                  </span>
+                </div>
+              </Link>
+
+              <Link
+                href={`/content/${item.id}`}
+                className="hidden gap-x-3 gap-y-1.5 px-6 py-4 transition-colors hover:bg-stone-100 lg:grid lg:grid-cols-[72px_1fr_160px_140px_100px_88px] lg:items-center"
               >
                 <span className="font-mono text-xs font-medium text-stone-400">
                   {refLabel(item.ref)}

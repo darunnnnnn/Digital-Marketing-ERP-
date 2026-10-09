@@ -187,7 +187,7 @@ export function PlanForm({
                     name={step.field}
                     value={dates[step.field]}
                     onChange={(e) => setDates({ ...dates, [step.field]: e.target.value })}
-                    className="mt-1.5 w-full rounded-lg border border-stone-200 bg-stone-50 px-2 py-1 text-xs text-stone-800 outline-none focus:border-brand-500 focus:bg-white"
+                    className="mt-1.5 h-10 w-full rounded-lg border border-stone-200 bg-stone-50 px-2 text-base text-stone-800 outline-none focus:border-brand-500 focus:bg-white sm:h-auto sm:py-1 sm:text-xs"
                   />
                 </li>
               ))}

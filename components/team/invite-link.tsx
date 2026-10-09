@@ -24,17 +24,17 @@ export function InviteLink({ name, link }: { name?: string; link: string }) {
       <p className="mt-0.5 text-xs text-brand-700">
         It works once and expires in 7 days. They&apos;ll choose their own password.
       </p>
-      <div className="mt-3 flex gap-2">
+      <div className="mt-3 flex flex-col gap-2 sm:flex-row">
         <input
           readOnly
           value={link}
           onFocus={(e) => e.currentTarget.select()}
-          className="min-w-0 flex-1 rounded-xl border border-brand-200 bg-white px-3 py-2 font-mono text-xs text-stone-700 outline-none"
+          className="min-w-0 flex-1 rounded-xl border border-brand-200 bg-white px-3 py-2.5 font-mono text-base text-stone-700 outline-none sm:py-2 sm:text-xs"
         />
         <button
           type="button"
           onClick={copy}
-          className="shrink-0 rounded-full bg-brand-800 px-4 text-xs font-medium text-white transition-colors hover:bg-brand-900"
+          className="h-10 shrink-0 rounded-full bg-brand-800 px-4 text-xs font-medium text-white transition-colors hover:bg-brand-900 sm:h-auto"
         >
           {copied ? "Copied" : "Copy"}
         </button>

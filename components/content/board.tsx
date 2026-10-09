@@ -38,7 +38,7 @@ export function Board({
   }
 
   return (
-    <div className="-mx-5 overflow-x-auto px-5 pb-2 lg:-mx-8 lg:px-8">
+    <div className="rail -mx-4 px-4 pb-2 sm:-mx-5 sm:px-5 lg:-mx-10 lg:px-10">
       <div className="flex min-w-max gap-2.5">
         {STAGES.map((stage) => {
           const config = STAGE_CONFIG[stage];
@@ -61,7 +61,7 @@ export function Board({
                 drop(stage);
               }}
               className={cn(
-                "flex w-[272px] shrink-0 flex-col rounded-3xl border p-2.5 backdrop-blur transition-colors",
+                "flex w-[78vw] max-w-[272px] shrink-0 snap-start scroll-mx-4 flex-col rounded-3xl border p-2.5 backdrop-blur transition-colors sm:w-[272px]",
                 isOver ? "border-brand-400 bg-brand-50/80" : "border-white/80 bg-white/45",
               )}
             >

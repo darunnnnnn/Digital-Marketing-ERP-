@@ -21,6 +21,8 @@ type NavItem = {
   href: string;
   label: string;
   title: string;
+  /** Even shorter, for the phone tab bar where a label gets about 70px. */
+  short?: string;
   icon: (p: { className?: string }) => React.ReactElement;
   soon?: boolean;
   /** Who sees it. Omitted means everyone. */
@@ -34,6 +36,7 @@ const NAV: NavItem[] = [
     href: "/dashboard",
     label: "Dashboard",
     title: "Dashboard",
+    short: "Home",
     icon: IconGrid,
     soon: true,
     roles: MANAGERS,
@@ -59,6 +62,7 @@ const NAV: NavItem[] = [
     href: "/payouts",
     label: "Payouts",
     title: "Payouts",
+    short: "Pay",
     icon: IconWallet,
     roles: ["ceo"],
   },
@@ -76,12 +80,23 @@ export function AppShell({
   const section = nav.find((n) => !n.soon && pathname.startsWith(n.href));
   const roleLabel = ROLE_LABELS[user.role as Role] ?? user.role;
 
+  // The phone tab bar carries only places you can actually go — a greyed-out
+  // "coming soon" tab wastes the scarcest space on the screen. With a single
+  // destination there is nothing to switch between, so the bar is dropped.
+  const tabs = nav.filter((n) => !n.soon);
+  const showTabs = tabs.length > 1;
+
+  // A scriptwriter has no /clients, so the logo cannot hardcode it.
+  const home = tabs[0]?.href ?? "/content";
+
+  const isActive = (href: string) => pathname === href || pathname.startsWith(href + "/");
+
   return (
     <div className="flex min-h-screen w-full">
-      {/* Icon rail */}
+      {/* Icon rail — desktop only; phones get the bottom tab bar instead. */}
       <aside className="sticky top-0 hidden h-screen w-[88px] shrink-0 flex-col items-center border-r border-white/70 bg-white/60 py-5 backdrop-blur-xl lg:flex">
         <Link
-          href="/content"
+          href={home}
           title="Agency OS"
           className="grid h-12 w-12 place-items-center rounded-2xl bg-white font-serif text-2xl text-brand-800 shadow-sm ring-1 ring-stone-200"
         >
@@ -90,7 +105,6 @@ export function AppShell({
 
         <nav className="mt-8 flex flex-col items-center gap-2">
           {nav.map((item) => {
-            const active = pathname === item.href || pathname.startsWith(item.href + "/");
             const Icon = item.icon;
 
             if (item.soon) {
@@ -112,7 +126,7 @@ export function AppShell({
                 title={item.label}
                 className={cn(
                   "grid h-12 w-12 place-items-center rounded-2xl transition-colors",
-                  active
+                  isActive(item.href)
                     ? "bg-brand-800 text-white shadow-lg shadow-brand-900/25"
                     : "text-stone-500 hover:bg-white hover:text-brand-800",
                 )}
@@ -139,47 +153,54 @@ export function AppShell({
 
       <div className="flex min-w-0 flex-1 flex-col">
         {/* Top bar */}
-        <header className="sticky top-0 z-20 flex h-20 items-center gap-4 border-b border-white/70 bg-white/70 px-5 backdrop-blur-xl lg:px-10">
+        <header className="sticky top-0 z-20 flex h-16 items-center gap-3 border-b border-white/70 bg-white/80 px-4 backdrop-blur-xl sm:px-5 lg:h-20 lg:gap-4 lg:px-10">
           <Link
-            href="/clients"
-            className="grid h-10 w-10 place-items-center rounded-xl bg-white font-serif text-xl text-brand-800 ring-1 ring-stone-200 lg:hidden"
+            href={home}
+            aria-label="Agency OS"
+            className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white font-serif text-xl text-brand-800 ring-1 ring-stone-200 lg:hidden"
           >
             A
           </Link>
-          <p className="text-lg font-medium text-stone-900">{section?.title ?? "Agency OS"}</p>
+          <p className="min-w-0 truncate text-base font-medium text-stone-900 lg:text-lg">
+            {section?.title ?? "Agency OS"}
+          </p>
 
-          <div className="ml-auto flex items-center gap-2">
+          <div className="ml-auto flex shrink-0 items-center gap-1 sm:gap-2">
+            {/* Both are placeholders; on a phone the room is better spent on
+                controls that actually do something. */}
             <button
               type="button"
               title="Settings — coming soon"
-              className="grid h-10 w-10 place-items-center rounded-full text-stone-500 transition-colors hover:bg-white hover:text-brand-800"
+              className="hidden h-10 w-10 place-items-center rounded-full text-stone-500 transition-colors hover:bg-white hover:text-brand-800 sm:grid"
             >
               <IconSettings className="h-5 w-5" />
             </button>
             <button
               type="button"
               title="Notifications — coming soon"
-              className="relative grid h-10 w-10 place-items-center rounded-full text-stone-500 transition-colors hover:bg-white hover:text-brand-800"
+              className="relative hidden h-10 w-10 place-items-center rounded-full text-stone-500 transition-colors hover:bg-white hover:text-brand-800 sm:grid"
             >
               <IconBell className="h-5 w-5" />
             </button>
-            <span className="mx-2 h-8 w-px bg-stone-200" />
+            <span className="mx-2 hidden h-8 w-px bg-stone-200 sm:block" />
             <div className="hidden text-right sm:block">
               <p className="text-sm font-medium leading-tight text-stone-900">{user.name}</p>
               <p className="text-xs text-stone-500">{roleLabel}</p>
             </div>
             <span
               title={`${user.name} · ${roleLabel}`}
-              className="grid h-11 w-11 place-items-center rounded-full bg-brand-800 text-sm font-medium text-white shadow-md shadow-brand-900/25"
+              className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-brand-800 text-sm font-medium text-white shadow-md shadow-brand-900/25 lg:h-11 lg:w-11"
             >
               {initials(user.name)}
             </span>
 
-            {/* Always visible, including on phones where the left rail is hidden. */}
+            {/* Always reachable — the desktop rail that normally holds this is
+                hidden on phones. */}
             <form action={signOut}>
               <button
                 type="submit"
-                className="ml-1 inline-flex h-10 items-center gap-2 rounded-full bg-white px-4 text-sm font-medium text-stone-600 ring-1 ring-stone-200 transition-colors hover:text-red-600 hover:ring-red-200"
+                aria-label="Sign out"
+                className="ml-0.5 inline-flex h-10 items-center justify-center gap-2 rounded-full bg-white px-3 text-sm font-medium text-stone-600 ring-1 ring-stone-200 transition-colors hover:text-red-600 hover:ring-red-200 sm:px-4"
               >
                 <IconLogout className="h-4 w-4" />
                 <span className="hidden sm:inline">Sign out</span>
@@ -188,8 +209,54 @@ export function AppShell({
           </div>
         </header>
 
-        <main className="mx-auto w-full max-w-7xl flex-1 px-5 py-10 lg:px-10">{children}</main>
+        <main
+          className={cn(
+            "mx-auto w-full max-w-7xl flex-1 px-4 py-6 sm:px-5 sm:py-8 lg:px-10 lg:py-10",
+            // Clear the fixed tab bar so the last card is never trapped under it.
+            showTabs && "pb-[calc(5.5rem+env(safe-area-inset-bottom))] lg:pb-10",
+          )}
+        >
+          {children}
+        </main>
       </div>
+
+      {/* Phone tab bar — thumb height, one tap to anywhere. */}
+      {showTabs && (
+        <nav
+          aria-label="Main"
+          className="pb-safe fixed inset-x-0 bottom-0 z-30 border-t border-stone-200/80 bg-white/90 backdrop-blur-xl lg:hidden"
+        >
+          <ul className="flex items-stretch">
+            {tabs.map((item) => {
+              const Icon = item.icon;
+              const active = isActive(item.href);
+
+              return (
+                <li key={item.href} className="flex-1">
+                  <Link
+                    href={item.href}
+                    aria-current={active ? "page" : undefined}
+                    className={cn(
+                      "flex h-16 flex-col items-center justify-center gap-1 text-[11px] font-medium transition-colors",
+                      active ? "text-brand-800" : "text-stone-400",
+                    )}
+                  >
+                    <span
+                      className={cn(
+                        "grid h-8 w-12 place-items-center rounded-full transition-colors",
+                        active && "bg-brand-50",
+                      )}
+                    >
+                      <Icon className="h-5 w-5" />
+                    </span>
+                    {item.short ?? item.label}
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </nav>
+      )}
     </div>
   );
 }

@@ -30,13 +30,15 @@ export default async function EditClientPage({ params }: { params: Promise<{ id:
       </Link>
 
       <div>
-        <h1 className="text-4xl font-semibold tracking-tight text-stone-900">Edit client</h1>
-        <p className="mt-2 text-base text-stone-500">
+        <h1 className="text-2xl font-semibold tracking-tight text-stone-900 sm:text-3xl lg:text-4xl">
+          Edit client
+        </h1>
+        <p className="mt-1.5 text-sm text-stone-500 sm:mt-2 sm:text-base">
           Changes apply to this month&apos;s targets and every report from here on.
         </p>
       </div>
 
-      <Card className="p-6">
+      <Card className="p-4 sm:p-6">
         <ClientForm action={action} defaults={client} submitLabel="Save changes" />
       </Card>
     </div>
