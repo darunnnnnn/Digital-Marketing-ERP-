@@ -7,6 +7,7 @@ import { canApprove, canManageClients, canManagePayouts, canManageTeam } from "@
 import { workPortals } from "@/lib/roles";
 import { LoginPage } from "@/pages/LoginPage";
 import { InvitePage } from "@/pages/InvitePage";
+import { DashboardPage } from "@/pages/dashboard/DashboardPage";
 import { ClientsPage } from "@/pages/clients/ClientsPage";
 import { ClientFormPage } from "@/pages/clients/ClientFormPage";
 import { ClientDetailPage } from "@/pages/clients/ClientDetailPage";
@@ -64,6 +65,14 @@ function AppRoutes() {
       {/* Everyone starts at the pipeline; creative roles see only their own queue. */}
       <Route index element={<Navigate to="/content" replace />} />
 
+      <Route
+        path="dashboard"
+        element={
+          <RoleGate allow={clients}>
+            <DashboardPage />
+          </RoleGate>
+        }
+      />
       <Route
         path="clients"
         element={

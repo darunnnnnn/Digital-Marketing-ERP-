@@ -1,0 +1,133 @@
+/* Two columns on a wide screen: what needs doing on the left, where the month
+   stands on the right. Stacks on anything narrower. */
+.dash-columns {
+  display: grid;
+  gap: var(--sp-6);
+}
+
+@media (min-width: 1024px) {
+  .dash-columns {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .dash-main {
+    grid-column: span 2;
+  }
+}
+
+/* ---- rows in the two lists --------------------------------------------- */
+
+/* Which gate a submission is at, in the same place on every row so the column
+   can be scanned without reading. */
+.dash-gate {
+  flex-shrink: 0;
+  min-width: 4.5rem;
+  border-radius: var(--radius-sm);
+  background: var(--brand-50);
+  padding: var(--sp-1) 0.625rem;
+  font-size: 11px;
+  font-weight: 500;
+  text-align: center;
+  color: var(--brand-700);
+}
+
+.dash-gate-late {
+  background: var(--red-50);
+  color: var(--red-700);
+}
+
+/* Client and owner: present, but never competing with the title. */
+.dash-meta {
+  flex-shrink: 0;
+  max-width: 11rem;
+  font-size: 0.75rem;
+  color: var(--stone-500);
+}
+
+.dash-late {
+  flex-shrink: 0;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--red-600);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- money ------------------------------------------------------------- */
+
+.dash-money {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  padding: var(--sp-2) var(--sp-6) var(--sp-6);
+}
+
+.dash-money-icon {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: var(--radius);
+  background: var(--brand-50);
+  color: var(--brand-700);
+}
+
+.dash-money-icon svg {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.dash-money-value {
+  font-size: 1.75rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--stone-900);
+}
+
+.dash-money-note {
+  margin-top: 0.125rem;
+  font-size: 0.75rem;
+  color: var(--stone-500);
+}
+
+/* ---- client progress --------------------------------------------------- */
+
+.dash-clients {
+  list-style: none;
+  margin: 0;
+  padding: var(--sp-2) 0 var(--sp-2);
+}
+
+.dash-client {
+  display: block;
+  padding: 0.625rem var(--sp-6);
+  transition: background-color 0.15s;
+}
+
+.dash-client:hover {
+  background: var(--stone-100);
+}
+
+.dash-client-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  font-size: 0.875rem;
+}
+
+.dash-client-name {
+  min-width: 0;
+  font-weight: 500;
+  color: var(--stone-800);
+}
+
+.dash-client-count {
+  flex-shrink: 0;
+  font-weight: 500;
+  color: var(--stone-900);
+}
+
+.dash-client-bar {
+  margin-top: 0.375rem;
+}

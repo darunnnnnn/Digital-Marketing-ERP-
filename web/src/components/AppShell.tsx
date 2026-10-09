@@ -52,7 +52,7 @@ const CRAFT_ICONS: Record<string, NavItem["icon"]> = {
 const MANAGERS = ["ceo", "manager"];
 
 const NAV: NavItem[] = [
-  { to: "/dashboard", label: "Dashboard", title: "Dashboard", icon: IconGrid, soon: true, roles: MANAGERS },
+  { to: "/dashboard", label: "Dashboard", title: "Dashboard", icon: IconGrid, roles: MANAGERS },
   { to: "/clients", label: "Clients", title: "Client Management", icon: IconUsers, roles: MANAGERS },
   { to: "/content", label: "Content", title: "Content Pipeline", icon: IconFilm },
   {
