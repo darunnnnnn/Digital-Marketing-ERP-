@@ -81,6 +81,16 @@ export const canManagePayouts = (v: Viewer) => isCeo(v);
 /** What a client is charged for one video or script. The CEO sets the price. */
 export const canPriceContent = (v: Viewer) => isCeo(v);
 
+/**
+ * The personal dashboard: your own work and your own pay for the month.
+ *
+ * Everyone but the CEO, who already has the agency-wide view — the board, the
+ * team page and the full payroll — and is not paid through it. It only ever
+ * shows the signed-in person their own numbers, so no role check guards the
+ * money itself; the page simply never loads anybody else's.
+ */
+export const canSeeDashboard = (v: Viewer) => !isCeo(v);
+
 /** Editing one panel of the video page. */
 export function canEditPanel(v: Viewer, item: Assignable, panel: string) {
   if (isManager(v)) return true;

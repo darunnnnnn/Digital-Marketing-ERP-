@@ -34,12 +34,13 @@ const MANAGERS = ["ceo", "manager"];
 const NAV: NavItem[] = [
   {
     href: "/dashboard",
-    label: "Dashboard",
-    title: "Dashboard",
+    label: "My dashboard",
+    title: "My dashboard",
     short: "Home",
     icon: IconGrid,
-    soon: true,
-    roles: MANAGERS,
+    // Everyone but the CEO, who is not paid through the pipeline and already
+    // has the agency-wide views.
+    roles: ["manager", "scriptwriter", "cameraman", "editor", "publisher"],
   },
   {
     href: "/clients",
