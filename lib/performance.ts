@@ -100,6 +100,94 @@ export const ROLE_STEPS: Record<string, RoleStep[]> = {
   manager: [],
 };
 
+/** The assignment field that makes someone the owner of a role's step. */
+const ROLE_ASSIGN: Record<string, AssignField> = {
+  scriptwriter: "scriptwriterId",
+  cameraman: "cameramanId",
+  editor: "editorId",
+  publisher: "publisherId",
+};
+
+const ASSIGN_ROLE = Object.fromEntries(
+  Object.entries(ROLE_ASSIGN).map(([role, field]) => [field, role]),
+) as Record<AssignField, string>;
+
+export const ASSIGN_FIELDS = Object.values(ROLE_ASSIGN);
+
+/**
+ * The steps one person is measured and paid on.
+ *
+ * `Member.role` is a job title, not the whole truth: the four assignment
+ * fields on a video are independent, so a scriptwriter can be handed the edit
+ * on one video and the shoot on another. Counting only the declared role meant
+ * that work vanished — it never showed in their queue and, because pay is
+ * rate × deliveries, they were never paid for it.
+ *
+ * So the roles someone works are their declared one plus every role they hold
+ * an assignment for. The CEO assigning them to a step is the statement that
+ * they do that job; nobody has to maintain a second list by hand.
+ */
+export function stepsForRoles(roles: Iterable<string>): RoleStep[] {
+  const steps: RoleStep[] = [];
+  const seen = new Set<string>();
+  for (const role of roles) {
+    for (const step of ROLE_STEPS[role] ?? []) {
+      // Two roles can nominate the same step; count it once.
+      const key = `${step.assign ?? "agency"}:${step.done}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      steps.push(step);
+    }
+  }
+  return steps;
+}
+
+/**
+ * Which roles each of these people actually works, in one query rather than
+ * one per person — the payouts and team pages ask about everybody at once.
+ */
+export async function rolesByMember(
+  agencyId: string,
+  members: { id: string; role: string }[],
+): Promise<Map<string, string[]>> {
+  const ids = members.map((m) => m.id);
+  const roles = new Map(members.map((m) => [m.id, new Set([m.role])]));
+  if (ids.length === 0) return new Map();
+
+  const rows = await db.contentItem.findMany({
+    where: {
+      agencyId,
+      OR: ASSIGN_FIELDS.map((field) => ({ [field]: { in: ids } })),
+    },
+    select: {
+      scriptwriterId: true,
+      cameramanId: true,
+      editorId: true,
+      publisherId: true,
+    },
+  });
+
+  for (const row of rows) {
+    for (const field of ASSIGN_FIELDS) {
+      const holder = row[field];
+      if (holder) roles.get(holder)?.add(ASSIGN_ROLE[field]);
+    }
+  }
+
+  return new Map([...roles].map(([id, set]) => [id, [...set]]));
+}
+
+/** The same thing for one person. */
+export async function rolesForMember(member: { id: string; role: string; agencyId: string }) {
+  const map = await rolesByMember(member.agencyId, [member]);
+  return map.get(member.id) ?? [member.role];
+}
+
+/** Human-readable, for "Scriptwriter · Editor" under someone's name. */
+export function extraRoles(roles: string[], declared: string) {
+  return roles.filter((r) => r !== declared);
+}
+
 export type WorkRow = {
   id: string;
   ref: number;
@@ -162,8 +250,11 @@ export async function memberPerformance(
   member: { id: string; name: string; role: string; agencyId: string },
   monthKey: string,
   today = new Date(),
+  /** Pass this when looping over a team, so the roles lookup runs once. */
+  knownRoles?: string[],
 ): Promise<Performance> {
-  const steps = ROLE_STEPS[member.role] ?? [];
+  const roles = knownRoles ?? (await rolesForMember(member));
+  const steps = stepsForRoles(roles);
   const { start, end } = monthRange(monthKey);
   const todayDay = localDay(today);
   const weekOut = new Date(todayDay.getTime() + 7 * 86_400_000);

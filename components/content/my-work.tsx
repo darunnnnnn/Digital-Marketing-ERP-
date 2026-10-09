@@ -22,7 +22,7 @@ function daysLabel(due: Date | null, tone: string) {
   return formatCalendar(due);
 }
 
-function TaskRow({ item, verb, tone }: { item: WorkItem; verb: string; tone: string }) {
+function TaskRow({ item, tone }: { item: WorkItem; tone: string }) {
   return (
     <li>
       <Link
@@ -47,7 +47,7 @@ function TaskRow({ item, verb, tone }: { item: WorkItem; verb: string; tone: str
             {item.title}
           </span>
           <span className="mt-0.5 block truncate text-xs text-stone-500 sm:text-sm">
-            {item.client} · {verb}
+            {item.client} · {item.verb}
           </span>
         </span>
 
@@ -111,7 +111,8 @@ function QuietList({ title, note, items }: { title: string; note: string; items:
 
 export function MyWork({ name, work }: { name: string; work: Work }) {
   const groups = groupByUrgency(work.todo);
-  const verb = work.task?.verb ?? "Your step";
+  // Someone who writes and edits has no single noun for their queue, so it
+  // falls back to "task" rather than naming whichever job came first.
   const noun = work.task?.noun ?? "task";
   const today = new Date().toLocaleDateString("en-IN", {
     weekday: "long",
@@ -218,7 +219,7 @@ export function MyWork({ name, work }: { name: string; work: Work }) {
                 </div>
                 <ul className="divide-y divide-stone-200/70 border-t border-stone-200/70">
                   {groups[g.key].map((item) => (
-                    <TaskRow key={item.id} item={item} verb={verb} tone={g.tone} />
+                    <TaskRow key={item.id} item={item} tone={g.tone} />
                   ))}
                 </ul>
               </section>

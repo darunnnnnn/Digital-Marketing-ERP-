@@ -1,8 +1,9 @@
 // What one person actually has to do. Creative roles never see the agency
-// board; they get their own queue, built from the single step their role owns.
+// board; they get their own queue, built from every step they are responsible
+// for — which is not always just the one their job title names.
 
 import { db } from "./db";
-import { ROLE_STEPS, memberPerformance } from "./performance";
+import { memberPerformance, rolesForMember, stepsForRoles, type RoleStep } from "./performance";
 import { stageIndex } from "./pipeline";
 import { calendarDate, currentMonthKey } from "./utils";
 
@@ -22,6 +23,18 @@ export const ROLE_TASK: Record<string, { noun: string; verb: string }> = {
   publisher: { noun: "post", verb: "Caption, schedule and post" },
 };
 
+const ASSIGN_TASK: Record<string, { noun: string; verb: string }> = {
+  scriptwriterId: ROLE_TASK.scriptwriter,
+  cameramanId: ROLE_TASK.cameraman,
+  editorId: ROLE_TASK.editor,
+  publisherId: ROLE_TASK.publisher,
+};
+
+/** What this step asks of whoever holds it. */
+function taskForStep(step: RoleStep) {
+  return (step.assign ? ASSIGN_TASK[step.assign] : null) ?? { noun: "task", verb: "Your step" };
+}
+
 export type WorkItem = {
   id: string;
   ref: number;
@@ -29,47 +42,81 @@ export type WorkItem = {
   client: string;
   stage: string;
   due: Date | null;
+  /** What this particular item needs from them — "Edit the video". */
+  verb: string;
+  /** "script", "edit"… for counting a mixed queue in plain language. */
+  noun: string;
 };
 
 export async function myWork(user: { id: string; role: string; agencyId: string }) {
-  const step = (ROLE_STEPS[user.role] ?? [])[0];
-  if (!step || !step.assign) return null;
+  const roles = await rolesForMember(user);
+  // Only the steps that are actually handed to a person; the CEO's agency-wide
+  // approval steps have no assignee and belong on the board, not in a queue.
+  const steps = stepsForRoles(roles).filter((step) => step.assign);
+  if (steps.length === 0) return null;
 
   // Their queue and their month's numbers are independent — fetch together.
-  const [rows, { summary }] = await Promise.all([
-    db.contentItem.findMany({
-      where: {
-        agencyId: user.agencyId,
-        [step.assign]: user.id,
-        stage: { not: "published" },
-      },
-      include: { client: { select: { name: true } } },
-      orderBy: [{ [step.due]: "asc" }, { ref: "asc" }],
-    }),
-    // How their month is going, so the dashboard can show progress, not just a list.
-    memberPerformance({ ...user, name: "" }, currentMonthKey()),
+  const [perStep, { summary }] = await Promise.all([
+    Promise.all(
+      steps.map((step) =>
+        db.contentItem.findMany({
+          where: {
+            agencyId: user.agencyId,
+            [step.assign!]: user.id,
+            stage: { not: "published" },
+          },
+          include: { client: { select: { name: true } } },
+          orderBy: [{ [step.due]: "asc" }, { ref: "asc" }],
+        }),
+      ),
+    ),
+    // How their month is going, so the dashboard shows progress, not just a list.
+    memberPerformance({ ...user, name: "" }, currentMonthKey(), new Date(), roles),
   ]);
 
-  const mine = stageIndex(step.stage);
-  const map = (r: (typeof rows)[number]): WorkItem => ({
-    id: r.id,
-    ref: r.ref,
-    title: r.title,
-    client: r.client.name,
-    stage: r.stage,
-    due: (r[step.due] as Date | null) ?? null,
+  const todo: WorkItem[] = [];
+  const upcoming: WorkItem[] = [];
+  const handedOn: WorkItem[] = [];
+
+  steps.forEach((step, i) => {
+    const task = taskForStep(step);
+    const mine = stageIndex(step.stage);
+
+    for (const r of perStep[i]) {
+      const item: WorkItem = {
+        id: r.id,
+        ref: r.ref,
+        title: r.title,
+        client: r.client.name,
+        stage: r.stage,
+        due: (r[step.due] as Date | null) ?? null,
+        verb: task.verb,
+        noun: task.noun,
+      };
+
+      // Which list it belongs in is per step, not per person: the same video
+      // can be waiting on their edit while their script on it is long done.
+      if (r.stage === step.stage) todo.push(item);
+      else if (stageIndex(r.stage) < mine) upcoming.push(item);
+      else handedOn.push(item);
+    }
   });
 
+  const byDue = (a: WorkItem, b: WorkItem) =>
+    (a.due?.getTime() ?? Infinity) - (b.due?.getTime() ?? Infinity) || a.ref - b.ref;
+
   return {
-    step,
-    task: ROLE_TASK[user.role],
+    steps,
+    roles,
+    /** Only set when they do one job, so the page can name it in the heading. */
+    task: steps.length === 1 ? taskForStep(steps[0]) : null,
     month: summary,
     /** On their desk right now. */
-    todo: rows.filter((r) => r.stage === step.stage).map(map),
+    todo: todo.sort(byDue),
     /** Assigned to them, but an earlier step is still running. */
-    upcoming: rows.filter((r) => stageIndex(r.stage) < mine).map(map),
+    upcoming: upcoming.sort(byDue),
     /** Already handed on — with the CEO or someone else. */
-    handedOn: rows.filter((r) => stageIndex(r.stage) > mine).map(map),
+    handedOn: handedOn.sort(byDue),
   };
 }
 

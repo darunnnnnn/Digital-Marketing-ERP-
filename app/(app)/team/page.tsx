@@ -6,10 +6,26 @@ import { requireRole } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { canManageTeam } from "@/lib/permissions";
 import Link from "next/link";
-import { ROLE_STEPS, memberPerformance } from "@/lib/performance";
+import { extraRoles, memberPerformance, rolesByMember, stepsForRoles } from "@/lib/performance";
+import { ROLE_LABELS, type Role } from "@/lib/pipeline";
 import { cn, currentMonthKey, initials, monthLabel } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
+
+/**
+ * Roles somebody works beyond the one in their job title, which they earn by
+ * being assigned the step rather than by anyone editing a list.
+ */
+function AlsoDoing({ roles, declared }: { roles: string[]; declared: string }) {
+  const extra = extraRoles(roles, declared);
+  if (extra.length === 0) return null;
+
+  return (
+    <p className="mt-0.5 truncate text-[11px] text-brand-700">
+      also {extra.map((r) => (ROLE_LABELS[r as Role] ?? r).toLowerCase()).join(", ")}
+    </p>
+  );
+}
 
 export default async function TeamPage() {
   const user = await requireRole(canManageTeam);
@@ -25,9 +41,18 @@ export default async function TeamPage() {
   const count = (s: string) => members.filter((m) => status(m) === s).length;
 
   const monthKey = currentMonthKey();
+  // One roles query for the whole team, then one performance pass per person —
+  // somebody's deliveries include every step they hold, not just their title's.
+  const roles = await rolesByMember(user.agencyId, members);
   const perf = new Map(
     await Promise.all(
-      members.map(async (m) => [m.id, (await memberPerformance(m, monthKey)).summary] as const),
+      members.map(
+        async (m) =>
+          [
+            m.id,
+            (await memberPerformance(m, monthKey, new Date(), roles.get(m.id))).summary,
+          ] as const,
+      ),
     ),
   );
 
@@ -61,7 +86,7 @@ export default async function TeamPage() {
           const s = status(m);
           const self = m.id === user.id;
           const p = perf.get(m.id)!;
-          const owns = (ROLE_STEPS[m.role] ?? []).length > 0;
+          const owns = stepsForRoles(roles.get(m.id) ?? [m.role]).length > 0;
 
           return (
             <li key={m.id} className={cn("surface p-4", !m.active && "opacity-60")}>
@@ -79,6 +104,7 @@ export default async function TeamPage() {
                       {self && <span className="ml-2 text-xs text-stone-400">(you)</span>}
                     </p>
                     <p className="truncate text-sm text-stone-500">{m.email ?? "No email"}</p>
+                    <AlsoDoing roles={roles.get(m.id) ?? []} declared={m.role} />
                   </Link>
                 </div>
                 <span
@@ -176,6 +202,7 @@ export default async function TeamPage() {
                         <p className="truncate text-sm text-stone-500">
                           {m.email ?? "No email"}
                         </p>
+                        <AlsoDoing roles={roles.get(m.id) ?? []} declared={m.role} />
                       </div>
                     </Link>
                   </td>
@@ -184,7 +211,7 @@ export default async function TeamPage() {
                   </td>
                   {(() => {
                     const p = perf.get(m.id)!;
-                    const owns = (ROLE_STEPS[m.role] ?? []).length > 0;
+                    const owns = stepsForRoles(roles.get(m.id) ?? [m.role]).length > 0;
                     if (!owns) {
                       return (
                         <td colSpan={3} className="px-4 py-4 text-sm text-stone-400">

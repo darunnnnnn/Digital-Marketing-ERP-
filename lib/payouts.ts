@@ -3,7 +3,7 @@
 
 import { db } from "./db";
 import { PAY_TYPES, computePay, onPayroll } from "./pay-rules";
-import { memberPerformance } from "./performance";
+import { memberPerformance, rolesByMember } from "./performance";
 
 export {
   PAY_TYPES,
@@ -49,11 +49,19 @@ export async function monthPayouts(agencyId: string, monthKey: string): Promise<
 
   // Everyone who still needs live numbers is calculated at once, not one
   // person after another — otherwise the page slows down with every hire.
+  // The roles lookup is batched too, so adding multi-role support did not turn
+  // this page into one extra query per person.
+  const pending = members.filter((m) => !frozen.has(m.id));
+  const roles = await rolesByMember(agencyId, pending);
   const live = new Map(
     await Promise.all(
-      members
-        .filter((m) => !frozen.has(m.id))
-        .map(async (m) => [m.id, (await memberPerformance(m, monthKey)).summary] as const),
+      pending.map(
+        async (m) =>
+          [
+            m.id,
+            (await memberPerformance(m, monthKey, new Date(), roles.get(m.id))).summary,
+          ] as const,
+      ),
     ),
   );
 
@@ -114,6 +122,108 @@ export async function monthPayouts(agencyId: string, monthKey: string): Promise<
     });
   }
   return rows;
+}
+
+export type MemberEarnings = {
+  monthKey: string;
+  payType: string;
+  rate: number;
+  salary: number;
+  deliveries: number;
+  taskPay: number;
+  base: number;
+  adjustment: number;
+  note: string | null;
+  total: number;
+  status: "estimate" | "approved" | "paid";
+  onPayroll: boolean;
+  paidAt: Date | null;
+  /** What made up the deliveries, per step — a multi-role person works several. */
+  breakdown: { step: string; done: number }[];
+  roles: string[];
+};
+
+/**
+ * One person's own pay for a month. Deliberately separate from monthPayouts:
+ * this is what someone is shown about themselves, so it never reads anybody
+ * else's rate or total.
+ *
+ * An approved month is read from its frozen record; an open one is a running
+ * estimate off current deliveries and current rates.
+ */
+export async function memberEarnings(
+  member: {
+    id: string;
+    name: string;
+    role: string;
+    agencyId: string;
+    payType: string;
+    rate: number;
+    salary: number;
+  },
+  monthKey: string,
+): Promise<MemberEarnings> {
+  const [record, perf, roles] = await Promise.all([
+    db.payout.findUnique({
+      where: { memberId_monthKey: { memberId: member.id, monthKey } },
+    }),
+    memberPerformance(member, monthKey),
+    rolesByMember(member.agencyId, [member]).then((m) => m.get(member.id) ?? [member.role]),
+  ]);
+
+  // Grouped by the step label the pipeline already uses, so "Scripts written 4,
+  // Edits delivered 3" reads the same here as on their profile.
+  const counts = new Map<string, number>();
+  for (const row of perf.completed) counts.set(row.step, (counts.get(row.step) ?? 0) + 1);
+  const breakdown = [...counts.entries()]
+    .map(([step, done]) => ({ step, done }))
+    .sort((a, b) => b.done - a.done);
+
+  if (record) {
+    const pay = computePay(
+      record.payType,
+      record.deliveries,
+      record.rate,
+      record.salary,
+      record.adjustment,
+    );
+    return {
+      monthKey,
+      payType: record.payType,
+      rate: record.rate,
+      salary: record.salary,
+      deliveries: record.deliveries,
+      taskPay: pay.taskPay,
+      base: pay.base,
+      adjustment: record.adjustment,
+      note: record.note,
+      total: record.amount,
+      status: record.status === "paid" ? "paid" : "approved",
+      onPayroll: true,
+      paidAt: record.paidAt,
+      breakdown,
+      roles,
+    };
+  }
+
+  const pay = computePay(member.payType, perf.summary.done, member.rate, member.salary);
+  return {
+    monthKey,
+    payType: member.payType,
+    rate: member.rate,
+    salary: member.salary,
+    deliveries: perf.summary.done,
+    taskPay: pay.taskPay,
+    base: pay.base,
+    adjustment: 0,
+    note: null,
+    total: pay.total,
+    status: "estimate",
+    onPayroll: onPayroll(member.payType, member.rate, member.salary),
+    paidAt: null,
+    breakdown,
+    roles,
+  };
 }
 
 /** Freezes one person's month. Returns false if it was already approved. */
