@@ -3,7 +3,7 @@ import { MyWork } from "./MyWork";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { PageSkeleton } from "@/components/PageSkeleton";
 import { useViewer } from "@/lib/auth";
-import { myWork } from "@/lib/my-work";
+import { deskCounts, myWork } from "@/lib/my-work";
 import { craftBySlug, workPortals } from "@/lib/roles";
 import { useAsync } from "@/lib/use-async";
 import { cn } from "@/lib/utils";
@@ -15,6 +15,27 @@ import "./WorkPage.css";
  * built for just this one role, with a switcher to the others — the sidebar
  * carries the same links, but it is hidden on phones.
  */
+/**
+ * Where someone holding several crafts lands.
+ *
+ * Their first craft in pipeline order is rarely the one with work on it: a
+ * writer who also edits spends most of the month with every script away at
+ * review and the edits piling up behind them. Sending them to that desk shows
+ * "you're all caught up" over an empty queue while their real work sits one tab
+ * across, which reads as the assignment never having arrived. So open the desk
+ * that has something on it, and fall back to the first only when all are clear.
+ */
+export function WorkHome() {
+  const viewer = useViewer();
+  const portals = workPortals(viewer);
+  const counts = useAsync(() => deskCounts(viewer), [viewer.id]);
+
+  if (counts.loading && !counts.data) return <PageSkeleton />;
+
+  const busiest = portals.find((c) => (counts.data?.[c.slug] ?? 0) > 0) ?? portals[0];
+  return <Navigate to={busiest ? `/work/${busiest.slug}` : "/content"} replace />;
+}
+
 export function WorkPage() {
   const viewer = useViewer();
   const { craft: slug = "" } = useParams();

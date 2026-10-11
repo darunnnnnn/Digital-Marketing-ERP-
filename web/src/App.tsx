@@ -15,7 +15,7 @@ import { ApprovalsPage } from "@/pages/approvals/ApprovalsPage";
 import { ContentBoardPage } from "@/pages/content/ContentBoardPage";
 import { ContentNewPage } from "@/pages/content/ContentNewPage";
 import { ContentDetailPage } from "@/pages/content/ContentDetailPage";
-import { WorkPage } from "@/pages/content/WorkPage";
+import { WorkHome, WorkPage } from "@/pages/content/WorkPage";
 import { TeamPage } from "@/pages/team/TeamPage";
 import { TeamProfilePage } from "@/pages/team/TeamProfilePage";
 import { PayoutsPage } from "@/pages/payouts/PayoutsPage";
@@ -109,7 +109,7 @@ function AppRoutes() {
       <Route
         path="content"
         element={
-          portals.length ? <Navigate to={`/work/${portals[0].slug}`} replace /> : <ContentBoardPage />
+          portals.length ? <WorkHome /> : <ContentBoardPage />
         }
       />
       <Route path="work/:craft" element={<WorkPage />} />
