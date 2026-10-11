@@ -55,8 +55,24 @@ export function notify(n: Notification) {
 
   void supabase.functions
     .invoke("notify", { body: { ...n, what } })
-    .then(({ error }) => {
-      if (error) console.warn("Couldn't send the notification email:", error.message);
+    .then(async ({ error }) => {
+      if (!error) return;
+      // supabase-js reports every failed status as the same sentence. The
+      // function's own explanation is in the response it hangs off the error,
+      // and that is the part worth reading.
+      const body = await readError(error);
+      console.warn(`Couldn't send the notification email: ${body ?? error.message}`);
     })
     .catch((e) => console.warn("Couldn't send the notification email:", e));
+}
+
+async function readError(error: unknown): Promise<string | null> {
+  const res = (error as { context?: Response }).context;
+  if (!(res instanceof Response)) return null;
+  try {
+    const body = await res.clone().json();
+    return typeof body?.error === "string" ? `${res.status} — ${body.error}` : null;
+  } catch {
+    return null;
+  }
 }
