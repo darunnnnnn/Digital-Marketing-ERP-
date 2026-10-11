@@ -15,7 +15,6 @@ import { Card, CardHeader } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Modal } from "@/components/ui/Modal";
 import { ProgressBar, ProgressRing } from "@/components/ui/Progress";
-import { Stat } from "@/components/ui/Stat";
 import { PageSkeleton } from "@/components/PageSkeleton";
 import { useToast } from "@/components/ui/Toast";
 import { deleteClient, getClient } from "@/lib/queries";
@@ -136,7 +135,7 @@ export function ClientDetailPage() {
   ].filter((c) => c.value);
 
   return (
-    <div className="stack-8">
+    <div className="detail-page stack-6">
       <Link to="/clients" className="back-link">
         <IconChevronLeft />
         All clients
@@ -148,24 +147,53 @@ export function ClientDetailPage() {
 
         <div className="detail-head-main">
           <div className="detail-title-row">
-            <h1 className="page-title">{client.name}</h1>
+            <h1 className="detail-name">{client.name}</h1>
             <Badge className={s.className}>{s.label}</Badge>
           </div>
+
           <p className="detail-meta">
             {client.industry || "No industry set"}
             {client.retainer > 0 && (
               <>
-                {" · "}
-                <span className="detail-meta-strong">{formatMoney(client.retainer)}</span>/month
+                <span className="detail-dot" aria-hidden />
+                <span className="detail-meta-strong">{formatMoney(client.retainer)}</span>
+                <span>/month</span>
               </>
             )}
             {client.monthlyPostTarget > 0 && (
               <>
-                {" · "}
-                <span className="detail-meta-strong">{client.monthlyPostTarget}</span> posts/month
+                <span className="detail-dot" aria-hidden />
+                <span className="detail-meta-strong">{client.monthlyPostTarget}</span>
+                <span>posts/month</span>
               </>
             )}
           </p>
+
+          {/* The agreed rates, if any — these seed the price on every video
+              planned for this client. */}
+          {(client.scriptPrice > 0 || client.shootPrice > 0 || client.editPrice > 0) && (
+            <div className="detail-rates">
+              {client.scriptPrice > 0 && (
+                <span className="detail-rate">
+                  <span className="detail-rate-value">{formatMoney(client.scriptPrice)}</span>
+                  <span className="detail-rate-label">per script</span>
+                </span>
+              )}
+              {client.shootPrice > 0 && (
+                <span className="detail-rate">
+                  <span className="detail-rate-value">{formatMoney(client.shootPrice)}</span>
+                  <span className="detail-rate-label">per shoot</span>
+                </span>
+              )}
+              {client.editPrice > 0 && (
+                <span className="detail-rate">
+                  <span className="detail-rate-value">{formatMoney(client.editPrice)}</span>
+                  <span className="detail-rate-label">per edit</span>
+                </span>
+              )}
+            </div>
+          )}
+
           {services.length > 0 && (
             <div className="detail-services">
               {services.map((svc) => (
@@ -200,23 +228,30 @@ export function ClientDetailPage() {
             }
           />
           <div className="detail-progress">
-            <ProgressRing value={pct} label={`${pct}%`} sublabel="published" />
+            <ProgressRing value={pct} size={72} label={`${pct}%`} sublabel="published" />
 
-            <div className="detail-progress-main stack-4">
-              <div>
-                <div className="detail-progress-row">
-                  <span className="detail-progress-label">Published against target</span>
-                  <span className="detail-progress-value tabular">
-                    {stats.published} / {client.monthlyTarget}
-                  </span>
-                </div>
-                <ProgressBar value={pct} color={a.bar} className="detail-progress-bar" />
+            <div className="detail-progress-main">
+              <div className="detail-progress-row">
+                <span className="detail-progress-label">Published against target</span>
+                <span className="detail-progress-value tabular">
+                  {stats.published} / {client.monthlyTarget}
+                </span>
               </div>
+              <ProgressBar value={pct} color={a.bar} className="detail-progress-bar" />
 
-              <div className="detail-three">
-                <Stat label="Planned" value={stats.planned} />
-                <Stat label="In production" value={stats.inProduction} />
-                <Stat label="Published" value={stats.published} />
+              <div className="detail-figures">
+                <div className="detail-figure">
+                  <p className="detail-figure-value tabular">{stats.planned}</p>
+                  <p className="detail-figure-label">Planned</p>
+                </div>
+                <div className="detail-figure">
+                  <p className="detail-figure-value tabular">{stats.inProduction}</p>
+                  <p className="detail-figure-label">In production</p>
+                </div>
+                <div className="detail-figure">
+                  <p className="detail-figure-value tabular">{stats.published}</p>
+                  <p className="detail-figure-label">Published</p>
+                </div>
               </div>
             </div>
           </div>

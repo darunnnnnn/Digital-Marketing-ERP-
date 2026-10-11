@@ -19,10 +19,23 @@ export type MemberOption = {
   accent: string;
 };
 
+/** The slice of a client the quick-add modal needs — any client row qualifies. */
+export type QuickAddClient = {
+  id: string;
+  name: string;
+  scriptPrice: number;
+  shootPrice: number;
+  editPrice: number;
+};
+
 export type ClientOption = {
   id: string;
   name: string;
   accent: string;
   monthlyTarget: number;
   planned: number;
+  /** The client's standard rates, so a new video can be seeded from them. */
+  scriptPrice: number;
+  shootPrice: number;
+  editPrice: number;
 };

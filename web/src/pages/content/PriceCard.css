@@ -1,0 +1,65 @@
+.price-card {
+  padding: var(--sp-3);
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.price-row {
+  padding: var(--sp-2) 0.625rem;
+  border-radius: var(--radius-sm);
+}
+
+.price-row-editable {
+  transition: background-color 0.15s;
+}
+
+.price-row-editable:hover {
+  background: var(--stone-50);
+}
+
+.price-row-head,
+.price-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sp-3);
+}
+
+.price-row-label {
+  font-size: 0.875rem;
+  color: var(--stone-500);
+  cursor: pointer;
+}
+
+.price-row-amount {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--stone-900);
+  font-variant-numeric: tabular-nums;
+}
+
+.price-row-inherited {
+  font-size: 11px;
+  color: var(--stone-400);
+}
+
+.price-row-controls {
+  margin-top: 0.375rem;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.price-row-error {
+  margin-top: 0.375rem;
+  font-size: 0.75rem;
+  color: var(--red-600);
+}
+
+.price-card-hint {
+  padding: var(--sp-1) 0.625rem 0;
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--stone-400);
+}

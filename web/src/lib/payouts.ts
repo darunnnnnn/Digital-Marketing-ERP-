@@ -4,6 +4,7 @@
 import { supabase } from "./supabase";
 import { PAY_TYPES, computePay, onPayroll } from "./pay-rules";
 import { loadPerfSource, measureMember } from "./performance";
+import { memberRoles } from "./roles";
 import { toDate } from "./utils";
 import type { Member, Payout } from "./types";
 
@@ -110,6 +111,102 @@ export async function monthPayouts(agencyId: string, monthKey: string): Promise<
     });
   }
   return rows;
+}
+
+export type MemberEarnings = {
+  monthKey: string;
+  payType: string;
+  rate: number;
+  salary: number;
+  deliveries: number;
+  taskPay: number;
+  base: number;
+  adjustment: number;
+  note: string | null;
+  total: number;
+  status: "estimate" | "approved" | "paid";
+  onPayroll: boolean;
+  paidAt: Date | null;
+  /** What made up the deliveries, per step — a multi-role person works several. */
+  breakdown: { step: string; done: number }[];
+  roles: string[];
+};
+
+/**
+ * One person's own pay for a month. Deliberately separate from monthPayouts:
+ * this is what someone is shown about themselves, so it only ever reads their
+ * own frozen Payout row (self-read policy) or their own assigned content
+ * (already all that row level security hands back to a creative role) —
+ * never the rest of the team's.
+ *
+ * An approved month is read from its frozen record; an open one is a running
+ * estimate off current deliveries and current rates.
+ */
+export async function memberEarnings(
+  member: Member,
+  monthKey: string,
+): Promise<MemberEarnings> {
+  const [{ data: record }, source] = await Promise.all([
+    supabase
+      .from("Payout")
+      .select("*")
+      .eq("memberId", member.id)
+      .eq("monthKey", monthKey)
+      .maybeSingle(),
+    loadPerfSource(member.agencyId, monthKey),
+  ]);
+
+  const perf = measureMember(member, monthKey, source);
+  const roles = memberRoles(member);
+
+  // Grouped by the step label the pipeline already uses, so "Scripts written
+  // 4, Edits delivered 3" reads the same here as on the team page.
+  const counts = new Map<string, number>();
+  for (const row of perf.completed) counts.set(row.step, (counts.get(row.step) ?? 0) + 1);
+  const breakdown = [...counts.entries()]
+    .map(([step, done]) => ({ step, done }))
+    .sort((a, b) => b.done - a.done);
+
+  if (record) {
+    const r = record as Payout;
+    const pay = computePay(r.payType, r.deliveries, r.rate, r.salary, r.adjustment);
+    return {
+      monthKey,
+      payType: r.payType,
+      rate: r.rate,
+      salary: r.salary,
+      deliveries: r.deliveries,
+      taskPay: pay.taskPay,
+      base: pay.base,
+      adjustment: r.adjustment,
+      note: r.note,
+      total: r.amount,
+      status: r.status === "paid" ? "paid" : "approved",
+      onPayroll: true,
+      paidAt: toDate(r.paidAt),
+      breakdown,
+      roles,
+    };
+  }
+
+  const pay = computePay(member.payType, perf.summary.done, member.rate, member.salary);
+  return {
+    monthKey,
+    payType: member.payType,
+    rate: member.rate,
+    salary: member.salary,
+    deliveries: perf.summary.done,
+    taskPay: pay.taskPay,
+    base: pay.base,
+    adjustment: 0,
+    note: null,
+    total: pay.total,
+    status: "estimate",
+    onPayroll: onPayroll(member.payType, member.rate, member.salary),
+    paidAt: null,
+    breakdown,
+    roles,
+  };
 }
 
 /**

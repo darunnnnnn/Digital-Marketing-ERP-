@@ -1,4 +1,5 @@
 import { handoff } from "@/lib/pipeline";
+import { effectivePrice } from "@/lib/pricing";
 import { hasRole } from "@/lib/roles";
 import type { ContentItem, Member } from "@/lib/types";
 import { dateInputValue, toDate } from "@/lib/utils";
@@ -15,7 +16,11 @@ import type { HandoffInfo } from "./gate-forms";
  * Only ever called for someone who may actually approve: it carries the team
  * list and the default assignee, which nobody else's page should receive.
  */
-export function buildHandoff(item: ContentItem, team: Member[]): HandoffInfo | null {
+export function buildHandoff(
+  item: ContentItem,
+  team: Member[],
+  client: { scriptPrice: number; shootPrice: number; editPrice: number } | null,
+): HandoffInfo | null {
   const gate = handoff(item.stage);
   if (!gate) return null;
 
@@ -29,6 +34,7 @@ export function buildHandoff(item: ContentItem, team: Member[]): HandoffInfo | n
     defaultDue: dateInputValue(
       toDate(item[gate.deadline as keyof ContentItem] as string | null),
     ),
+    price: { field: gate.price, ...effectivePrice(item, client, gate.price) },
     // The script gate also decides whether there is a shoot, and who does the voice over.
     script:
       item.stage === "script_review"

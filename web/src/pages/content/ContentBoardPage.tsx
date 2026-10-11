@@ -201,7 +201,14 @@ export function ContentBoardPage() {
       ) : view === "list" ? (
         <ContentList items={visible} />
       ) : (
-        <Board items={visible} draggable={canDrag(viewer)} onMoved={board.reload} />
+        <Board
+          items={visible}
+          draggable={canDrag(viewer)}
+          onMoved={board.reload}
+          canQuickAdd={canPlan(viewer)}
+          clients={clients}
+          members={members}
+        />
       )}
     </div>
   );

@@ -41,6 +41,19 @@ alter table "ContentItem" add column if not exists "voNotes" text;
 alter table "ContentItem" add column if not exists "voUrl" text;
 alter table "ContentItem" add column if not exists "voCompletedAt" timestamptz;
 
+-- What a client pays for each part of the work — the script, the shoot, the
+-- edit. All optional: 0 on the client means no rate agreed, and null on a
+-- video means that part has never been priced — seeded from the client's
+-- rates when the video is planned, then changeable by the CEO at the gate
+-- where that part is approved, since the client's standard rate stops being
+-- true the moment a one-hour shoot turns into a three-day one.
+alter table "Client" add column if not exists "scriptPrice" integer not null default 0;
+alter table "Client" add column if not exists "shootPrice" integer not null default 0;
+alter table "Client" add column if not exists "editPrice" integer not null default 0;
+alter table "ContentItem" add column if not exists "scriptPrice" integer;
+alter table "ContentItem" add column if not exists "shootPrice" integer;
+alter table "ContentItem" add column if not exists "editPrice" integer;
+
 -- =========================================================================
 -- 2. Defaults that Prisma used to supply
 -- =========================================================================
@@ -268,11 +281,18 @@ create policy event_insert on "ContentEvent" for insert
       )
   ));
 
--- Payout: money is the CEO's alone, to read and to change.
+-- Payout: changing anyone's pay is the CEO's alone. Reading is too, except
+-- that each person may read their own frozen row — the dashboard's "what you
+-- earned" card needs that much, and no more: an approved or paid month, not
+-- anyone else's, and never a write.
 drop policy if exists payout_all on "Payout";
 create policy payout_all on "Payout" for all
   using ("agencyId" = app_agency_id() and app_is_ceo())
   with check ("agencyId" = app_agency_id() and app_is_ceo());
+
+drop policy if exists payout_read_self on "Payout";
+create policy payout_read_self on "Payout" for select
+  using ("memberId" = app_member_id());
 
 -- Session: left over from the old server-side login. Nobody reads it now.
 drop policy if exists session_none on "Session";
@@ -336,6 +356,16 @@ security definer
 set search_path = public
 as $$
 begin
+  -- What a video is worth is the CEO's decision alone — stricter than the
+  -- manager bypass below, so it is checked before that bypass can apply.
+  if new."scriptPrice" is distinct from old."scriptPrice"
+  or new."shootPrice" is distinct from old."shootPrice"
+  or new."editPrice" is distinct from old."editPrice" then
+    if not app_is_ceo() then
+      raise exception 'Only the CEO can change what a video is worth';
+    end if;
+  end if;
+
   if app_is_manager() then
     return new;
   end if;

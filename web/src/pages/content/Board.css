@@ -58,10 +58,52 @@
   color: var(--stone-700);
 }
 
-.column-count {
+.column-head-right {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: var(--sp-2);
   margin-left: auto;
+}
+
+.column-count {
   font-size: 11px;
   color: var(--stone-400);
+}
+
+/* The quick-add button, next to the count — out of the way until wanted.
+   A <button> carries its own padding and border in every browser, and those
+   are rarely equal on all four sides — left uncleared, that alone is enough
+   to push the icon off centre at this size. */
+.column-add {
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+  flex-shrink: 0;
+  width: 1.25rem;
+  height: 1.25rem;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-full);
+  background: var(--stone-100);
+  color: var(--stone-500);
+  line-height: 0;
+  cursor: pointer;
+  transition:
+    background-color 0.15s,
+    color 0.15s;
+}
+
+.column-add:hover {
+  background: var(--stone-200);
+  color: var(--stone-700);
+}
+
+.column-add svg {
+  display: block;
+  width: 0.7rem;
+  height: 0.7rem;
 }
 
 .column-body {

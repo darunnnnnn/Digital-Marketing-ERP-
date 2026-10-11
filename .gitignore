@@ -1,11 +1,5 @@
+# The app lives in web/, which has its own .gitignore. These are the few
+# things that can still appear at the repo root.
 node_modules
-.next
-out
-build
 .env
-*.db
-*.db-journal
-prisma/dev.db*
 .DS_Store
-next-env.d.ts
-.next-verify

@@ -164,6 +164,44 @@ export function ClientFormPage() {
           </div>
 
           <div className="form-box">
+            <p className="form-box-label">Standard rates</p>
+            <p className="form-box-hint">
+              Optional. Every video planned for this client starts at these prices, and the
+              CEO can change the price on any single video later. Leave them at 0 if nothing
+              is agreed yet.
+            </p>
+            <div className="form-grid-3">
+              <Field label="Price for script" hint="₹, optional" error={errors.scriptPrice}>
+                <Input
+                  type="number"
+                  min={0}
+                  step={250}
+                  value={form.scriptPrice}
+                  onChange={(e) => set("scriptPrice")(e.target.value)}
+                />
+              </Field>
+              <Field label="Price for shoot" hint="₹, optional" error={errors.shootPrice}>
+                <Input
+                  type="number"
+                  min={0}
+                  step={500}
+                  value={form.shootPrice}
+                  onChange={(e) => set("shootPrice")(e.target.value)}
+                />
+              </Field>
+              <Field label="Price for edit" hint="₹, optional" error={errors.editPrice}>
+                <Input
+                  type="number"
+                  min={0}
+                  step={500}
+                  value={form.editPrice}
+                  onChange={(e) => set("editPrice")(e.target.value)}
+                />
+              </Field>
+            </div>
+          </div>
+
+          <div className="form-box">
             <p className="form-box-label">Point of contact</p>
             <div className="form-grid-3">
               <Field label="Name" hint="optional">

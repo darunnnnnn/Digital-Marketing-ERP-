@@ -365,3 +365,16 @@
   width: 1rem;
   height: 1rem;
 }
+
+/* Small quiet link in a card header action slot, e.g. "What this is worth"
+   pointing to the client's standard rates. */
+.detail-link {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--brand-600);
+  transition: color 0.15s;
+}
+
+.detail-link:hover {
+  color: var(--brand-500);
+}

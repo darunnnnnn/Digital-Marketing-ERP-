@@ -3,7 +3,9 @@ import { Button } from "@/components/ui/Button";
 import { Field, Input, Select, Textarea } from "@/components/ui/Field";
 import { YesNoField } from "@/components/ui/YesNoField";
 import { approveScript, handOff } from "@/lib/queries";
+import { parsePrice } from "@/lib/pricing";
 import type { ContentItem, Member } from "@/lib/types";
+import { PriceQuestion, type PriceAsk } from "./PriceQuestion";
 import type { MemberOption } from "./types";
 // Both stylesheets, because these forms are used outside the video page too:
 // .panel-pair and .panel-error live in PanelForm.css, which only that page
@@ -28,6 +30,8 @@ export type HandoffInfo = {
   defaultDue: string;
   /** Set only at the script gate, which decides how the video is made. */
   script?: ScriptGateInfo;
+  /** The price this gate offers a chance to change. */
+  price: PriceAsk;
 };
 
 /** What the script gate needs beyond the single person the other gates pick. */
@@ -143,13 +147,30 @@ export function HandoffForm({
   const [memberId, setMemberId] = useState(info.defaultMemberId);
   const [due, setDue] = useState(info.defaultDue);
   const [note, setNote] = useState("");
+  const [price, setPrice] = useState<string | undefined>(undefined);
   const [error, setError] = useState<string | null>(null);
+  const [priceError, setPriceError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
+    setPriceError(null);
+
+    // Reprice only when the checkbox is on — untouched, the price question
+    // leaves the stored value exactly as it is.
+    let parsedPrice: number | undefined;
+    if (price !== undefined) {
+      const parsed = parsePrice(price);
+      if (parsed.error) return setPriceError(parsed.error);
+      parsedPrice = parsed.value ?? 0;
+    }
+
     setBusy(true);
-    const message = await handOff(item, { memberId, due, note, actor }, team);
+    const message = await handOff(
+      item,
+      { memberId, due, note, actor, price: parsedPrice, priceField: info.price.field },
+      team,
+    );
     setBusy(false);
     if (message) return setError(message);
     onDone();
@@ -172,6 +193,8 @@ export function HandoffForm({
           <Input type="date" value={due} onChange={(e) => setDue(e.target.value)} />
         </Field>
       </div>
+
+      <PriceQuestion ask={info.price} value={price} onChange={setPrice} error={priceError ?? undefined} />
 
       <Field label="Note for them" hint="optional, shows in the activity log">
         <Textarea
@@ -227,11 +250,22 @@ export function ScriptGateForm({
   const [voiceoverId, setVoiceoverId] = useState(script.defaults.voiceoverId);
   const [voDue, setVoDue] = useState(script.defaults.voDue);
   const [note, setNote] = useState("");
+  const [price, setPrice] = useState<string | undefined>(undefined);
   const [error, setError] = useState<string | null>(null);
+  const [priceError, setPriceError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
+    setPriceError(null);
+
+    let parsedPrice: number | undefined;
+    if (price !== undefined) {
+      const parsed = parsePrice(price);
+      if (parsed.error) return setPriceError(parsed.error);
+      parsedPrice = parsed.value ?? 0;
+    }
+
     setBusy(true);
     const message = await approveScript(
       item,
@@ -246,6 +280,7 @@ export function ScriptGateForm({
         voDue,
         note,
         actor,
+        price: parsedPrice,
       },
       team,
     );
@@ -256,6 +291,8 @@ export function ScriptGateForm({
 
   return (
     <form onSubmit={submit} className="stack-5">
+      <PriceQuestion ask={info.price} value={price} onChange={setPrice} error={priceError ?? undefined} />
+
       <YesNoField
         label="Does this video need a shoot?"
         hint="choose No to use footage you already have"

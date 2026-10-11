@@ -217,7 +217,18 @@ export const STAGE_LABELS = Object.fromEntries(
  */
 export const HANDOFFS: Record<
   string,
-  { assign: AssignField; role: string; deadline: string; who: string; verb: string }
+  {
+    assign: AssignField;
+    role: string;
+    deadline: string;
+    who: string;
+    verb: string;
+    /**
+     * Which price the CEO is offered a chance to change at this gate — the
+     * part of the work that was just delivered and is being approved here.
+     */
+    price: "scriptPrice" | "shootPrice" | "editPrice";
+  }
 > = {
   script_review: {
     assign: "cameramanId",
@@ -225,6 +236,7 @@ export const HANDOFFS: Record<
     deadline: "shootDue",
     who: "cameraman",
     verb: "Approve script & assign",
+    price: "scriptPrice",
   },
   footage_review: {
     assign: "editorId",
@@ -232,6 +244,7 @@ export const HANDOFFS: Record<
     deadline: "editDue",
     who: "editor",
     verb: "Approve footage & assign the edit",
+    price: "shootPrice",
   },
   edit_review: {
     assign: "publisherId",
@@ -239,6 +252,7 @@ export const HANDOFFS: Record<
     deadline: "publishDue",
     who: "posting team",
     verb: "Approve final video & assign posting",
+    price: "editPrice",
   },
 };
 
@@ -311,4 +325,14 @@ export function isOverdue(dueDate: Date | null, stage: string) {
 
 export function refLabel(ref: number) {
   return `#${String(ref).padStart(3, "0")}`;
+}
+
+/**
+ * Whether a video can be dropped straight onto this stage, skipping the ones
+ * before it — true for every stage with someone actually doing work on it.
+ * Not the three CEO gates, which only exist to approve what came before, and
+ * not Published, which is reached by posting, not by being added to.
+ */
+export function canQuickAddTo(stage: Stage) {
+  return STAGE_CONFIG[stage].owner !== "ceo" && stage !== "published";
 }

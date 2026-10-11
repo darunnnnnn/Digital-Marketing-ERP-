@@ -37,18 +37,25 @@
   inset: 0;
   display: grid;
   place-content: center;
+  padding: 0 12%;
   text-align: center;
   line-height: 1;
 }
 
+/* Sized in em against the font-size set on .ring itself (a fraction of its
+   pixel size), so the text always fits the circle instead of a fixed size
+   meant for one ring overflowing a smaller one. */
 .ring-label {
-  font-size: 1.5rem;
+  font-size: 1em;
   font-weight: 600;
   letter-spacing: -0.02em;
+  white-space: nowrap;
 }
 
 .ring-sublabel {
-  margin-top: var(--sp-1);
-  font-size: 0.75rem;
+  display: block;
+  margin-top: 0.3em;
+  font-size: 0.5em;
   color: var(--stone-400);
+  white-space: nowrap;
 }

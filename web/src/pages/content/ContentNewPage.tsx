@@ -106,6 +106,11 @@ function PlanForm({
         titles,
         clientId: v.clientId,
         clientName: selected?.name ?? "this client",
+        // 0 on the client means no rate agreed — the video then starts
+        // unpriced too, rather than inheriting a price nobody set.
+        clientScriptPrice: selected?.scriptPrice ?? 0,
+        clientShootPrice: selected?.shootPrice ?? 0,
+        clientEditPrice: selected?.editPrice ?? 0,
         format: v.format,
         priority: v.priority,
         // Blank in script-only mode, so no later deadline is invented.
@@ -378,6 +383,9 @@ export function ContentNewPage() {
           accent: c.accent,
           monthlyTarget: c.monthlyTarget,
           planned: planned.get(c.id) ?? 0,
+          scriptPrice: c.scriptPrice,
+          shootPrice: c.shootPrice,
+          editPrice: c.editPrice,
         })),
       members,
     };

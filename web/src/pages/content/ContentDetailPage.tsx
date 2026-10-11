@@ -6,6 +6,7 @@ import { StageActions } from "./StageActions";
 import { buildHandoff } from "./handoff-info";
 import { StageRail } from "./StageRail";
 import { TaskView } from "./TaskView";
+import { PriceCard } from "./PriceCard";
 import { Timeline } from "./Timeline";
 import { IconChevronLeft, IconPencil, IconTrash } from "@/components/icons";
 import { Button } from "@/components/ui/Button";
@@ -25,6 +26,7 @@ import {
   canAssign,
   canDeleteContent,
   canEditPanel,
+  canPriceContent,
   canSeeItem,
   canSendBack,
   isManager,
@@ -38,6 +40,7 @@ import {
   stageConfig,
   stageProgress,
 } from "@/lib/pipeline";
+import { effectivePrice } from "@/lib/pricing";
 import { accent } from "@/lib/theme";
 import { STEPS, deadlineFor, stepStatus } from "@/lib/schedule";
 import { useAsync } from "@/lib/use-async";
@@ -170,7 +173,7 @@ export function ContentDetailPage() {
   // At a CEO gate, approving also picks the next person and their deadline.
   // Only built for someone who can actually approve, so the team list and
   // default assignee never reach anyone else's page.
-  const handoffInfo = canAdvance(viewer, item) ? buildHandoff(item, team) : null;
+  const handoffInfo = canAdvance(viewer, item) ? buildHandoff(item, team, item.client) : null;
 
   const meta = [
     {
@@ -641,6 +644,27 @@ export function ContentDetailPage() {
                   />
                 ))}
             </div>
+          </Card>
+
+          <Card>
+            <CardHeader
+              title="What this is worth"
+              action={
+                <Link to={`/clients/${item.clientId}/edit`} className="detail-link">
+                  Client rates
+                </Link>
+              }
+            />
+            <PriceCard
+              item={item}
+              editable={canPriceContent(viewer)}
+              actor={viewer.name}
+              onChanged={reload}
+              asks={(["scriptPrice", "shootPrice", "editPrice"] as const).map((field) => ({
+                field,
+                ...effectivePrice(item, item.client, field),
+              }))}
+            />
           </Card>
 
           {(item.referenceUrl ||

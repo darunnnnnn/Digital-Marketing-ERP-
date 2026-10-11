@@ -8,9 +8,10 @@
  *     so a blocked write fails in the database, not just in the UI.
  */
 import { supabase } from "./supabase";
-import { STEPS, scheduleFrom, type DeadlineField } from "./schedule";
+import { STAGE_DEADLINE, STEPS, scheduleFrom, type DeadlineField } from "./schedule";
 import { handoff, nextStage, prevStage, stageConfig, type Stage } from "./pipeline";
 import { craftByAssign, hasRole } from "./roles";
+import { PRICE_FIELDS, priceLabel } from "./pricing";
 import { currentMonthKey, parseDateInput } from "./utils";
 import type {
   Client,
@@ -29,7 +30,7 @@ function fail(message: string, error: { message: string } | null): never {
 
 const ITEM_WITH_NAMES = `
   *,
-  client:Client(id, name, accent),
+  client:Client(id, name, accent, scriptPrice, shootPrice, editPrice),
   scriptwriter:Member!ContentItem_scriptwriterId_fkey(name, accent, role),
   cameraman:Member!ContentItem_cameramanId_fkey(name, accent, role),
   editor:Member!ContentItem_editorId_fkey(name, accent, role),
@@ -183,6 +184,10 @@ export type PlanInput = {
   deadlines?: Partial<Record<DeadlineField, string>>;
   assignees?: { cameramanId?: string; editorId?: string; publisherId?: string };
   actor?: string;
+  /** The client's standard rates, to seed the price on every video created here. */
+  clientScriptPrice?: number;
+  clientShootPrice?: number;
+  clientEditPrice?: number;
 };
 
 /** Creates one tracked video per title, numbering them sequentially. */
@@ -229,6 +234,10 @@ export async function planContent(input: PlanInput) {
     editorId: input.assignees?.editorId || null,
     publisherId: input.assignees?.publisherId || null,
     stage: input.scriptwriterId ? "scripting" : "planned",
+    // 0 means no rate agreed on the client, which stays unpriced here too.
+    scriptPrice: input.clientScriptPrice ? input.clientScriptPrice : null,
+    shootPrice: input.clientShootPrice ? input.clientShootPrice : null,
+    editPrice: input.clientEditPrice ? input.clientEditPrice : null,
   }));
 
   const { data, error } = await supabase.from("ContentItem").insert(rows).select("id");
@@ -239,6 +248,97 @@ export async function planContent(input: PlanInput) {
     ids.map((id) => logEvent(id, "created", `Planned for ${input.clientName}`, input.actor)),
   );
   return ids;
+}
+
+export type QuickAddInput = {
+  agencyId: string;
+  clientId: string;
+  clientName: string;
+  title: string;
+  /** Which column it lands on directly — skipping every stage before it. */
+  stage: Stage;
+  /** Who picks it up there. Required for any stage with a craft owner. */
+  assigneeId?: string;
+  dueDate?: string;
+  priority?: string;
+  /** An example video for whoever picks this up. Optional. */
+  referenceUrl?: string;
+  actor?: string;
+  /** The client's standard rates, to seed the price on this video. */
+  clientScriptPrice?: number;
+  clientShootPrice?: number;
+  clientEditPrice?: number;
+  /** Overrides the seeded price for the part of the work this stage is for,
+   *  when the CEO changes it from the client's standard rate. */
+  price?: number;
+  priceField?: "scriptPrice" | "shootPrice" | "editPrice";
+};
+
+/**
+ * Drops a single video straight onto a stage further down the pipeline —
+ * a script the client already supplied, footage shot outside the app,
+ * anything that shouldn't have to walk through every earlier step to reach
+ * the person who actually needs it next. Used from the board, by the CEO
+ * and social media managers, as a short cut next to the normal planner.
+ */
+export async function quickAddContent(input: QuickAddInput) {
+  const { data: last } = await supabase
+    .from("ContentItem")
+    .select("ref")
+    .eq("agencyId", input.agencyId)
+    .order("ref", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  const ref = ((last as { ref: number } | null)?.ref ?? 0) + 1;
+
+  const config = stageConfig(input.stage);
+  const due = parseDateInput(input.dueDate ?? "");
+  const deadlineField = STAGE_DEADLINE[input.stage];
+
+  const row: Record<string, unknown> = {
+    agencyId: input.agencyId,
+    clientId: input.clientId,
+    ref,
+    title: input.title,
+    format: "reel",
+    priority: input.priority || "normal",
+    referenceUrl: input.referenceUrl?.trim() || null,
+    stage: input.stage,
+    monthKey: currentMonthKey(),
+    ...enterStage(input.stage),
+    // 0 on the client means no rate agreed, which stays unpriced here too.
+    scriptPrice: input.clientScriptPrice ? input.clientScriptPrice : null,
+    shootPrice: input.clientShootPrice ? input.clientShootPrice : null,
+    editPrice: input.clientEditPrice ? input.clientEditPrice : null,
+  };
+
+  // The CEO's own number for this part of the work, in place of the client's
+  // standard rate — the same override the hand-off gates offer.
+  if (input.priceField && input.price !== undefined) row[input.priceField] = input.price;
+
+  if (config.assign && input.assigneeId) row[config.assign] = input.assigneeId;
+
+  if (deadlineField && due) {
+    row[deadlineField] = due.toISOString();
+    // The posting date doubles as the overall due date and decides the month
+    // it counts toward — the same rule the CEO's hand-off gate follows.
+    if (deadlineField === "publishDue") {
+      row.dueDate = due.toISOString();
+      row.monthKey = currentMonthKey(due);
+    }
+  }
+
+  const { data, error } = await supabase.from("ContentItem").insert(row).select("id").single();
+  if (error) fail("Couldn't add that", error);
+
+  const id = (data as { id: string }).id;
+  await logEvent(
+    id,
+    "created",
+    `Added straight to ${config.label} for ${input.clientName}`,
+    input.actor,
+  );
+  return id;
 }
 
 // ------------------------------------------------------ moving work along
@@ -402,7 +502,18 @@ export async function sendBack(item: ContentItem, note: string, actor?: string) 
  */
 export async function handOff(
   item: ContentItem,
-  input: { memberId: string; due: string; note?: string; actor?: string },
+  input: {
+    memberId: string;
+    due: string;
+    note?: string;
+    actor?: string;
+    /**
+     * Set only when the CEO ticked "change what this is worth" in the gate
+     * dialog; left undefined, the price column is never touched by this write.
+     */
+    price?: number;
+    priceField?: "scriptPrice" | "shootPrice" | "editPrice";
+  },
   team: Member[],
 ) {
   const gate = handoff(item.stage);
@@ -427,6 +538,7 @@ export async function handOff(
     patch.dueDate = due.toISOString();
     patch.monthKey = currentMonthKey(due);
   }
+  if (input.price !== undefined && input.priceField) patch[input.priceField] = input.price;
 
   const { error } = await supabase.from("ContentItem").update(patch).eq("id", item.id);
   if (error) return error.message;
@@ -439,6 +551,17 @@ export async function handOff(
       : `${stageConfig(item.stage).advance} — assigned to ${member.name}, due ${input.due}`,
     input.actor,
   );
+
+  // A separate entry: a price change is its own fact, and burying it in the
+  // hand-off message would hide it from anyone scanning the activity log.
+  if (input.price !== undefined && input.priceField) {
+    await logEvent(
+      item.id,
+      "price",
+      `${PRICE_FIELDS[input.priceField].label} set to ${priceLabel(input.price)}`,
+      input.actor,
+    );
+  }
   return null;
 }
 
@@ -455,6 +578,8 @@ export type ScriptGateInput = {
   voDue: string;
   note?: string;
   actor?: string;
+  /** Set only when the CEO ticked "change what this script is worth". */
+  price?: number;
 };
 
 /**
@@ -526,6 +651,7 @@ export async function approveScript(item: ContentItem, input: ScriptGateInput, t
   const to: Stage = input.shootNeeded || item.voNeeded ? "shooting" : "editing";
   patch.stage = to;
   if (to === "editing") patch.editStartedAt = now;
+  if (input.price !== undefined) patch.scriptPrice = input.price;
 
   const { error } = await supabase.from("ContentItem").update(patch).eq("id", item.id);
   if (error) return error.message;
@@ -536,7 +662,43 @@ export async function approveScript(item: ContentItem, input: ScriptGateInput, t
     `Approve script — ${parts.join("; ")}${input.note ? `: ${input.note}` : ""}`,
     input.actor,
   );
+
+  if (input.price !== undefined) {
+    await logEvent(
+      item.id,
+      "price",
+      `${PRICE_FIELDS.scriptPrice.label} set to ${priceLabel(input.price)}`,
+      input.actor,
+    );
+  }
   return null;
+}
+
+/**
+ * Sets one of a video's three prices outright, for the CEO who wants to
+ * reprice without waiting for the next gate. `null` clears it, which falls
+ * the video back to the client's standard rate.
+ */
+export async function setContentPrice(
+  item: ContentItem,
+  field: "scriptPrice" | "shootPrice" | "editPrice",
+  price: number | null,
+  actor?: string,
+) {
+  const { error } = await supabase
+    .from("ContentItem")
+    .update({ [field]: price })
+    .eq("id", item.id);
+  if (error) fail("Couldn't change the price", error);
+
+  await logEvent(
+    item.id,
+    "price",
+    price === null
+      ? `${PRICE_FIELDS[field].label} cleared — back to the client's rate`
+      : `${PRICE_FIELDS[field].label} set to ${priceLabel(price)}`,
+    actor,
+  );
 }
 
 export async function setAssignee(

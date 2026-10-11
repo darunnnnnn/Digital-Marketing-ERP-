@@ -26,6 +26,12 @@ export type Client = {
   monthlyTarget: number;
   monthlyPostTarget: number;
   retainer: number;
+  /** What this client pays per part of the work — the starting price on every
+   *  video planned for them. 0 means no rate agreed; a video then shows no
+   *  price at all for that part. */
+  scriptPrice: number;
+  shootPrice: number;
+  editPrice: number;
   services: string;
   notes: string | null;
   createdAt: string;
@@ -116,6 +122,15 @@ export type ContentItem = {
 
   revisions: number;
   notes: string | null;
+
+  // What each part of this piece is worth. Seeded from the client's rates
+  // when planned, then adjustable by the CEO at the gate where that part is
+  // approved. null means never priced, which falls back to the client's rate
+  // rather than showing a misleading 0.
+  scriptPrice: number | null;
+  shootPrice: number | null;
+  editPrice: number | null;
+
   createdAt: string;
   updatedAt: string;
 };
@@ -149,7 +164,14 @@ export type Payout = {
 
 /** A content row with the joined names the board and lists display. */
 export type ContentItemWithNames = ContentItem & {
-  client: { id: string; name: string; accent: string } | null;
+  client: {
+    id: string;
+    name: string;
+    accent: string;
+    scriptPrice: number;
+    shootPrice: number;
+    editPrice: number;
+  } | null;
   scriptwriter: { name: string; accent: string; role: string } | null;
   cameraman: { name: string; accent: string; role: string } | null;
   editor: { name: string; accent: string; role: string } | null;

@@ -15,6 +15,9 @@ export type ClientValues = {
   monthlyTarget: string;
   monthlyPostTarget: string;
   retainer: string;
+  scriptPrice: string;
+  shootPrice: string;
+  editPrice: string;
   services: string;
   notes: string;
 };
@@ -32,6 +35,9 @@ export const EMPTY_CLIENT: ClientValues = {
   monthlyTarget: "12",
   monthlyPostTarget: "0",
   retainer: "0",
+  scriptPrice: "0",
+  shootPrice: "0",
+  editPrice: "0",
   services: "",
   notes: "",
 };
@@ -49,6 +55,9 @@ export function clientToValues(c: Client): ClientValues {
     monthlyTarget: String(c.monthlyTarget),
     monthlyPostTarget: String(c.monthlyPostTarget),
     retainer: String(c.retainer),
+    scriptPrice: String(c.scriptPrice),
+    shootPrice: String(c.shootPrice),
+    editPrice: String(c.editPrice),
     services: c.services,
     notes: c.notes ?? "",
   };
@@ -82,6 +91,22 @@ export function validateClient(values: ClientValues) {
     errors.retainer = "Enter a positive amount.";
   }
 
+  // All three rates are optional; 0 is the honest "nothing agreed yet".
+  const scriptPrice = Number(v.scriptPrice || 0);
+  if (!Number.isFinite(scriptPrice) || scriptPrice < 0) {
+    errors.scriptPrice = "Enter a positive amount.";
+  }
+
+  const shootPrice = Number(v.shootPrice || 0);
+  if (!Number.isFinite(shootPrice) || shootPrice < 0) {
+    errors.shootPrice = "Enter a positive amount.";
+  }
+
+  const editPrice = Number(v.editPrice || 0);
+  if (!Number.isFinite(editPrice) || editPrice < 0) {
+    errors.editPrice = "Enter a positive amount.";
+  }
+
   if (!STATUSES.includes(v.status)) v.status = "active";
   if (!ACCENT_KEYS.includes(v.accent as never)) v.accent = "default";
 
@@ -98,6 +123,9 @@ export function validateClient(values: ClientValues) {
       monthlyTarget: target,
       monthlyPostTarget: postTarget,
       retainer: Math.round(retainer),
+      scriptPrice: Math.round(scriptPrice),
+      shootPrice: Math.round(shootPrice),
+      editPrice: Math.round(editPrice),
       services: v.services,
       notes: v.notes || null,
     },

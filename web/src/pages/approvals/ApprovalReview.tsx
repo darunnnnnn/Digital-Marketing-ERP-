@@ -60,7 +60,7 @@ function Decision({
   const config = stageConfig(item.stage);
   const canApproveThis = canAdvance(viewer, item);
   const canReject = canSendBack(viewer, item);
-  const handoff = canApproveThis ? buildHandoff(item, team) : null;
+  const handoff = canApproveThis ? buildHandoff(item, team, item.client) : null;
 
   async function requestChanges(e: React.FormEvent) {
     e.preventDefault();

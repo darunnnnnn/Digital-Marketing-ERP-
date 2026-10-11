@@ -6,7 +6,7 @@
 // — real DDL, real triggers, real row level security — with nothing to install
 // beyond npm and nothing left running afterwards.
 //
-// It loads the production schema from prisma/migrations, applies setup.sql
+// It loads the production schema from supabase/base-schema, applies setup.sql
 // twice (it is advertised as safe to re-run), then makes every insert the app
 // makes, with no id and no updatedAt, exactly as the app sends them.
 import { PGlite } from "@electric-sql/pglite";
@@ -41,11 +41,11 @@ await step("stand-ins for what Supabase provides", `
   create role authenticated nologin;
 `);
 
-// The real production schema, straight from the migrations that built it.
+// The real production schema, straight from the migrations that built it —
+// kept as plain DDL in base-schema/ now that Prisma itself is gone.
 await step(
-  "load the real schema from prisma/migrations",
-  read("../../prisma/migrations/20260926063511_init/migration.sql") +
-    read("../../prisma/migrations/20260926144318_add_monthly_post_target/migration.sql"),
+  "load the real schema from base-schema/",
+  read("base-schema/001_init.sql") + read("base-schema/002_monthly_post_target.sql"),
 );
 
 // The file the user is about to run.

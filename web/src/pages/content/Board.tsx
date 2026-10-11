@@ -1,24 +1,34 @@
 import { useEffect, useState } from "react";
-import { STAGES, STAGE_CONFIG, type Stage } from "@/lib/pipeline";
+import { IconPlus } from "@/components/icons";
+import { STAGES, STAGE_CONFIG, canQuickAddTo, type Stage } from "@/lib/pipeline";
 import { moveToStage } from "@/lib/queries";
 import { useToast } from "@/components/ui/Toast";
 import { cn } from "@/lib/utils";
 import { ContentCard } from "./ContentCard";
-import type { BoardItem } from "./types";
+import { QuickAddModal } from "./QuickAddModal";
+import type { BoardItem, MemberOption, QuickAddClient } from "./types";
 import "./Board.css";
 
 export function Board({
   items,
   draggable = false,
   onMoved,
+  canQuickAdd = false,
+  clients = [],
+  members = [],
 }: {
   items: BoardItem[];
   draggable?: boolean;
   onMoved?: () => void;
+  /** CEO and social media managers can drop a video straight onto a stage. */
+  canQuickAdd?: boolean;
+  clients?: QuickAddClient[];
+  members?: MemberOption[];
 }) {
   const [local, setLocal] = useState(items);
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [overStage, setOverStage] = useState<Stage | null>(null);
+  const [addingTo, setAddingTo] = useState<Stage | null>(null);
   const toast = useToast();
 
   // The database is the source of truth; re-sync whenever fresh data arrives.
@@ -73,7 +83,20 @@ export function Board({
               <header className="column-head">
                 <span className="column-dot" style={{ background: config.dot }} />
                 <h2 className="column-label">{config.label}</h2>
-                <span className="column-count tabular">{column.length}</span>
+                <span className="column-head-right">
+                  <span className="column-count tabular">{column.length}</span>
+                  {canQuickAdd && canQuickAddTo(stage) && (
+                    <button
+                      type="button"
+                      className="column-add"
+                      title={`Add straight to ${config.label}`}
+                      aria-label={`Add straight to ${config.label}`}
+                      onClick={() => setAddingTo(stage)}
+                    >
+                      <IconPlus />
+                    </button>
+                  )}
+                </span>
               </header>
 
               <div className="column-body">
@@ -100,6 +123,16 @@ export function Board({
           );
         })}
       </div>
+
+      {addingTo && (
+        <QuickAddModal
+          stage={addingTo}
+          clients={clients}
+          members={members}
+          onClose={() => setAddingTo(null)}
+          onAdded={() => onMoved?.()}
+        />
+      )}
     </div>
   );
 }

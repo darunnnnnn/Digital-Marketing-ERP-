@@ -87,6 +87,9 @@ export const canApprove = (v: Viewer) => isCeo(v);
 /** Money: rates, approvals and marking paid. */
 export const canManagePayouts = (v: Viewer) => isCeo(v);
 
+/** What a client is charged for one video or script. The CEO sets the price. */
+export const canPriceContent = (v: Viewer) => isCeo(v);
+
 /** Editing one panel of the video page. */
 export function canEditPanel(v: Viewer, item: Assignable, panel: string) {
   if (isManager(v)) return true;

@@ -13,6 +13,7 @@ const KIND_TONES: Record<string, string> = {
   assign: "dot-brand",
   note: "dot-faint",
   publish: "dot-strong",
+  price: "dot-strong",
 };
 
 export function Timeline({

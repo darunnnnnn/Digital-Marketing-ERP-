@@ -43,7 +43,9 @@ export function ProgressRing({
   const c = 2 * Math.PI * r;
 
   return (
-    <div className="ring" style={{ width: size, height: size }}>
+    // The label scales off the ring's own size (em, below) instead of a
+    // fixed rem, so a smaller ring never crowds or overruns its circle.
+    <div className="ring" style={{ width: size, height: size, fontSize: size * 0.185 }}>
       <svg width={size} height={size} className="ring-svg">
         <circle
           cx={size / 2}
