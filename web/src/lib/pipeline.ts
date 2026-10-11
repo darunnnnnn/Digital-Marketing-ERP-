@@ -228,6 +228,9 @@ export const HANDOFFS: Record<
      * part of the work that was just delivered and is being approved here.
      */
     price: "scriptPrice" | "shootPrice" | "editPrice";
+    /** Who delivered the work this gate signs off on, and what it's called. */
+    done: AssignField;
+    doneLabel: string;
   }
 > = {
   script_review: {
@@ -237,6 +240,8 @@ export const HANDOFFS: Record<
     who: "cameraman",
     verb: "Approve script & assign",
     price: "scriptPrice",
+    done: "scriptwriterId",
+    doneLabel: "Script",
   },
   footage_review: {
     assign: "editorId",
@@ -245,6 +250,8 @@ export const HANDOFFS: Record<
     who: "editor",
     verb: "Approve footage & assign the edit",
     price: "shootPrice",
+    done: "cameramanId",
+    doneLabel: "Footage",
   },
   edit_review: {
     assign: "publisherId",
@@ -253,6 +260,8 @@ export const HANDOFFS: Record<
     who: "posting team",
     verb: "Approve final video & assign posting",
     price: "editPrice",
+    done: "editorId",
+    doneLabel: "Edit",
   },
 };
 

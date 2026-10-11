@@ -8,6 +8,7 @@
  *     so a blocked write fails in the database, not just in the UI.
  */
 import { supabase } from "./supabase";
+import { notify } from "./notify";
 import { STAGE_DEADLINE, STEPS, scheduleFrom, type DeadlineField } from "./schedule";
 import { handoff, nextStage, prevStage, stageConfig, type Stage } from "./pipeline";
 import { craftByAssign, hasRole } from "./roles";
@@ -140,6 +141,42 @@ async function logEvent(contentId: string, kind: string, message: string, actor?
   await supabase
     .from("ContentEvent")
     .insert({ contentId, kind, message, actor: actor ?? null });
+}
+
+/**
+ * Emails whoever a video landing on a stage now concerns: the CEO when it has
+ * reached one of their gates, otherwise the people who hold that stage's work.
+ *
+ * Used by every path that moves a video without choosing a person — the plain
+ * advance button, drag and drop, a track finishing. The CEO's gates do their
+ * own telling, because they assign and approve in the same breath and have
+ * both halves to say.
+ */
+function announce(item: { id: string } & Partial<ContentItem>, to: Stage) {
+  const gate = handoff(to);
+  if (gate) return notify({ event: "submitted", contentId: item.id, what: gate.doneLabel });
+
+  // Posting it is the publisher's own last act, not work handed to them.
+  if (to === "published") return;
+
+  const deadline = STAGE_DEADLINE[to];
+  const due = deadline ? item[deadline] : null;
+
+  // The shoot stage holds two independent jobs, each with its own deadline and
+  // its own name in the subject line, so they are told separately — and only
+  // the ones this video actually has.
+  if (to === "shooting") {
+    if (item.shootNeeded !== false) {
+      notify({ event: "assigned", contentId: item.id, fields: ["cameramanId"], due });
+    }
+    if (item.voNeeded) {
+      notify({ event: "assigned", contentId: item.id, fields: ["voiceoverId"], due: item.voDue });
+    }
+    return;
+  }
+
+  const field = stageConfig(to).assign;
+  if (field) notify({ event: "assigned", contentId: item.id, fields: [field], due });
 }
 
 export async function countPublished(agencyId: string, monthKey = currentMonthKey()) {
@@ -338,6 +375,10 @@ export async function quickAddContent(input: QuickAddInput) {
     `Added straight to ${config.label} for ${input.clientName}`,
     input.actor,
   );
+
+  if (config.assign && input.assigneeId) {
+    notify({ event: "assigned", contentId: id, fields: [config.assign], due: input.dueDate });
+  }
   return id;
 }
 
@@ -411,6 +452,7 @@ export async function advanceStage(item: ContentItem, actor?: string) {
   if (error) fail("Couldn't move this video on", error);
 
   await logEvent(item.id, "stage", `Moved to ${stageConfig(to).label}`, actor);
+  announce(item, to);
 }
 
 /**
@@ -445,6 +487,7 @@ export async function completeTrack(item: ContentItem, track: "shoot" | "vo", ac
   const part = track === "shoot" ? "Footage" : "Voice over";
   if (to) {
     await logEvent(item.id, "stage", `${part} in — moved to ${stageConfig(to).label}`, actor);
+    announce(item, to);
   } else {
     const waiting = track === "shoot" ? "the voice over" : "the shoot";
     await logEvent(item.id, "stage", `${part} in — waiting on ${waiting}`, actor);
@@ -470,6 +513,7 @@ export async function moveToStage(
     `Moved from ${stageConfig(item.stage).label} to ${stageConfig(to).label}`,
     actor,
   );
+  announce(item, to as Stage);
 }
 
 export async function sendBack(item: ContentItem, note: string, actor?: string) {
@@ -494,6 +538,12 @@ export async function sendBack(item: ContentItem, note: string, actor?: string) 
       : `Sent back to ${stageConfig(to).label}`,
     actor,
   );
+
+  // Whoever owns the stage it dropped back to is the one being asked for
+  // another pass. Landing back on a CEO gate is nobody's work, so nothing is
+  // sent — the gate itself is the next thing to happen.
+  const field = stageConfig(to).assign;
+  if (field) notify({ event: "sent_back", contentId: item.id, fields: [field], note });
 }
 
 /**
@@ -562,6 +612,22 @@ export async function handOff(
       input.actor,
     );
   }
+
+  // Two different pieces of news, to two different people: the one who just
+  // got signed off, and the one it has landed on.
+  notify({
+    event: "approved",
+    contentId: item.id,
+    fields: [gate.done],
+    what: gate.doneLabel,
+  });
+  notify({
+    event: "assigned",
+    contentId: item.id,
+    fields: [gate.assign],
+    due: input.due,
+    note: input.note,
+  });
   return null;
 }
 
@@ -671,6 +737,34 @@ export async function approveScript(item: ContentItem, input: ScriptGateInput, t
       input.actor,
     );
   }
+
+  notify({ event: "approved", contentId: item.id, fields: ["scriptwriterId"] });
+  if (input.shootNeeded) {
+    notify({
+      event: "assigned",
+      contentId: item.id,
+      fields: ["cameramanId"],
+      due: input.shootDue,
+      note: input.note,
+    });
+  } else {
+    notify({
+      event: "assigned",
+      contentId: item.id,
+      fields: ["editorId"],
+      due: input.editDue,
+      note: input.note,
+    });
+  }
+  if (item.voNeeded) {
+    notify({
+      event: "assigned",
+      contentId: item.id,
+      fields: ["voiceoverId"],
+      due: input.voDue,
+      note: input.note,
+    });
+  }
   return null;
 }
 
@@ -715,14 +809,19 @@ export async function setAssignee(
     .eq("id", item.id);
   if (error) fail("Couldn't change the assignment", error);
 
+  const craft = craftByAssign(field);
   await logEvent(
     item.id,
     "assign",
-    member
-      ? `${member.name} assigned as ${craftByAssign(field)?.role ?? member.role}`
-      : "Assignment cleared",
+    member ? `${member.name} assigned as ${craft?.role ?? member.role}` : "Assignment cleared",
     actor,
   );
+
+  // Only worth an email when someone was put on it. Clearing a slot leaves
+  // nobody to tell.
+  if (member && craft) {
+    notify({ event: "assigned", contentId: item.id, fields: [craft.assign] });
+  }
 }
 
 const LINK_FIELDS = [

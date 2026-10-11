@@ -68,6 +68,55 @@ For the two CEO accounts, create them in **Authentication → Users → Add user
 with the same email addresses their `Member` rows already use. Matching is by
 email, so they pick up their existing records immediately.
 
+## Email notifications
+
+Four moments send mail: work being **assigned**, work being **submitted** for
+review, an approval, and a request for changes. Nobody is ever mailed about
+something they did themselves.
+
+The browser can't send it — that would mean shipping an API key to every
+signed-in device — so it asks an edge function, `supabase/functions/notify`,
+which looks up the recipients itself and hands the mail to
+[Resend](https://resend.com). The browser names an event and an assignment slot
+("whoever is the editor on this video"); it never names a person and never
+carries an address.
+
+Deploy it once:
+
+```bash
+npx supabase login
+npx supabase link --project-ref <your-project-ref>
+npx supabase functions deploy notify
+```
+
+Then set the three secrets it needs, either with the CLI or in **Edge Functions
+→ notify → Secrets** in the dashboard:
+
+| Secret           | What it is                                              |
+| ---------------- | ------------------------------------------------------- |
+| `RESEND_API_KEY` | from resend.com → API Keys                               |
+| `EMAIL_FROM`     | `Agency OS <no-reply@yourdomain.com>` — a verified sender |
+| `APP_URL`        | where the app is hosted, for the link in each mail        |
+
+```bash
+npx supabase secrets set RESEND_API_KEY=re_xxx \
+  EMAIL_FROM="Agency OS <no-reply@yourdomain.com>" \
+  APP_URL=https://your-app.vercel.app
+```
+
+`SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` are injected by Supabase itself
+and don't need setting.
+
+**A domain has to be verified before anyone but you gets mail.** Until one is,
+`EMAIL_FROM` falls back to Resend's shared `onboarding@resend.dev` sender, which
+only ever delivers to the address that owns the Resend account — useful for
+testing, useless for the team. Add your domain in Resend → Domains, add the DNS
+records it asks for, then point `EMAIL_FROM` at it.
+
+Mail is sent without the app waiting on it. If Resend is down or a key is wrong,
+the action still goes through and the failure is a line in the console — a video
+that moved is a video that moved.
+
 ## Where the security lives
 
 The old build checked permissions on the server before every query. There is no
@@ -95,12 +144,14 @@ src/
     schedule.ts      the four-week deadline cycle
     permissions.ts   who may do what (for the UI)
     queries.ts       every read and write
+    notify.ts        asks the edge function to email whoever a change concerns
     performance.ts   per-person delivery, measured from stage timestamps
     payouts.ts       monthly pay
     use-async.ts     loading state for a page's own fetch
   components/ui/     Button, Field, Modal, Toast… one .tsx and one .css each
   pages/             one folder per section, page CSS beside the page
 supabase/            the SQL to run once
+  functions/notify/  the only place email is sent from
 ```
 
 Every component and page keeps its stylesheet next to it and imports it. There
