@@ -332,6 +332,43 @@ export function isOverdue(dueDate: Date | null, stage: string) {
   return calendarDate(dueDate) < today;
 }
 
+/**
+ * How a deadline is doing, in the three states worth drawing differently.
+ *
+ * "late" is the one that gets red — red is reserved for overdue and delete, and
+ * handing a second colour to work that is merely due soon would spend the
+ * board's only alarm on something that is still on time. "soon" is today or
+ * tomorrow: close enough that it is the next thing to pick up, so it is drawn
+ * in ink instead, darker and heavier than the quiet grey every other date gets.
+ */
+export type DueState = "late" | "soon" | "ok";
+
+export function dueState(dueDate: Date | null, stage: string): DueState {
+  if (!dueDate || stage === "published") return "ok";
+  if (isOverdue(dueDate, stage)) return "late";
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const days = Math.round((calendarDate(dueDate).getTime() - today.getTime()) / 86_400_000);
+  return days <= 1 ? "soon" : "ok";
+}
+
+/** How long a video may sit in one stage before the board calls it stuck. */
+export const STUCK_HOURS = 72;
+
+/**
+ * Nothing has happened to this video in three days.
+ *
+ * Deadlines only catch work that was given one. This is the other half: a
+ * planned video nobody picked up, an edit sitting with no date on it. The
+ * scheduled sweep mails about exactly this (supabase/functions/sweep), and the
+ * two read the same column so the board and the mail never disagree.
+ */
+export function isStuck(stageSince: Date | null, stage: string) {
+  if (!stageSince || stage === "published") return false;
+  return Date.now() - stageSince.getTime() > STUCK_HOURS * 3_600_000;
+}
+
 export function refLabel(ref: number) {
   return `#${String(ref).padStart(3, "0")}`;
 }

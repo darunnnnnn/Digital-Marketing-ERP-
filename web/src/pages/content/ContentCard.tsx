@@ -1,5 +1,5 @@
 import { Link } from "react-router";
-import { isOverdue, priority, refLabel, stageConfig } from "@/lib/pipeline";
+import { STUCK_HOURS, dueState, isStuck, priority, refLabel, stageConfig } from "@/lib/pipeline";
 import { accent } from "@/lib/theme";
 import { cn, dueLabel, initials } from "@/lib/utils";
 import type { BoardItem } from "./types";
@@ -19,8 +19,11 @@ export function ContentCard({
   onDragEnd?: () => void;
 }) {
   const stage = stageConfig(item.stage);
-  const late = isOverdue(item.dueDate, item.stage);
+  const state = dueState(item.dueDate, item.stage);
   const due = dueLabel(item.dueDate);
+  // Only worth saying when no deadline is already saying it — a late video is
+  // being chased on its date, and two warnings on one card is one too many.
+  const stalled = state !== "late" && isStuck(item.stageSince, item.stage);
 
   return (
     <Link
@@ -50,7 +53,27 @@ export function ContentCard({
 
         {item.revisions > 0 && <span className="item-tag item-tag-plain">{item.revisions} rev</span>}
 
-        {due && <span className={cn("item-due", "tabular", late && "item-due-late")}>{due}</span>}
+        {stalled && (
+          <span
+            title={`Hasn't moved in over ${STUCK_HOURS / 24} days`}
+            className="item-tag chip-alert"
+          >
+            Stuck
+          </span>
+        )}
+
+        {due && (
+          <span
+            className={cn(
+              "item-due",
+              "tabular",
+              state === "late" && "item-due-late",
+              state === "soon" && "item-due-soon",
+            )}
+          >
+            {due}
+          </span>
+        )}
 
         <span className="item-owner">
           {item.owner ? (

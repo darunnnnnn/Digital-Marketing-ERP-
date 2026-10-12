@@ -6,6 +6,8 @@ export type BoardItem = {
   priority: string;
   format: string;
   dueDate: Date | null;
+  /** When it last changed stage, for "nothing has moved in three days". */
+  stageSince: Date | null;
   revisions: number;
   client: { id: string; name: string; accent: string };
   owner: { name: string; accent: string; role: string } | null;

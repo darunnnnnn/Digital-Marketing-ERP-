@@ -3,7 +3,8 @@ import { Link, useNavigate, useSearchParams } from "react-router";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { Field, Input, Select, Textarea } from "@/components/ui/Field";
+import { Field, Input, Textarea } from "@/components/ui/Field";
+import { Picker } from "@/components/ui/Picker";
 import { LinkButton } from "@/components/ui/Button";
 import { PageSkeleton } from "@/components/PageSkeleton";
 import { IconChevronLeft } from "@/components/icons";
@@ -133,14 +134,14 @@ function PlanForm({
     <form onSubmit={onSubmit} className="stack-5">
       <div className="form-grid">
         <Field label="Client" error={errors.clientId}>
-          <Select value={v.clientId} onChange={(e) => set("clientId", e.target.value)}>
-            {clients.length === 0 && <option value="">No clients yet</option>}
-            {clients.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
-              </option>
-            ))}
-          </Select>
+          <Picker
+            label="Client"
+            clearable={false}
+            placeholder={clients.length === 0 ? "No clients yet" : "Choose a client…"}
+            value={v.clientId}
+            options={clients.map((c) => ({ value: c.id, label: c.name }))}
+            onChange={(id) => set("clientId", id)}
+          />
         </Field>
 
         {v.planMode === "full" ? (
@@ -220,14 +221,13 @@ function PlanForm({
                 ] as const
               ).map(([field, role, label]) => (
                 <Field key={field} label={label} error={errors[field]}>
-                  <Select value={v[field]} onChange={(e) => set(field, e.target.value)}>
-                    <option value="">Decide at the gate</option>
-                    {byRole(role).map((m) => (
-                      <option key={m.id} value={m.id}>
-                        {m.name}
-                      </option>
-                    ))}
-                  </Select>
+                  <Picker
+                    label={label}
+                    placeholder="Decide at the gate"
+                    value={v[field]}
+                    options={byRole(role).map((m) => ({ value: m.id, label: m.name }))}
+                    onChange={(id) => set(field, id)}
+                  />
                 </Field>
               ))}
             </div>
@@ -306,21 +306,27 @@ function PlanForm({
 
       <div className="form-grid-3">
         <Field label="Format">
-          <Select value={v.format} onChange={(e) => set("format", e.target.value)}>
-            {FORMATS.map((f) => (
-              <option key={f.key} value={f.key}>
-                {f.label}
-              </option>
-            ))}
-          </Select>
+          <Picker
+            label="Format"
+            clearable={false}
+            value={v.format}
+            options={FORMATS.map((f) => ({ value: f.key, label: f.label }))}
+            onChange={(f) => set("format", f)}
+          />
         </Field>
 
         <Field label="Priority">
-          <Select value={v.priority} onChange={(e) => set("priority", e.target.value)}>
-            <option value="low">Low</option>
-            <option value="normal">Normal</option>
-            <option value="high">High</option>
-          </Select>
+          <Picker
+            label="Priority"
+            clearable={false}
+            value={v.priority}
+            options={[
+              { value: "low", label: "Low" },
+              { value: "normal", label: "Normal" },
+              { value: "high", label: "High" },
+            ]}
+            onChange={(pr) => set("priority", pr)}
+          />
         </Field>
 
         <Field
@@ -328,17 +334,13 @@ function PlanForm({
           hint={v.mode === "count" ? "required" : "optional"}
           error={errors.scriptwriterId}
         >
-          <Select
+          <Picker
+            label="Scriptwriter"
+            placeholder="Leave in Planned"
             value={v.scriptwriterId}
-            onChange={(e) => set("scriptwriterId", e.target.value)}
-          >
-            <option value="">Leave in Planned</option>
-            {writers.map((w) => (
-              <option key={w.id} value={w.id}>
-                {w.name}
-              </option>
-            ))}
-          </Select>
+            options={writers.map((w) => ({ value: w.id, label: w.name }))}
+            onChange={(id) => set("scriptwriterId", id)}
+          />
         </Field>
       </div>
 

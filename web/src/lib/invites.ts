@@ -1,19 +1,9 @@
-// Invite links. The browser holds a random token; the database holds only its
-// SHA-256, so a copy of the database can't be used to claim an invite.
+// Invite links. The database holds only a token's SHA-256, so a copy of it
+// can't be used to claim an invite. The token itself is minted and mailed by
+// the `invite` edge function and never passes through here — this file only
+// reads and spends a token that someone arrived with.
 
 import { supabase } from "./supabase";
-
-export const INVITE_DAYS = 7;
-
-export function newToken() {
-  const bytes = new Uint8Array(32);
-  crypto.getRandomValues(bytes);
-  // base64url, the same shape the old server's tokens had.
-  return btoa(String.fromCharCode(...bytes))
-    .replace(/\+/g, "-")
-    .replace(/\//g, "_")
-    .replace(/=+$/, "");
-}
 
 /** SHA-256, hex — matching what is already stored for existing invites. */
 export async function hashToken(token: string) {
@@ -38,16 +28,43 @@ export async function claimInvite(token: string) {
   return !error && data === true;
 }
 
-/** Issues a fresh invite link token for a member, replacing any earlier one. */
-export async function issueInvite(memberId: string) {
-  const token = newToken();
-  const { error } = await supabase
-    .from("Member")
-    .update({
-      inviteTokenHash: await hashToken(token),
-      inviteExpires: new Date(Date.now() + INVITE_DAYS * 86_400_000).toISOString(),
-    })
-    .eq("id", memberId);
-  if (error) throw new Error(`Couldn't create an invite link: ${error.message}`);
-  return `${window.location.origin}/invite/${token}`;
+/**
+ * What happened when we tried to get someone their link. Either it is in their
+ * inbox, or it isn't and the link itself comes back so it can be passed on by
+ * hand — being unable to send mail is no reason to leave someone locked out.
+ */
+export type InviteResult =
+  | { sent: true; email: string }
+  | { sent: false; link: string | null; why: string };
+
+/**
+ * Emails someone a fresh link to set their password, replacing any earlier one.
+ *
+ * The token is minted inside the edge function, not here — see
+ * supabase/functions/invite. This asks for a member by id and never handles the
+ * token itself, so the only plaintext copy is the one in their inbox. The one
+ * exception is a send that failed, which hands the link back so it can still be
+ * delivered some other way.
+ */
+export async function sendInvite(memberId: string): Promise<InviteResult> {
+  const { data, error } = await supabase.functions.invoke("invite", { body: { memberId } });
+
+  if (error) {
+    // supabase-js reports every failed status as the same sentence; the
+    // function's own explanation is in the response hung off the error.
+    throw new Error(await readError(error));
+  }
+  return data as InviteResult;
+}
+
+async function readError(error: unknown): Promise<string> {
+  const fallback = error instanceof Error ? error.message : "Couldn't send that invite.";
+  const res = (error as { context?: Response }).context;
+  if (!(res instanceof Response)) return fallback;
+  try {
+    const body = await res.clone().json();
+    return typeof body?.error === "string" ? body.error : fallback;
+  } catch {
+    return fallback;
+  }
 }

@@ -12,7 +12,8 @@ import { IconChevronLeft, IconPencil, IconTrash } from "@/components/icons";
 import { Button } from "@/components/ui/Button";
 import { Card, CardHeader } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { Field, Input, Select, Textarea } from "@/components/ui/Field";
+import { Field, Input, Textarea } from "@/components/ui/Field";
+import { Picker } from "@/components/ui/Picker";
 import { YesNoField } from "@/components/ui/YesNoField";
 import { LinkButton } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
@@ -355,20 +356,26 @@ export function ContentDetailPage() {
               </Field>
               <div className="panel-pair">
                 <Field label="Format">
-                  <Select name="format" defaultValue={item.format}>
-                    {FORMATS.map((f) => (
-                      <option key={f.key} value={f.key}>
-                        {f.label}
-                      </option>
-                    ))}
-                  </Select>
+                  <Picker
+                    label="Format"
+                    name="format"
+                    clearable={false}
+                    defaultValue={item.format}
+                    options={FORMATS.map((f) => ({ value: f.key, label: f.label }))}
+                  />
                 </Field>
                 <Field label="Priority">
-                  <Select name="priority" defaultValue={item.priority}>
-                    <option value="low">Low</option>
-                    <option value="normal">Normal</option>
-                    <option value="high">High</option>
-                  </Select>
+                  <Picker
+                    label="Priority"
+                    name="priority"
+                    clearable={false}
+                    defaultValue={item.priority}
+                    options={[
+                      { value: "low", label: "Low" },
+                      { value: "normal", label: "Normal" },
+                      { value: "high", label: "High" },
+                    ]}
+                  />
                 </Field>
               </div>
             </PanelForm>

@@ -194,6 +194,10 @@ button {
 }
 
 /* Vertical rhythm helpers, the equivalent of the old space-y utilities. */
+.stack-4 > * + * {
+  margin-top: var(--sp-4);
+}
+
 .stack-5 > * + * {
   margin-top: var(--sp-5);
 }

@@ -54,25 +54,42 @@
   color: var(--stone-400);
 }
 
+/* The picker, stripped back to a line of text: in a row of assignments the
+   name is the thing, and a field's border around each one would be a cage. */
 .assignee-select {
-  margin-left: -2px;
-  width: 100%;
-  font: inherit;
+  margin-left: -0.25rem;
+  gap: 0.25rem;
   font-size: 0.875rem;
   font-weight: 500;
-  cursor: pointer;
-  border: 0;
-  border-radius: 0.25rem;
+  border-color: transparent;
   background: transparent;
-  padding: 0 2px;
-  outline: none;
+  padding: 0.125rem 0.25rem;
+  border-radius: var(--radius-sm);
 }
 
-.assignee-select:focus {
-  box-shadow: 0 0 0 1px var(--brand-600);
+.assignee-select:hover:not(:disabled) {
+  border-color: transparent;
+  background: var(--stone-100);
+}
+
+.assignee-select:focus-visible,
+.assignee-select.picker-open {
+  border-color: transparent;
+  background: var(--stone-100);
+  box-shadow: 0 0 0 2px var(--brand-500);
+}
+
+.assignee-select .picker-chevron svg {
+  width: 0.875rem;
+  height: 0.875rem;
 }
 
 .assignee-select:disabled {
+  opacity: 1;
   cursor: default;
   color: var(--stone-600);
+}
+
+.assignee-select:disabled .picker-chevron {
+  display: none;
 }

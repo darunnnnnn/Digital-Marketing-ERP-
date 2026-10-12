@@ -41,3 +41,33 @@
   padding-top: var(--sp-4);
   border-top: 1px solid var(--stone-200);
 }
+
+/* ---- a named run of fields inside a gate form -------------------------- */
+/*
+ * A hairline and a small title, nothing more: enough to break a long gate
+ * form into the two or three decisions it actually is, without adding another
+ * card inside a card.
+ */
+
+.gate-group {
+  border-top: 1px solid var(--stone-200);
+  padding-top: var(--sp-4);
+}
+
+.gate-group:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.gate-group-title {
+  margin-bottom: var(--sp-3);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--stone-400);
+}
+
+.gate-group-fields > * + * {
+  margin-top: var(--sp-4);
+}

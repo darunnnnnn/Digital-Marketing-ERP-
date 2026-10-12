@@ -120,6 +120,7 @@ export function ContentBoardPage() {
       format: row.format,
       // The deadline for the step the video is on right now, not the final one.
       dueDate: deadlineField ? toDate(row[deadlineField] as string | null) : null,
+      stageSince: toDate(row.stageSince),
       revisions: row.revisions,
       client: row.client ?? { id: row.clientId, name: "—", accent: "default" },
       owner: ownerMember ?? null,

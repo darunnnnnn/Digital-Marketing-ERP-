@@ -72,6 +72,8 @@ export type ContentItem = {
   stage: string;
   monthKey: string;
   dueDate: string | null;
+  /** When the stage last changed. Set by the database, never by the app. */
+  stageSince: string | null;
 
   cycleStart: string | null;
   scriptDue: string | null;

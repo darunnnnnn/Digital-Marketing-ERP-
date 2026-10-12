@@ -19,9 +19,16 @@
   gap: 0.625rem;
 }
 
+/*
+ * Every lane is the same height whether or not anything is in it. A column
+ * that shrinks to fit an empty state reads as a smaller, lesser stage than
+ * its neighbours; the board is a set of equal lanes, and an empty one is a
+ * lane waiting for work rather than a box that ran out of it.
+ */
 .column {
   display: flex;
   width: 272px;
+  min-height: 30rem;
   flex-shrink: 0;
   flex-direction: column;
   border-radius: 1.5rem;
@@ -113,13 +120,15 @@
   gap: var(--sp-2);
 }
 
+/* Fills whatever the cards leave, so the dashed outline reaches the bottom
+   of the lane instead of floating as a small box at the top of it. */
 .column-drop {
   display: grid;
   flex: 1;
   place-items: center;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-lg);
   border: 1px dashed var(--stone-200);
-  padding: var(--sp-8) var(--sp-3);
+  padding: var(--sp-6) var(--sp-3);
   text-align: center;
   font-size: 0.75rem;
   color: var(--stone-400);

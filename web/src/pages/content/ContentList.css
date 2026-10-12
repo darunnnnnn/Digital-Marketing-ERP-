@@ -136,6 +136,11 @@
   color: var(--red-600);
 }
 
+/* Due today or tomorrow — ink, not a second alarm colour. */
+.list-due-soon {
+  color: var(--stone-700);
+}
+
 @media (min-width: 1024px) {
   .list-due,
   .list-right {

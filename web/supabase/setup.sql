@@ -54,6 +54,16 @@ alter table "ContentItem" add column if not exists "scriptPrice" integer;
 alter table "ContentItem" add column if not exists "shootPrice" integer;
 alter table "ContentItem" add column if not exists "editPrice" integer;
 
+-- When the stage last changed. "Overdue" only ever catches work with a date on
+-- it; this catches the other kind of stall — a video nobody has touched since
+-- Tuesday, with no deadline to miss. Existing rows take their last edit as the
+-- closest thing to an answer available.
+alter table "ContentItem" add column if not exists "stageSince" timestamptz;
+update "ContentItem"
+   set "stageSince" = coalesce("updatedAt", "createdAt")
+ where "stageSince" is null;
+alter table "ContentItem" alter column "stageSince" set default now();
+
 -- =========================================================================
 -- 2. Defaults that Prisma used to supply
 -- =========================================================================
@@ -104,6 +114,28 @@ drop trigger if exists content_set_updated_at on "ContentItem";
 create trigger content_set_updated_at
   before update on "ContentItem"
   for each row execute function set_updated_at();
+
+-- "stageSince" has to be the database's job for the same reason "updatedAt"
+-- does: every path that moves a video would otherwise have to remember to set
+-- it, and the one that forgets makes the video look stuck forever. Only a real
+-- stage change resets it — an ordinary edit leaves it alone, which is the whole
+-- point of measuring how long something has sat where it is.
+create or replace function set_stage_since()
+returns trigger
+language plpgsql
+as $$
+begin
+  if tg_op = 'INSERT' or new.stage is distinct from old.stage then
+    new."stageSince" = now();
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists content_set_stage_since on "ContentItem";
+create trigger content_set_stage_since
+  before insert or update on "ContentItem"
+  for each row execute function set_stage_since();
 
 -- =========================================================================
 -- 3. Row level security
@@ -461,6 +493,46 @@ grant execute on function app_claim_invite(text) to anon, authenticated;
 -- The five-argument visibility function this replaced. Dropped last, because
 -- the policies above had to be moved off it first.
 drop function if exists app_can_see_item(text, text, text, text, text);
+
+-- =========================================================================
+-- 5. The mail ledger
+-- =========================================================================
+
+-- What the scheduled sweep has already said, so it never says it twice.
+--
+-- The sweep (supabase/functions/sweep) runs every hour and works out from the
+-- board what needs saying: deadlines that passed, videos that have not moved,
+-- each person's day. Reminders are the one kind of mail where sending twice is
+-- worse than not sending at all — three copies of "this is late" teaches people
+-- to filter the sender — so every mail claims a key here before it goes out,
+-- and the unique index below is what makes that claim mean something. Two runs
+-- overlapping, or one cron job retried, lose the race rather than the reader's
+-- attention.
+--
+-- The keys carry what the mail was about: the deadline it was measured against,
+-- the stage a video was stuck in, the day a digest covered. So moving a
+-- deadline, or getting stuck again after moving on, is a new thing to say and
+-- gets a new key — rather than being swallowed as a repeat.
+create table if not exists "MailLog" (
+  "id"       text primary key default gen_random_uuid()::text,
+  "agencyId" text not null references "Agency"("id") on delete cascade,
+  "kind"     text not null,
+  "key"      text not null,
+  "sentAt"   timestamptz not null default now()
+);
+
+create unique index if not exists "MailLog_kind_key_key" on "MailLog"("kind", "key");
+create index if not exists "MailLog_agencyId_sentAt_idx" on "MailLog"("agencyId", "sentAt" desc);
+
+-- Readable by whoever runs the agency, for answering "did it actually mail
+-- him?". Written by nobody: the sweep runs as the service role, which is past
+-- row level security entirely, so granting no write policy is how the app and
+-- the browser are kept out of the ledger that protects them.
+alter table "MailLog" enable row level security;
+
+drop policy if exists maillog_read on "MailLog";
+create policy maillog_read on "MailLog" for select
+  using ("agencyId" = app_agency_id() and app_is_manager());
 
 -- =========================================================================
 -- Tell the API layer to re-read the schema.

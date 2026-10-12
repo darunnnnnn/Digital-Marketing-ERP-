@@ -4,6 +4,24 @@
   padding: var(--sp-4);
 }
 
+/* The fallback, when mail couldn't be sent — red is the app's one alarm, and
+   something needing to be carried by hand is exactly what it is for. */
+.invite-link-warn {
+  background: var(--red-50);
+}
+
+.invite-link-warn .invite-link-title {
+  color: var(--red-700);
+}
+
+.invite-link-warn .invite-link-note {
+  color: var(--red-600);
+}
+
+.invite-link-warn .invite-link-input {
+  border-color: var(--red-200);
+}
+
 .invite-link-title {
   font-size: 0.875rem;
   font-weight: 500;

@@ -231,3 +231,32 @@
     display: none;
   }
 }
+
+/* ---- the way back out of a filtered view ------------------------------- */
+
+.appr-clear-filter {
+  align-self: flex-start;
+  border-radius: var(--radius-full);
+  padding: 0.4375rem var(--sp-4);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--brand-700);
+  background: rgb(255 255 255 / 0.7);
+  box-shadow: inset 0 0 0 1px var(--brand-100);
+  cursor: pointer;
+  transition:
+    background-color 0.15s,
+    box-shadow 0.15s;
+}
+
+.appr-clear-filter:hover {
+  background: var(--brand-50);
+  box-shadow: inset 0 0 0 1px var(--brand-200);
+}
+
+.appr-clear-filter:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 2px #fff,
+    0 0 0 4px var(--brand-600);
+}

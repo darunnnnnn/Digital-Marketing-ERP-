@@ -1,6 +1,7 @@
 import { useSearchParams } from "react-router";
 import { IconSearch } from "@/components/icons";
 import { Card } from "@/components/ui/Card";
+import { Picker } from "@/components/ui/Picker";
 import { cn } from "@/lib/utils";
 import type { ClientOption, MemberOption } from "./types";
 import "./ContentToolbar.css";
@@ -43,33 +44,23 @@ export function ContentToolbar({
         ))}
       </div>
 
-      <select
+      <Picker
         className="bar-select"
-        aria-label="Filter by client"
+        label="Filter by client"
+        placeholder="All clients"
         value={params.get("client") ?? ""}
-        onChange={(e) => set("client", e.target.value)}
-      >
-        <option value="">All clients</option>
-        {clients.map((c) => (
-          <option key={c.id} value={c.id}>
-            {c.name}
-          </option>
-        ))}
-      </select>
+        options={clients.map((c) => ({ value: c.id, label: c.name }))}
+        onChange={(v) => set("client", v)}
+      />
 
-      <select
+      <Picker
         className="bar-select"
-        aria-label="Filter by person"
+        label="Filter by person"
+        placeholder="Anyone"
         value={params.get("owner") ?? ""}
-        onChange={(e) => set("owner", e.target.value)}
-      >
-        <option value="">Anyone</option>
-        {members.map((m) => (
-          <option key={m.id} value={m.id}>
-            {m.name}
-          </option>
-        ))}
-      </select>
+        options={members.map((m) => ({ value: m.id, label: m.name }))}
+        onChange={(v) => set("owner", v)}
+      />
 
       <button
         type="button"

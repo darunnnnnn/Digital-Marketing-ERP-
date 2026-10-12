@@ -2,7 +2,8 @@ import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
-import { Field, Input, Select, Textarea } from "@/components/ui/Field";
+import { Field, Input, Textarea } from "@/components/ui/Field";
+import { Picker } from "@/components/ui/Picker";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { PageSkeleton } from "@/components/PageSkeleton";
 import { IconChevronLeft } from "@/components/icons";
@@ -117,11 +118,17 @@ export function ClientFormPage() {
             </Field>
 
             <Field label="Status">
-              <Select value={form.status} onChange={(e) => set("status")(e.target.value)}>
-                <option value="active">Active</option>
-                <option value="paused">Paused</option>
-                <option value="archived">Archived</option>
-              </Select>
+              <Picker
+                label="Status"
+                clearable={false}
+                value={form.status}
+                options={[
+                  { value: "active", label: "Active" },
+                  { value: "paused", label: "Paused" },
+                  { value: "archived", label: "Archived" },
+                ]}
+                onChange={set("status")}
+              />
             </Field>
 
             <Field label="Monthly content target" hint="videos / month" error={errors.monthlyTarget}>

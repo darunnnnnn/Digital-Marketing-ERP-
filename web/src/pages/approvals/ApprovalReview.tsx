@@ -31,6 +31,48 @@ function OpenIcon() {
   );
 }
 
+/** The approve form's id, so the button above it can submit it. */
+const FORM_ID = "approve-gate-form";
+
+function CopyIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <rect x="9" y="9" width="11" height="11" rx="2" />
+      <path d="M5 15V5a2 2 0 0 1 2-2h8" />
+    </svg>
+  );
+}
+
+/** Lifting a script out of the sheet to paste it somewhere else. */
+function CopyScript({ text }: { text: string }) {
+  const toast = useToast();
+  const [done, setDone] = useState(false);
+
+  async function copy() {
+    try {
+      await navigator.clipboard.writeText(text);
+      setDone(true);
+      setTimeout(() => setDone(false), 1600);
+    } catch {
+      toast.warn("Your browser wouldn't let us copy that.");
+    }
+  }
+
+  return (
+    <button type="button" className="review-copy" onClick={copy}>
+      <CopyIcon />
+      {done ? "Copied" : "Copy script"}
+    </button>
+  );
+}
+
 /**
  * The decision, sat beside the work rather than on top of it.
  *
@@ -76,22 +118,36 @@ function Decision({
 
   return (
     <div className="decide">
-      <div className="decide-switch" role="tablist" aria-label="Your decision">
+      {/*
+       * Both ways out, at the top, where the decision is made — not at the foot
+       * of a form you have to scroll to reach. The fields underneath are the
+       * terms of the approval, so Approve submits them from up here through
+       * `form=`, and the live half of the pair is the one that is filled in.
+       */}
+      <div className="decide-actions">
+        {mode === "approve" ? (
+          <Button
+            type="submit"
+            form={FORM_ID}
+            className="decide-go"
+            disabled={!canApproveThis || busy}
+          >
+            {busy ? "Approving…" : "Approve"}
+          </Button>
+        ) : (
+          <Button
+            type="button"
+            variant="secondary"
+            className="decide-go"
+            onClick={() => setMode("approve")}
+            disabled={!canApproveThis}
+          >
+            Approve
+          </Button>
+        )}
         <button
           type="button"
-          role="tab"
-          aria-selected={mode === "approve"}
-          className={cn("decide-tab", mode === "approve" && "decide-tab-on")}
-          onClick={() => setMode("approve")}
-          disabled={!canApproveThis}
-        >
-          Approve
-        </button>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={mode === "changes"}
-          className={cn("decide-tab", mode === "changes" && "decide-tab-off-on")}
+          className={cn("decide-back", mode === "changes" && "decide-back-on")}
           onClick={() => setMode("changes")}
           disabled={!canReject}
         >
@@ -106,15 +162,21 @@ function Decision({
               <p className="decide-note">
                 Approving hands this straight to the next person, so pick who and by when.
               </p>
-              {/* The same form as the video page's dialog, laid out for a column. */}
+              {/* The same form as the video page's dialog, laid out for a column
+                  and submitted by the button above it. */}
               <GateForm
                 item={item}
                 info={handoff}
                 team={team}
                 actor={viewer.name}
                 layout="inline"
+                formId={FORM_ID}
+                onBusy={setBusy}
                 onDone={onChanged}
               />
+              <p className="decide-foot">
+                Whoever you pick is emailed the moment you approve.
+              </p>
             </>
           ) : (
             <p className="stage-hint">You can&apos;t approve this step.</p>
@@ -132,11 +194,9 @@ function Decision({
                 placeholder="Hook is too slow — tighten the first 3 seconds."
               />
             </Field>
-            <div className="gate-actions">
-              <Button type="submit" variant="danger" disabled={busy}>
-                {busy ? "Sending…" : (config.sendBack ?? "Request changes")}
-              </Button>
-            </div>
+            <Button type="submit" variant="danger" className="decide-send" disabled={busy}>
+              {busy ? "Sending…" : (config.sendBack ?? "Request changes")}
+            </Button>
           </form>
         )}
       </div>
@@ -201,72 +261,75 @@ export function ApprovalReview({
         aria-label={`${gate.heading}: ${item.title}`}
         className="review"
       >
+        {/* The header carries only what names the thing and what moves between
+            them: title, where it came from, and the pager. Everything about the
+            submission itself — who, when, how late — belongs beside the work. */}
         <header className="review-head">
-          <div className="review-head-top">
-            <span className={cn("review-ref", late && "review-ref-late")}>
-              {refLabel(item.ref)}
+          <span className={cn("review-ref", late && "review-ref-late")}>
+            {refLabel(item.ref)}
+          </span>
+
+          <div className="review-head-main">
+            <h2 className="review-title truncate">{item.title}</h2>
+            <p className="review-head-sub truncate">
+              {[item.client?.name, gate.heading].filter(Boolean).join(" · ")}
+            </p>
+          </div>
+
+          {/* Walking the queue without going back to the list. One track, so
+              the two arrows and the counter read as a single control. */}
+          <div className="review-pager">
+            <button
+              type="button"
+              className="review-step"
+              onClick={() => onStep(-1)}
+              disabled={position.index === 0}
+              aria-label="Previous submission"
+            >
+              <IconChevronLeft />
+            </button>
+            <span className="review-count">
+              {position.index + 1} of {position.total}
             </span>
-            <div className="review-head-main">
-              <h2 className="review-title truncate">{item.title}</h2>
-              <p className="review-head-sub truncate">
-                {[item.client?.name, gate.heading].filter(Boolean).join(" · ")}
-              </p>
-            </div>
-
-            {/* Walking the queue without going back to the list. */}
-            <div className="review-steps">
-              <button
-                type="button"
-                className="review-step"
-                onClick={() => onStep(-1)}
-                disabled={position.index === 0}
-                aria-label="Previous submission"
-              >
-                <IconChevronLeft />
-              </button>
-              <span className="review-count">
-                {position.index + 1} of {position.total}
-              </span>
-              <button
-                type="button"
-                className="review-step"
-                onClick={() => onStep(1)}
-                disabled={position.index === position.total - 1}
-                aria-label="Next submission"
-              >
-                <IconChevronLeft className="flip" />
-              </button>
-            </div>
-
-            <button type="button" onClick={onClose} aria-label="Close" className="review-close">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M6 6l12 12M18 6L6 18" strokeLinecap="round" />
-              </svg>
+            <button
+              type="button"
+              className="review-step"
+              onClick={() => onStep(1)}
+              disabled={position.index === position.total - 1}
+              aria-label="Next submission"
+            >
+              <IconChevronLeft className="flip" />
             </button>
           </div>
+
+          <button type="button" onClick={onClose} aria-label="Close" className="review-close">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M6 6l12 12M18 6L6 18" strokeLinecap="round" />
+            </svg>
+          </button>
         </header>
 
         <div className="review-cols">
           {/* What they sent. This is the column that scrolls. */}
           <div className="review-main">
-            <div className="review-sender-row">
-              <div className="review-sender">
-                <span className="who-avatar">{initials(sender?.name ?? "?")}</span>
-                <div className="who-text">
-                  <p className="review-sender-name truncate">
-                    {sender?.name ?? "Nobody assigned"}
-                    {alsoFrom.map((person) => (
-                      <span key={person.name} className="review-sender-also">
-                        {" + "}
-                        {person.name}
-                      </span>
-                    ))}
-                  </p>
-                  <p className="review-sender-meta truncate">
-                    {sender?.role ?? "assignment cleared"}
-                    {sentAt ? ` · sent ${formatDateTime(sentAt)}` : ""}
-                  </p>
-                </div>
+            {/* Who sent it, when, and how late — one card, because it is one
+                fact about the submission rather than part of the work. */}
+            <div className="review-byline">
+              <span className="who-avatar">{initials(sender?.name ?? "?")}</span>
+              <div className="review-byline-text">
+                <p className="review-sender-name truncate">
+                  {sender?.name ?? "Nobody assigned"}
+                  {alsoFrom.map((person) => (
+                    <span key={person.name} className="review-sender-also">
+                      {" + "}
+                      {person.name}
+                    </span>
+                  ))}
+                </p>
+                <p className="review-sender-meta truncate">
+                  {sender?.role ?? "assignment cleared"}
+                  {sentAt ? ` · sent ${formatDateTime(sentAt)}` : ""}
+                </p>
               </div>
 
               <div className="review-chips">
@@ -279,7 +342,7 @@ export function ApprovalReview({
             </div>
 
             {links.length > 0 && (
-              <div className="review-links">
+              <div className="review-shelf">
                 {links.map((l) => (
                   <a
                     key={l.label}
@@ -306,18 +369,22 @@ export function ApprovalReview({
               </dl>
             )}
 
-            {notes.map((n) => (
-              <section key={n.label} className="review-note">
-                <h3 className="review-note-label">{n.label}</h3>
-                {/* A script reads better monospaced — the beats line up, as on
-                    the video page. Short notes stay in the body face. */}
-                <p
-                  className={cn("review-note-text", n.text.length > 240 && "review-note-script")}
-                >
-                  {n.text}
-                </p>
-              </section>
-            ))}
+            {notes.map((n) => {
+              // A script reads better monospaced — the beats line up, as on the
+              // video page — and it is long enough to be worth copying out.
+              const isScript = n.text.length > 240;
+              return (
+                <section key={n.label} className="review-note">
+                  <div className="review-note-head">
+                    <h3 className="review-note-label">{n.label}</h3>
+                    {isScript && <CopyScript text={n.text} />}
+                  </div>
+                  <p className={cn("review-note-text", isScript && "review-note-script")}>
+                    {n.text}
+                  </p>
+                </section>
+              );
+            })}
 
             {links.length === 0 && notes.length === 0 && facts.length === 0 && (
               <p className="review-nothing">

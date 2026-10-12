@@ -1,13 +1,14 @@
 import { useState } from "react";
 import { IconPlus } from "@/components/icons";
 import { Button } from "@/components/ui/Button";
-import { Field, Input, Select } from "@/components/ui/Field";
+import { Field, Input } from "@/components/ui/Field";
+import { Picker } from "@/components/ui/Picker";
 import { Modal } from "@/components/ui/Modal";
 import { useViewer } from "@/lib/auth";
-import { issueInvite } from "@/lib/invites";
+import { sendInvite, type InviteResult } from "@/lib/invites";
 import { createMember } from "@/lib/queries";
 import { ROLES, ROLE_LABELS } from "@/lib/pipeline";
-import { InviteLink } from "./InviteLink";
+import { InviteSent } from "./InviteLink";
 
 function InviteForm({ onDone }: { onDone: () => void }) {
   const viewer = useViewer();
@@ -16,7 +17,7 @@ function InviteForm({ onDone }: { onDone: () => void }) {
   const [role, setRole] = useState("editor");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
-  const [link, setLink] = useState<string | null>(null);
+  const [result, setResult] = useState<InviteResult | null>(null);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -44,17 +45,19 @@ function InviteForm({ onDone }: { onDone: () => void }) {
     }
 
     try {
-      setLink(await issueInvite(result.member.id));
+      setResult(await sendInvite(result.member.id));
     } catch (e) {
-      setErrors({ email: e instanceof Error ? e.message : "Couldn't create an invite link." });
+      // The person exists either way; it is only their link that didn't go.
+      // Say so on the email field, which is the thing that would be wrong.
+      setErrors({ email: e instanceof Error ? e.message : "Couldn't send the invite." });
     }
     setBusy(false);
   }
 
-  if (link) {
+  if (result) {
     return (
       <div className="stack-5">
-        <InviteLink name={name} link={link} />
+        <InviteSent name={name} result={result} />
         <div className="modal-actions">
           <Button onClick={onDone}>Done</Button>
         </div>
@@ -83,20 +86,20 @@ function InviteForm({ onDone }: { onDone: () => void }) {
         </Field>
       </div>
       <Field label="Role" error={errors.role}>
-        <Select value={role} onChange={(e) => setRole(e.target.value)}>
-          {ROLES.map((r) => (
-            <option key={r} value={r}>
-              {ROLE_LABELS[r]}
-            </option>
-          ))}
-        </Select>
+        <Picker
+          label="Role"
+          clearable={false}
+          value={role}
+          options={ROLES.map((r) => ({ value: r, label: ROLE_LABELS[r] }))}
+          onChange={setRole}
+        />
       </Field>
       <div className="modal-actions">
         <Button type="button" variant="ghost" onClick={onDone}>
           Cancel
         </Button>
         <Button type="submit" disabled={busy}>
-          {busy ? "Creating…" : "Create invite"}
+          {busy ? "Sending…" : "Send invite"}
         </Button>
       </div>
     </form>
@@ -116,7 +119,7 @@ export function InviteButton({ onInvited }: { onInvited: () => void }) {
         open={open}
         onClose={() => setOpen(false)}
         title="Invite a team member"
-        subtitle="You'll get a link to send them. No email is sent automatically."
+        subtitle="We'll email them a link to set their own password."
       >
         {open && (
           <InviteForm

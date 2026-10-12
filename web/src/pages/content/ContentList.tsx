@@ -1,5 +1,5 @@
 import { Link } from "react-router";
-import { isOverdue, priority, refLabel, stageConfig } from "@/lib/pipeline";
+import { STUCK_HOURS, dueState, isStuck, priority, refLabel, stageConfig } from "@/lib/pipeline";
 import { accent } from "@/lib/theme";
 import { cn, dueLabel, initials } from "@/lib/utils";
 import type { BoardItem } from "./types";
@@ -21,8 +21,9 @@ export function ContentList({ items }: { items: BoardItem[] }) {
         {items.map((item) => {
           const stage = stageConfig(item.stage);
           const clientAccent = accent(item.client.accent);
-          const late = isOverdue(item.dueDate, item.stage);
+          const state = dueState(item.dueDate, item.stage);
           const due = dueLabel(item.dueDate);
+          const stalled = state !== "late" && isStuck(item.stageSince, item.stage);
 
           return (
             <li key={item.id}>
@@ -36,6 +37,14 @@ export function ContentList({ items }: { items: BoardItem[] }) {
                   )}
                   {item.revisions > 0 && (
                     <span className="list-tag chip-neutral">{item.revisions} rev</span>
+                  )}
+                  {stalled && (
+                    <span
+                      title={`Hasn't moved in over ${STUCK_HOURS / 24} days`}
+                      className="list-tag chip-alert"
+                    >
+                      Stuck
+                    </span>
                   )}
                 </span>
 
@@ -63,7 +72,15 @@ export function ContentList({ items }: { items: BoardItem[] }) {
                   )}
                 </span>
 
-                <span className={cn("list-due", late && "list-due-late")}>{due ?? "—"}</span>
+                <span
+                  className={cn(
+                    "list-due",
+                    state === "late" && "list-due-late",
+                    state === "soon" && "list-due-soon",
+                  )}
+                >
+                  {due ?? "—"}
+                </span>
               </Link>
             </li>
           );

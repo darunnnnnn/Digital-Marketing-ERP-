@@ -1,14 +1,15 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
+import { Picker } from "@/components/ui/Picker";
 import { useToast } from "@/components/ui/Toast";
-import { issueInvite } from "@/lib/invites";
+import { sendInvite, type InviteResult } from "@/lib/invites";
 import { updateMember } from "@/lib/queries";
 import { isManager } from "@/lib/permissions";
 import { ROLES, ROLE_LABELS, type Role } from "@/lib/pipeline";
 import { CRAFTS, memberRoles } from "@/lib/roles";
 import { cn } from "@/lib/utils";
-import { InviteLink } from "./InviteLink";
+import { InviteSent } from "./InviteLink";
 import "./MemberActions.css";
 
 /**
@@ -62,19 +63,15 @@ export function RoleSelect({
   }
 
   return (
-    <select
+    <Picker
+      label="Role"
+      clearable={false}
       value={value}
       disabled={busy}
-      onChange={(e) => void change(e.target.value)}
-      aria-label="Role"
+      options={ROLES.map((r) => ({ value: r, label: ROLE_LABELS[r] }))}
+      onChange={(next) => void change(next)}
       className="role-select"
-    >
-      {ROLES.map((r) => (
-        <option key={r} value={r}>
-          {ROLE_LABELS[r]}
-        </option>
-      ))}
-    </select>
+    />
   );
 }
 
@@ -179,9 +176,14 @@ export function ExtraRoles({
 }
 
 /**
- * Issues a fresh invite link. Used both for someone who hasn't signed in yet and
- * as a password reset — in both cases they set their own password from the link,
- * and nobody here ever sees or types it.
+ * Emails someone a fresh link to set a password. Used both for someone who
+ * hasn't signed in yet and as a password reset — in both cases they choose it
+ * themselves from the link, and nobody here ever sees or types it.
+ *
+ * On success this is a toast and nothing else: the mail has gone, and putting a
+ * dialog in the way would only ask the CEO to dismiss something to learn that
+ * nothing is required of them. The dialog is kept for the case that does need
+ * them — a send that failed and a link that has to be passed on by hand.
  */
 export function InviteLinkButton({
   id,
@@ -192,35 +194,44 @@ export function InviteLinkButton({
   name: string;
   pending: boolean;
 }) {
-  const [open, setOpen] = useState(false);
-  const [link, setLink] = useState<string | null>(null);
+  const [failure, setFailure] = useState<InviteResult | null>(null);
+  const [busy, setBusy] = useState(false);
   const toast = useToast();
 
-  async function create() {
+  async function issue() {
+    setBusy(true);
     try {
-      setLink(await issueInvite(id));
-      setOpen(true);
+      const result = await sendInvite(id);
+      if (result.sent) {
+        toast.say(
+          pending ? `Invite sent to ${result.email}` : `Reset link sent to ${result.email}`,
+        );
+      } else {
+        setFailure(result);
+      }
     } catch (e) {
-      toast.warn(e instanceof Error ? e.message : "Couldn't create a link.");
+      toast.warn(e instanceof Error ? e.message : "Couldn't send that.");
     }
+    setBusy(false);
   }
 
   return (
     <>
-      <button type="button" onClick={create} className="row-action row-action-brand">
-        {pending ? "Invite link" : "Reset link"}
+      <button
+        type="button"
+        onClick={issue}
+        disabled={busy}
+        className="row-action row-action-brand"
+      >
+        {busy ? "Sending…" : pending ? "Send invite" : "Send reset"}
       </button>
       <Modal
-        open={open && Boolean(link)}
-        onClose={() => setOpen(false)}
-        title={pending ? "New invite link" : "Password reset link"}
-        subtitle={
-          pending
-            ? "Any earlier invite link for this person stops working."
-            : "They'll set a new password. Their current one keeps working until they do."
-        }
+        open={Boolean(failure)}
+        onClose={() => setFailure(null)}
+        title="The email didn't go"
+        subtitle="The link is good either way — it just has to reach them another way."
       >
-        {link && <InviteLink name={name} link={link} />}
+        {failure && <InviteSent name={name} result={failure} />}
       </Modal>
     </>
   );

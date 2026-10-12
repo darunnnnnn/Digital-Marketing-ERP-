@@ -1,9 +1,4 @@
-import type {
-  InputHTMLAttributes,
-  ReactNode,
-  SelectHTMLAttributes,
-  TextareaHTMLAttributes,
-} from "react";
+import type { InputHTMLAttributes, ReactNode, TextareaHTMLAttributes } from "react";
 import { cn } from "@/lib/utils";
 import "./Field.css";
 
@@ -47,16 +42,6 @@ export function Textarea(props: TextareaHTMLAttributes<HTMLTextAreaElement>) {
       autoComplete="off"
       {...props}
       className={cn("control", "control-textarea", props.className)}
-    />
-  );
-}
-
-export function Select(props: SelectHTMLAttributes<HTMLSelectElement>) {
-  return (
-    <select
-      autoComplete="off"
-      {...props}
-      className={cn("control", "control-select", props.className)}
     />
   );
 }

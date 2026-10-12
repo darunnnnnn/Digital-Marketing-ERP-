@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/Button";
-import { Field, Input, Select } from "@/components/ui/Field";
+import { Field, Input } from "@/components/ui/Field";
+import { Picker } from "@/components/ui/Picker";
 import { Modal } from "@/components/ui/Modal";
 import { useToast } from "@/components/ui/Toast";
 import { useViewer } from "@/lib/auth";
@@ -115,14 +116,14 @@ export function QuickAddModal({
     >
       <form onSubmit={onSubmit} className="stack-5">
         <Field label="Client" error={errors.clientId}>
-          <Select value={clientId} onChange={(e) => setClientId(e.target.value)}>
-            {clients.length === 0 && <option value="">No clients yet</option>}
-            {clients.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
-              </option>
-            ))}
-          </Select>
+          <Picker
+            label="Client"
+            clearable={false}
+            placeholder={clients.length === 0 ? "No clients yet" : "Choose a client…"}
+            value={clientId}
+            options={clients.map((c) => ({ value: c.id, label: c.name }))}
+            onChange={setClientId}
+          />
         </Field>
 
         <Field label="Title" error={errors.title}>
@@ -136,14 +137,13 @@ export function QuickAddModal({
 
         {craft && (
           <Field label={craft.role === "cameraman" ? "Cameraman" : craft.label} error={errors.assigneeId}>
-            <Select value={assigneeId} onChange={(e) => setAssigneeId(e.target.value)}>
-              <option value="">Choose who picks this up</option>
-              {assignees.map((m) => (
-                <option key={m.id} value={m.id}>
-                  {m.name}
-                </option>
-              ))}
-            </Select>
+            <Picker
+              label="Assign to"
+              placeholder="Choose who picks this up"
+              value={assigneeId}
+              options={assignees.map((m) => ({ value: m.id, label: m.name }))}
+              onChange={setAssigneeId}
+            />
           </Field>
         )}
 
@@ -165,11 +165,17 @@ export function QuickAddModal({
             <Input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
           </Field>
           <Field label="Priority">
-            <Select value={priority} onChange={(e) => setPriority(e.target.value)}>
-              <option value="low">Low</option>
-              <option value="normal">Normal</option>
-              <option value="high">High</option>
-            </Select>
+            <Picker
+              label="Priority"
+              clearable={false}
+              value={priority}
+              options={[
+                { value: "low", label: "Low" },
+                { value: "normal", label: "Normal" },
+                { value: "high", label: "High" },
+              ]}
+              onChange={setPriority}
+            />
           </Field>
         </div>
 

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/Button";
-import { Field, Input, Select, Textarea } from "@/components/ui/Field";
+import { Field, Input, Textarea } from "@/components/ui/Field";
+import { Picker } from "@/components/ui/Picker";
 import { YesNoField } from "@/components/ui/YesNoField";
 import { approveScript, handOff } from "@/lib/queries";
 import { parsePrice } from "@/lib/pricing";
@@ -84,19 +85,22 @@ function PersonSelect({
 }) {
   return (
     <Field label={label}>
-      <Select value={value} onChange={(e) => onChange(e.target.value)}>
-        <option value="">Choose a {noun}…</option>
-        {options.map((o) => (
-          <option key={o.id} value={o.id}>
-            {o.name}
-          </option>
-        ))}
-      </Select>
+      <Picker
+        label={label}
+        placeholder={`Choose a ${noun}…`}
+        value={value}
+        options={options.map((o) => ({ value: o.id, label: o.name }))}
+        onChange={onChange}
+      />
     </Field>
   );
 }
 
-/** The submit row, shared so both layouts press the same button. */
+/**
+ * The submit row — in a dialog only. Inline, the approvals panel puts the
+ * submit button in its own header and reaches this form through `form=`, so
+ * the button sits above the fields it commits rather than below all of them.
+ */
 function Actions({
   layout,
   busy,
@@ -108,8 +112,10 @@ function Actions({
   label: string;
   onCancel?: () => void;
 }) {
+  if (layout === "inline") return null;
+
   return (
-    <div className={layout === "inline" ? "gate-actions" : "modal-actions"}>
+    <div className="modal-actions">
       {onCancel && (
         <Button type="button" variant="ghost" onClick={onCancel}>
           Cancel
@@ -133,6 +139,8 @@ export function HandoffForm({
   team,
   actor,
   layout = "modal",
+  formId,
+  onBusy,
   onDone,
   onCancel,
 }: {
@@ -141,6 +149,10 @@ export function HandoffForm({
   team: Member[];
   actor?: string;
   layout?: FormLayout;
+  /** Set it to submit this form from a button that sits outside it. */
+  formId?: string;
+  /** Told whenever the write is in flight, so that outside button can wait. */
+  onBusy?: (busy: boolean) => void;
   onDone: () => void;
   onCancel?: () => void;
 }) {
@@ -166,28 +178,29 @@ export function HandoffForm({
     }
 
     setBusy(true);
+    onBusy?.(true);
     const message = await handOff(
       item,
       { memberId, due, note, actor, price: parsedPrice, priceField: info.price.field },
       team,
     );
     setBusy(false);
+    onBusy?.(false);
     if (message) return setError(message);
     onDone();
   }
 
   return (
-    <form onSubmit={submit} className="stack-5">
-      <div className="panel-pair">
+    <form id={formId} onSubmit={submit} className="stack-5">
+      <div className={layout === "inline" ? "stack-4" : "panel-pair"}>
         <Field label={`Assign to a ${info.who}`}>
-          <Select value={memberId} onChange={(e) => setMemberId(e.target.value)}>
-            <option value="">Choose a {info.who}…</option>
-            {info.options.map((o) => (
-              <option key={o.id} value={o.id}>
-                {o.name}
-              </option>
-            ))}
-          </Select>
+          <Picker
+            label={`Assign to a ${info.who}`}
+            placeholder={`Choose a ${info.who}…`}
+            value={memberId}
+            options={info.options.map((o) => ({ value: o.id, label: o.name }))}
+            onChange={setMemberId}
+          />
         </Field>
         <Field label="Their deadline">
           <Input type="date" value={due} onChange={(e) => setDue(e.target.value)} />
@@ -229,6 +242,8 @@ export function ScriptGateForm({
   team,
   actor,
   layout = "modal",
+  formId,
+  onBusy,
   onDone,
   onCancel,
 }: {
@@ -237,6 +252,10 @@ export function ScriptGateForm({
   team: Member[];
   actor?: string;
   layout?: FormLayout;
+  /** Set it to submit this form from a button that sits outside it. */
+  formId?: string;
+  /** Told whenever the write is in flight, so that outside button can wait. */
+  onBusy?: (busy: boolean) => void;
   onDone: () => void;
   onCancel?: () => void;
 }) {
@@ -267,6 +286,7 @@ export function ScriptGateForm({
     }
 
     setBusy(true);
+    onBusy?.(true);
     const message = await approveScript(
       item,
       {
@@ -285,13 +305,19 @@ export function ScriptGateForm({
       team,
     );
     setBusy(false);
+    onBusy?.(false);
     if (message) return setError(message);
     onDone();
   }
 
   return (
-    <form onSubmit={submit} className="stack-5">
-      <PriceQuestion ask={info.price} value={price} onChange={setPrice} error={priceError ?? undefined} />
+    <form id={formId} onSubmit={submit} className="stack-5">
+      <PriceQuestion
+        ask={info.price}
+        value={price}
+        onChange={setPrice}
+        error={priceError ?? undefined}
+      />
 
       <YesNoField
         label="Does this video need a shoot?"
@@ -302,7 +328,7 @@ export function ScriptGateForm({
       />
 
       {shootNeeded ? (
-        <div className="panel-pair">
+        <>
           <PersonSelect
             label="Assign to a cameraman"
             value={cameramanId}
@@ -313,7 +339,7 @@ export function ScriptGateForm({
           <Field label="Shoot deadline">
             <Input type="date" value={shootDue} onChange={(e) => setShootDue(e.target.value)} />
           </Field>
-        </div>
+        </>
       ) : (
         <>
           <Field label="Existing footage link" hint="optional — where the editor finds the files">
@@ -324,23 +350,21 @@ export function ScriptGateForm({
               placeholder="https://drive.google.com/…"
             />
           </Field>
-          <div className="panel-pair">
-            <PersonSelect
-              label="Assign to an editor"
-              value={editorId}
-              options={script.editors}
-              noun="editor"
-              onChange={setEditorId}
-            />
-            <Field label="Edit deadline">
-              <Input type="date" value={editDue} onChange={(e) => setEditDue(e.target.value)} />
-            </Field>
-          </div>
+          <PersonSelect
+            label="Assign to an editor"
+            value={editorId}
+            options={script.editors}
+            noun="editor"
+            onChange={setEditorId}
+          />
+          <Field label="Edit deadline">
+            <Input type="date" value={editDue} onChange={(e) => setEditDue(e.target.value)} />
+          </Field>
         </>
       )}
 
       {script.voNeeded ? (
-        <div className="panel-pair">
+        <>
           <PersonSelect
             label="Voice over, assign to"
             value={voiceoverId}
@@ -351,7 +375,7 @@ export function ScriptGateForm({
           <Field label="Voice over deadline">
             <Input type="date" value={voDue} onChange={(e) => setVoDue(e.target.value)} />
           </Field>
-        </div>
+        </>
       ) : (
         <p className="stage-hint">The scriptwriter marked this video as needing no voice over.</p>
       )}
@@ -390,6 +414,10 @@ export function GateForm(props: {
   team: Member[];
   actor?: string;
   layout?: FormLayout;
+  /** Set it to submit this form from a button that sits outside it. */
+  formId?: string;
+  /** Told whenever the write is in flight, so that outside button can wait. */
+  onBusy?: (busy: boolean) => void;
   onDone: () => void;
   onCancel?: () => void;
 }) {

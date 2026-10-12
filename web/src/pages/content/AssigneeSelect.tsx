@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useToast } from "@/components/ui/Toast";
+import { Picker } from "@/components/ui/Picker";
 import { setAssignee } from "@/lib/queries";
 import type { AssignField } from "@/lib/pipeline";
 import { accent } from "@/lib/theme";
@@ -61,20 +62,15 @@ export function AssigneeSelect({
 
       <span className="assignee-main">
         <span className="assignee-label">{label}</span>
-        <select
+        <Picker
+          label={label}
+          placeholder="Unassigned"
           value={value}
           disabled={disabled || busy}
-          onChange={(e) => void change(e.target.value)}
-          aria-label={label}
-          className="assignee-select truncate"
-        >
-          <option value="">Unassigned</option>
-          {options.map((o) => (
-            <option key={o.id} value={o.id}>
-              {o.name}
-            </option>
-          ))}
-        </select>
+          options={options.map((o) => ({ value: o.id, label: o.name }))}
+          onChange={(next) => void change(next)}
+          className="assignee-select"
+        />
       </span>
     </div>
   );

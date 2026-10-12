@@ -203,6 +203,83 @@ console.log("PASS  the voice over person can upload their own part");
 await as("priya@x.com", `update "ContentItem" set stage = 'footage_review'`);
 console.log("PASS  the voice over person can move the video off the shoot stage");
 
+// ---- the sweep: when a video last moved, and the ledger behind its mail ------
+
+async function rejects(label, sql, fragment) {
+  try {
+    await db.exec(sql);
+    failed = true;
+    console.log(`FAIL  ${label}  (it was allowed)`);
+  } catch (e) {
+    const ok = String(e.message).includes(fragment);
+    if (!ok) failed = true;
+    console.log(
+      `${ok ? "PASS" : "FAIL"}  ${label}${ok ? "" : `  (${String(e.message).split("\n")[0]})`}`,
+    );
+  }
+}
+
+await db.exec(`
+  insert into "Member"("agencyId", name, role, email)
+    select id, 'Darun', 'ceo', 'ceo@x.com' from "Agency" limit 1;
+  grant insert on all tables in schema public to authenticated;
+`);
+
+await expect(
+  "every video records when it reached the stage it is on",
+  `select count(*) from "ContentItem" where "stageSince" is null`,
+  0,
+);
+
+// The whole value of stageSince is that it answers "how long has this sat
+// here", which it only does if an ordinary edit doesn't reset it.
+await db.exec(`create temp table s as select "stageSince" as before from "ContentItem" limit 1`);
+await db.exec(`update "ContentItem" set notes = 'an ordinary edit'`);
+await expect(
+  "an ordinary edit leaves stageSince alone",
+  `select (select "stageSince" from "ContentItem" limit 1) = (select before from s)`,
+  true,
+);
+
+await as("ceo@x.com", `update "ContentItem" set stage = 'editing'`);
+await expect(
+  "moving a video to another stage resets stageSince",
+  `select (select "stageSince" from "ContentItem" limit 1) > (select before from s)`,
+  true,
+);
+
+await step(
+  "the sweep can record a mail it sent",
+  `insert into "MailLog"("agencyId", kind, key)
+   select id, 'late', 'video-1:scriptDue:2026-10-10:1' from "Agency" limit 1`,
+);
+
+// This is the guarantee the whole reminder system rests on: a second run, or a
+// retried cron job, cannot send the same nudge again.
+await rejects(
+  "the same mail cannot be recorded twice",
+  `insert into "MailLog"("agencyId", kind, key)
+   select id, 'late', 'video-1:scriptDue:2026-10-10:1' from "Agency" limit 1`,
+  "duplicate key",
+);
+
+await asFails(
+  "nobody signed in can write to the mail ledger",
+  "ceo@x.com",
+  `insert into "MailLog"("agencyId", kind, key)
+   select id, 'late', 'forged' from "Agency" limit 1`,
+  "row-level security",
+);
+
+{
+  const seen = (await as("ceo@x.com", `select count(*)::int as n from "MailLog"`)).rows[0].n;
+  const ok = seen === 1;
+  if (!ok) failed = true;
+  console.log(
+    `${ok ? "PASS" : "FAIL"}  the CEO can read what was mailed${ok ? "" : `  (sees ${seen})`}`,
+  );
+}
+
 console.log();
 console.log(failed ? "RESULT: FAILURES ABOVE" : "RESULT: setup.sql is good");
 process.exit(failed ? 1 : 0);

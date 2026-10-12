@@ -12,25 +12,19 @@
   text-transform: capitalize;
 }
 
+/* In the bar a filter is a pill like the toggles beside it, not a form field —
+   it sizes to its label rather than filling a column. */
 .bar-select {
+  width: auto;
   height: 2.25rem;
-  font: inherit;
   font-size: 0.75rem;
   font-weight: 600;
-  cursor: pointer;
   border-radius: var(--radius-full);
-  border: 1px solid var(--stone-200);
-  background: var(--stone-50);
-  padding: 0 0.875rem;
-  outline: none;
-  transition:
-    border-color 0.15s,
-    box-shadow 0.15s;
+  padding: 0 0.625rem 0 0.875rem;
 }
 
-.bar-select:focus {
-  border-color: var(--brand-600);
-  box-shadow: 0 0 0 1px var(--brand-600);
+.bar-select .picker-value {
+  flex: 0 1 auto;
 }
 
 .bar-toggle {

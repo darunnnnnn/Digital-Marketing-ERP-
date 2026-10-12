@@ -1,0 +1,200 @@
+/*
+ * The app's own dropdown. The closed button matches .control exactly, so a
+ * picker and a text input sitting in the same form are the same object; the
+ * open menu is a floating card in the same frosted white as every other
+ * surface, with evergreen marking what is chosen.
+ */
+
+.picker {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  width: 100%;
+  font: inherit;
+  font-size: 0.875rem;
+  text-align: left;
+  color: var(--stone-900);
+  background: var(--stone-50);
+  border: 1px solid var(--stone-200);
+  border-radius: var(--radius);
+  padding: 0.625rem 0.75rem 0.625rem 0.875rem;
+  cursor: pointer;
+  outline: none;
+  transition:
+    border-color 0.15s,
+    background-color 0.15s,
+    box-shadow 0.15s;
+}
+
+.picker:hover:not(:disabled) {
+  border-color: var(--stone-300);
+}
+
+.picker:focus-visible,
+.picker-open {
+  border-color: var(--brand-500);
+  background: #fff;
+  box-shadow: 0 0 0 4px var(--brand-100);
+}
+
+.picker:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Nothing chosen yet reads like a placeholder, as it does in an input. */
+.picker-empty .picker-value {
+  color: var(--stone-400);
+}
+
+.picker-value {
+  flex: 1;
+  min-width: 0;
+}
+
+.picker-chevron {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  color: var(--stone-400);
+  transition: transform 0.18s ease;
+}
+
+.picker-chevron svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.picker-open .picker-chevron {
+  transform: rotate(180deg);
+  color: var(--brand-600);
+}
+
+/* ---- the menu ---------------------------------------------------------- */
+
+.picker-menu {
+  position: fixed;
+  z-index: 60;
+  min-width: 11rem;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--stone-200);
+  background: rgb(255 255 255 / 0.98);
+  backdrop-filter: blur(12px);
+  box-shadow: var(--shadow-lg);
+  padding: 0.3125rem;
+  animation: picker-in 0.14s cubic-bezier(0.16, 1, 0.3, 1);
+  transform-origin: top center;
+}
+
+.picker-menu-up {
+  transform-origin: bottom center;
+}
+
+@keyframes picker-in {
+  from {
+    opacity: 0;
+    transform: translateY(-0.25rem) scale(0.98);
+  }
+}
+
+.picker-menu-up {
+  animation-name: picker-in-up;
+}
+
+@keyframes picker-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(0.25rem) scale(0.98);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .picker-menu {
+    animation: none;
+  }
+
+  .picker-chevron {
+    transition: none;
+  }
+}
+
+/* Long lists scroll inside the card rather than running off the screen. */
+.picker-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.0625rem;
+  max-height: 15rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.picker-option {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  width: 100%;
+  border: 0;
+  border-radius: var(--radius);
+  background: transparent;
+  padding: 0.5rem 0.625rem;
+  font: inherit;
+  font-size: 0.875rem;
+  text-align: left;
+  color: var(--stone-700);
+  cursor: pointer;
+  transition:
+    background-color 0.12s,
+    color 0.12s;
+}
+
+/* One highlight, driven by keyboard and mouse alike — never two at once. */
+.picker-option-active {
+  background: var(--stone-100);
+  color: var(--stone-900);
+}
+
+.picker-option-on {
+  color: var(--brand-800);
+  font-weight: 500;
+}
+
+.picker-option-on.picker-option-active {
+  background: var(--brand-50);
+}
+
+.picker-option-none {
+  color: var(--stone-500);
+}
+
+.picker-option:disabled {
+  color: var(--stone-300);
+  cursor: default;
+}
+
+.picker-option-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+
+.picker-option-meta {
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--stone-400);
+}
+
+.picker-tick {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  color: var(--brand-600);
+}
+
+.picker-tick svg {
+  width: 0.875rem;
+  height: 0.875rem;
+}

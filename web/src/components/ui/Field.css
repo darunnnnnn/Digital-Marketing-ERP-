@@ -65,10 +65,6 @@
   line-height: 1.6;
 }
 
-.control-select {
-  cursor: pointer;
-}
-
 /* Chrome paints autofilled inputs bright yellow, which broke the palette on
    the login form. Repaint it and keep the text legible. */
 .control:-webkit-autofill,
@@ -77,4 +73,35 @@
   -webkit-text-fill-color: var(--stone-900);
   -webkit-box-shadow: 0 0 0 100px var(--stone-50) inset;
   transition: background-color 9999s;
+}
+
+/*
+ * Date fields. The calendar button is drawn by the browser and is the one bit
+ * of a form that still looks like the browser rather than like this app, so it
+ * is dimmed to the weight of our own icons and warms to evergreen on hover.
+ */
+.control[type="date"] {
+  cursor: pointer;
+}
+
+.control[type="date"]::-webkit-calendar-picker-indicator {
+  opacity: 0.45;
+  cursor: pointer;
+  padding: 0.125rem;
+  border-radius: var(--radius-sm);
+  transition:
+    opacity 0.15s,
+    background-color 0.15s;
+}
+
+.control[type="date"]::-webkit-calendar-picker-indicator:hover {
+  opacity: 0.9;
+  background: var(--brand-50);
+}
+
+/* Chrome paints an empty date as dd-mm-yyyy in full-strength text, which reads
+   as a filled-in value next to a real one. Quiet it to placeholder weight. */
+.control[type="date"]:not(:focus):invalid::-webkit-datetime-edit,
+.control[type="date"][value=""]:not(:focus)::-webkit-datetime-edit {
+  color: var(--stone-400);
 }
