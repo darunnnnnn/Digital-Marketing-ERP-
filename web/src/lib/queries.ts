@@ -930,6 +930,42 @@ export async function updateMember(id: string, values: Partial<Member>) {
   if (error) fail("Couldn't save that change", error);
 }
 
+/**
+ * What would be lost by deleting someone — the two numbers the confirmation
+ * has to show, because neither is visible from the team page.
+ *
+ * Videos survive the delete and merely lose their owner; payouts do not survive
+ * it at all, which is why the database refuses that case outright (see the
+ * member_delete_guard trigger). Counting both here is what lets the UI say
+ * which of the two it is before anyone presses anything.
+ */
+export async function memberFootprint(id: string) {
+  const [videos, payouts] = await Promise.all([
+    supabase
+      .from("ContentItem")
+      .select("id", { count: "exact", head: true })
+      .or(
+        `scriptwriterId.eq.${id},cameramanId.eq.${id},voiceoverId.eq.${id},` +
+          `editorId.eq.${id},publisherId.eq.${id}`,
+      ),
+    supabase.from("Payout").select("id", { count: "exact", head: true }).eq("memberId", id),
+  ]);
+
+  if (videos.error) fail("Couldn't check their work", videos.error);
+  if (payouts.error) fail("Couldn't check their pay", payouts.error);
+  return { videos: videos.count ?? 0, payouts: payouts.count ?? 0 };
+}
+
+/**
+ * Removes someone for good. Deactivating is the usual answer; this is for the
+ * row that should never have existed. The database has the final say on
+ * whether it is allowed — see app_check_member_delete.
+ */
+export async function deleteMember(id: string) {
+  const { error } = await supabase.from("Member").delete().eq("id", id);
+  if (error) fail("Couldn't delete that person", error);
+}
+
 export async function createMember(values: {
   agencyId: string;
   name: string;

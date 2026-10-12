@@ -4,7 +4,7 @@ import { Modal } from "@/components/ui/Modal";
 import { Picker } from "@/components/ui/Picker";
 import { useToast } from "@/components/ui/Toast";
 import { sendInvite, type InviteResult } from "@/lib/invites";
-import { updateMember } from "@/lib/queries";
+import { deleteMember, memberFootprint, updateMember } from "@/lib/queries";
 import { isManager } from "@/lib/permissions";
 import { ROLES, ROLE_LABELS, type Role } from "@/lib/pipeline";
 import { CRAFTS, memberRoles } from "@/lib/roles";
@@ -232,6 +232,109 @@ export function InviteLinkButton({
         subtitle="The link is good either way — it just has to reach them another way."
       >
         {failure && <InviteSent name={name} result={failure} />}
+      </Modal>
+    </>
+  );
+}
+
+/**
+ * Deleting someone for good.
+ *
+ * Deactivating is the right answer almost every time — it keeps their name on
+ * the work they did. This is for the row that should never have existed: a
+ * typo'd invite, someone who never showed up. So it opens a dialog that first
+ * goes and counts what would actually be lost, rather than asking "are you
+ * sure?" about consequences it hasn't bothered to look up.
+ *
+ * Someone who has been paid cannot be deleted at all. The database refuses it
+ * outright, because "Payout" cascades from "Member" and deleting them would
+ * take every record of what they were paid along with them. This only says so
+ * earlier, and more kindly, than the error would.
+ */
+export function DeleteMember({
+  id,
+  name,
+  onChanged,
+}: {
+  id: string;
+  name: string;
+  onChanged: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [found, setFound] = useState<{ videos: number; payouts: number } | null>(null);
+  const [busy, setBusy] = useState(false);
+  const toast = useToast();
+  const first = name.split(" ")[0];
+
+  async function show() {
+    setOpen(true);
+    setFound(null);
+    try {
+      setFound(await memberFootprint(id));
+    } catch (e) {
+      setOpen(false);
+      toast.warn(e instanceof Error ? e.message : "Couldn't check their work.");
+    }
+  }
+
+  async function remove() {
+    setBusy(true);
+    try {
+      await deleteMember(id);
+      setOpen(false);
+      toast.say(`${first} was deleted.`);
+      onChanged();
+    } catch (e) {
+      toast.warn(e instanceof Error ? e.message : "Couldn't delete that person.");
+    }
+    setBusy(false);
+  }
+
+  const blocked = Boolean(found && found.payouts > 0);
+
+  return (
+    <>
+      <button type="button" onClick={show} className="row-action row-action-danger">
+        Delete
+      </button>
+      <Modal
+        open={open}
+        onClose={() => setOpen(false)}
+        title={`Delete ${first}?`}
+        subtitle="This can't be undone. Deactivating keeps their history instead."
+      >
+        <div className="stack-5">
+          {!found ? (
+            <p className="delete-note">Checking what they&apos;re on…</p>
+          ) : blocked ? (
+            <p className="delete-note delete-note-blocked">
+              {first} has {found.payouts} payout {found.payouts === 1 ? "record" : "records"}.
+              Deleting them would take their pay history with them, so it isn&apos;t allowed.
+              Deactivate them instead — they keep their history and can&apos;t sign in.
+            </p>
+          ) : found.videos > 0 ? (
+            <p className="delete-note">
+              {first} is assigned to {found.videos} {found.videos === 1 ? "video" : "videos"}.
+              Those stay on the board but become unassigned, and their name comes off the work
+              they did.
+            </p>
+          ) : (
+            <p className="delete-note">
+              {first} isn&apos;t on any videos and has no pay history. Nothing else changes.
+            </p>
+          )}
+
+          <div className="modal-actions">
+            <Button variant="secondary" onClick={() => setOpen(false)} disabled={busy}>
+              {blocked ? "Close" : "Cancel"}
+            </Button>
+            {!blocked && (
+              <Button variant="danger" onClick={remove} disabled={busy || !found}>
+                {busy ? "Deleting…" : "Delete permanently"}
+              </Button>
+            )}
+          </div>
+        </div>
       </Modal>
     </>
   );

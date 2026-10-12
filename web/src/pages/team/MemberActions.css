@@ -126,3 +126,20 @@
   justify-content: flex-end;
   gap: var(--sp-2);
 }
+
+/* The sentence in the delete dialog that says what will actually be lost. */
+.delete-note {
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--stone-600);
+}
+
+/* Someone who has been paid can't be deleted at all — red, because this is
+   the one case the dialog refuses rather than confirms. */
+.delete-note-blocked {
+  border-radius: var(--radius);
+  border-left: 3px solid var(--red-200);
+  background: var(--red-50);
+  padding: var(--sp-3) var(--sp-4);
+  color: var(--red-700);
+}

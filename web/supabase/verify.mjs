@@ -222,7 +222,9 @@ async function rejects(label, sql, fragment) {
 await db.exec(`
   insert into "Member"("agencyId", name, role, email)
     select id, 'Darun', 'ceo', 'ceo@x.com' from "Agency" limit 1;
-  grant insert on all tables in schema public to authenticated;
+  -- Supabase grants these to "authenticated" by default; a bare Postgres does
+  -- not, and without them a refusal can't be told from a missing grant.
+  grant insert, delete on all tables in schema public to authenticated;
 `);
 
 await expect(
@@ -279,6 +281,52 @@ await asFails(
     `${ok ? "PASS" : "FAIL"}  the CEO can read what was mailed${ok ? "" : `  (sees ${seen})`}`,
   );
 }
+
+// ---- deleting a person, and the history that must survive it ----------------
+
+// Sanjo the editor has a payout in the fixtures above; dadda does not.
+await db.exec(`
+  insert into "Payout"("agencyId","memberId","monthKey","payType",deliveries,rate,salary,amount)
+  select a.id, m.id, '2026-10', 'per_task', 2, 500, 0, 1000
+  from "Agency" a, "Member" m where m.email = 'sanjo@x.com'
+`);
+
+await rejects(
+  "someone who has been paid cannot be deleted",
+  `delete from "Member" where email = 'sanjo@x.com'`,
+  "pay history",
+);
+
+await expect(
+  "and so their payout record is still there",
+  `select count(*)::int from "Payout" p join "Member" m on m.id = p."memberId"
+    where m.email = 'sanjo@x.com'`,
+  1,
+);
+
+// The case delete is actually for: a person with no money attached. Their
+// videos survive and simply lose their owner, which is what SET NULL means.
+await db.exec(`
+  insert into "Member"("agencyId", name, role, email)
+    select id, 'Typo', 'editor', 'typo@x.com' from "Agency" limit 1;
+  update "ContentItem" set "editorId" = (select id from "Member" where email='typo@x.com')
+`);
+await step(
+  "someone with no pay history can be deleted",
+  `delete from "Member" where email = 'typo@x.com'`,
+);
+await expect(
+  "the videos they were on survive, unassigned",
+  `select count(*)::int from "ContentItem" where "editorId" is null`,
+  1,
+);
+
+await asFails(
+  "nobody can delete their own account",
+  "ceo@x.com",
+  `delete from "Member" where email = 'ceo@x.com'`,
+  "your own account",
+);
 
 console.log();
 console.log(failed ? "RESULT: FAILURES ABOVE" : "RESULT: setup.sql is good");

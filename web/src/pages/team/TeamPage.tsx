@@ -1,7 +1,13 @@
 import { Link } from "react-router";
 import { IconAlert, IconCheckCircle, IconClock, IconUsers } from "@/components/icons";
 import { InviteButton } from "./InviteButton";
-import { ActiveToggle, ExtraRoles, InviteLinkButton, RoleSelect } from "./MemberActions";
+import {
+  ActiveToggle,
+  DeleteMember,
+  ExtraRoles,
+  InviteLinkButton,
+  RoleSelect,
+} from "./MemberActions";
 import { Stat } from "@/components/ui/Stat";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { PageSkeleton } from "@/components/PageSkeleton";
@@ -157,6 +163,7 @@ export function TeamPage() {
                           <InviteLinkButton id={m.id} name={m.name} pending={s === "pending"} />
                         )}
                         <ActiveToggle id={m.id} active={m.active} onChanged={reload} />
+                        <DeleteMember id={m.id} name={m.name} onChanged={reload} />
                       </div>
                     )}
                   </td>

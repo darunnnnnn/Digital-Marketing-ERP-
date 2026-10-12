@@ -380,6 +380,46 @@ create trigger content_stage_guard
   before update on "ContentItem"
   for each row execute function app_check_stage_change();
 
+-- Deleting a person, and the one case where it must not be allowed.
+--
+-- Deactivating is the ordinary way to remove someone: it keeps their name on
+-- the work they did. Deleting is for the row that should never have existed —
+-- a typo'd invite, someone who never joined — and it is genuinely destructive,
+-- because "Payout" cascades from "Member". That cascade is the whole reason
+-- this trigger exists: without it, deleting someone who has been paid takes
+-- every record of what they were paid with them, silently, from a button that
+-- says nothing about money.
+--
+-- Their videos are a lesser matter and deliberately left alone: those columns
+-- are ON DELETE SET NULL, so the work survives and simply loses its owner.
+create or replace function app_check_member_delete()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  paid int;
+begin
+  if old.id = app_member_id() then
+    raise exception 'You cannot delete your own account';
+  end if;
+
+  select count(*) into paid from "Payout" where "memberId" = old.id;
+  if paid > 0 then
+    raise exception
+      'This person has % payout record(s). Deactivate them instead — deleting would take their pay history with them', paid;
+  end if;
+
+  return old;
+end;
+$$;
+
+drop trigger if exists member_delete_guard on "Member";
+create trigger member_delete_guard
+  before delete on "Member"
+  for each row execute function app_check_member_delete();
+
 -- Assignments and deadlines are managers' decisions.
 create or replace function app_check_content_fields()
 returns trigger
