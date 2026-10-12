@@ -3,8 +3,9 @@ import { Link } from "react-router";
 import { IconAlert, IconCheckCircle, IconClock, IconFilm } from "@/components/icons";
 import { Stat } from "@/components/ui/Stat";
 import { groupByUrgency, type Urgency, type WorkItem, type myWork } from "@/lib/my-work";
-import { refLabel, stageConfig } from "@/lib/pipeline";
+import { refLabel, stageConfig, stageProgress } from "@/lib/pipeline";
 import { cn, formatCalendar } from "@/lib/utils";
+import "@/components/ui/Badge.css";
 import "./MyWork.css";
 import "../clients/ClientsPage.css";
 
@@ -22,66 +23,80 @@ function daysLabel(due: Date | null) {
   return due ? formatCalendar(due) : "No date";
 }
 
-function TaskRow({ item, verb, tone }: { item: WorkItem; verb: string; tone: string }) {
+const IconArrow = () => (
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <path d="M5 12h13M13 6l6 6-6 6" />
+  </svg>
+);
+
+/**
+ * One job inside its group's card. Everything on it is real: the stage chip
+ * and the progress bar come from the pipeline, the deadline from the step this
+ * role owns. The action button is the point of the row — the rest of it exists
+ * so someone can decide whether to press it.
+ */
+function TaskRow({
+  item,
+  verb,
+  noun,
+  tone,
+}: {
+  item: WorkItem;
+  verb: string;
+  noun: string;
+  tone: string;
+}) {
+  const stage = stageConfig(item.stage);
+  const progress = stageProgress(item.stage);
+
   return (
-    <li>
-      <Link to={`/content/${item.id}`} className="task">
-        <span className={cn("task-ref", `task-ref-${tone}`)}>{refLabel(item.ref)}</span>
+    <li className="work-item">
+      <span className={cn("work-ref", `work-ref-${tone}`)}>{refLabel(item.ref)}</span>
 
-        <span className="task-main">
-          <span className="task-title truncate">{item.title}</span>
-          <span className="task-sub truncate">
-            {item.client} · {verb}
+      <div className="work-item-main">
+        <div className="work-item-top">
+          <Link to={`/content/${item.id}`} className="work-item-title truncate">
+            {item.title}
+          </Link>
+          <span className={cn("badge", stage.chip)}>{stage.label}</span>
+        </div>
+
+        <p className="work-item-verb">{verb}</p>
+
+        <div className="work-item-meta">
+          <span className="work-item-client truncate">
+            <IconFilm />
+            {item.client}
           </span>
-        </span>
+          <span className="work-item-progress" title={`${progress}% of the way to published`}>
+            <span aria-hidden className="work-bar">
+              <span className="work-bar-fill" style={{ width: `${progress}%` }} />
+            </span>
+            {progress}%
+          </span>
+        </div>
+      </div>
 
-        <span className="task-due">
-          <span className={cn("task-due-date", tone === "alert" && "task-due-late")}>
+      <div className="work-item-side">
+        <p className="work-due">
+          <span className={cn("work-due-date", tone === "alert" && "work-due-late")}>
             {daysLabel(item.due)}
           </span>
-          <span className="task-due-label">deadline</span>
-        </span>
-
-        <span className="task-go">
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M5 12h13M13 6l6 6-6 6" />
-          </svg>
-        </span>
-      </Link>
-    </li>
-  );
-}
-
-function QuietList({ title, note, items }: { title: string; note: string; items: WorkItem[] }) {
-  return (
-    <section className="card">
-      <div className="quiet-head">
-        <h2 className="quiet-title">
-          {title} <span className="muted">({items.length})</span>
-        </h2>
-        <p className="quiet-note">{note}</p>
+          <span className="work-due-label">deadline</span>
+        </p>
+        <Link to={`/content/${item.id}`} className="work-open">
+          Open the {noun}
+          <IconArrow />
+        </Link>
       </div>
-      <ul className="quiet-list">
-        {items.slice(0, 5).map((item) => (
-          <li key={item.id} className="quiet-row">
-            <p className="quiet-row-title truncate">{item.title}</p>
-            <p className="quiet-row-meta">
-              <span className="truncate">{item.client}</span>
-              <span>·</span>
-              <span>{stageConfig(item.stage).label}</span>
-            </p>
-          </li>
-        ))}
-        {items.length > 5 && <li className="quiet-more">+{items.length - 5} more</li>}
-      </ul>
-    </section>
+    </li>
   );
 }
 
@@ -149,90 +164,43 @@ export function MyWork({
         />
       </div>
 
-      <div className="mywork-columns">
-        {/* The work itself */}
-        <div className="mywork-main stack-5">
-          {work.todo.length === 0 ? (
-            <div className="card mywork-clear">
-              <span className="mywork-clear-icon">
-                <IconCheckCircle />
-              </span>
-              <p className="mywork-clear-title">You&apos;re all caught up</p>
-              <p className="mywork-clear-note">
-                New work appears here the moment the CEO assigns it to you, with the deadline
-                attached.
-              </p>
-            </div>
-          ) : (
-            GROUPS.filter((g) => groups[g.key].length > 0).map((g) => (
-              <section key={g.key} className="card">
-                <div className={cn("group-head", `group-head-${g.tone}`)}>
-                  <div>
-                    <h2 className={cn("group-title", g.tone === "alert" && "group-title-alert")}>
-                      {g.title}
-                    </h2>
-                    <p className="group-note">{g.note}</p>
-                  </div>
-                  <span className={cn("group-count", g.tone === "alert" && "group-count-alert")}>
-                    {groups[g.key].length}
-                  </span>
-                </div>
-                <ul className="task-list">
-                  {groups[g.key].map((item) => (
-                    <TaskRow key={item.id} item={item} verb={verb} tone={g.tone} />
-                  ))}
-                </ul>
-              </section>
-            ))
-          )}
-        </div>
-
-        {/* Side panel */}
-        <div className="stack-5">
-          <section className="card month-card">
-            <h2 className="month-title">Your month</h2>
-            <dl className="month-list">
-              <div className="month-row">
-                <dt className="muted">Delivered</dt>
-                <dd className="month-value tabular">{work.month.done}</dd>
+      <div className="stack-5">
+        {work.todo.length === 0 ? (
+          <div className="card mywork-clear">
+            <span className="mywork-clear-icon">
+              <IconCheckCircle />
+            </span>
+            <p className="mywork-clear-title">You&apos;re all caught up</p>
+            <p className="mywork-clear-note">
+              New work appears here the moment the CEO assigns it to you, with the deadline
+              attached.
+            </p>
+          </div>
+        ) : (
+          GROUPS.filter((g) => groups[g.key].length > 0).map((g) => (
+            <section key={g.key} className="card work-group">
+              <div className={cn("group-head", `group-head-${g.tone}`)}>
+                <span aria-hidden className={cn("group-dot", `group-dot-${g.tone}`)} />
+                <h2 className={cn("group-title", g.tone === "alert" && "group-title-alert")}>
+                  {g.title}
+                </h2>
+                <span className="group-sep" aria-hidden>
+                  ·
+                </span>
+                <p className={cn("group-note", `group-note-${g.tone}`)}>{g.note}</p>
+                <span className="group-count">
+                  {groups[g.key].length} {groups[g.key].length === 1 ? noun : `${noun}s`}
+                </span>
               </div>
-              <div className="month-row">
-                <dt className="muted">On time</dt>
-                <dd className="month-value tabular">
-                  {work.month.onTimeRate === null ? "—" : `${work.month.onTimeRate}%`}
-                </dd>
-              </div>
-              {work.month.late > 0 && (
-                <div className="month-row">
-                  <dt className="muted">Delivered late</dt>
-                  <dd className="month-value month-value-late tabular">{work.month.late}</dd>
-                </div>
-              )}
-              {work.month.revisions > 0 && (
-                <div className="month-row">
-                  <dt className="muted">Sent back</dt>
-                  <dd className="month-value tabular">{work.month.revisions}</dd>
-                </div>
-              )}
-            </dl>
-          </section>
 
-          {work.upcoming.length > 0 && (
-            <QuietList
-              title="Coming to you"
-              note="Assigned, but an earlier step is still running."
-              items={work.upcoming}
-            />
-          )}
-
-          {work.handedOn.length > 0 && (
-            <QuietList
-              title="Handed on"
-              note="Your part is done. Nothing to do here."
-              items={work.handedOn}
-            />
-          )}
-        </div>
+              <ul className="work-list">
+                {groups[g.key].map((item) => (
+                  <TaskRow key={item.id} item={item} verb={verb} noun={noun} tone={g.tone} />
+                ))}
+              </ul>
+            </section>
+          ))
+        )}
       </div>
     </div>
   );

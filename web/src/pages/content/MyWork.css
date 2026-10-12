@@ -7,21 +7,6 @@
   margin-top: var(--sp-1);
 }
 
-.mywork-columns {
-  display: grid;
-  gap: var(--sp-6);
-}
-
-@media (min-width: 1024px) {
-  .mywork-columns {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-
-  .mywork-main {
-    grid-column: span 2;
-  }
-}
-
 /* ---- nothing to do ----------------------------------------------------- */
 
 .mywork-clear {
@@ -61,25 +46,57 @@
 
 /* ---- urgency groups ---------------------------------------------------- */
 
-.group-head {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: var(--sp-3);
-  padding: 0.875rem var(--sp-5);
+/*
+ * A group is one card: a tinted strip that names the urgency, then the jobs
+ * in it. The strip carries all the colour, so the rows under it stay neutral
+ * however many groups are open at once.
+ */
+.work-group {
+  overflow: hidden;
 }
 
-/* A tinted header is the only signal needed — the rows below stay neutral. */
+.work-group + .work-group {
+  margin-top: var(--sp-5);
+}
+
+.group-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.8125rem var(--sp-5);
+  background: rgb(242 244 242 / 0.8);
+  border-bottom: 1px solid var(--stone-200);
+}
+
 .group-head-alert {
-  background: rgb(254 242 242 / 0.7);
+  background: rgb(254 242 242 / 0.75);
+  border-bottom-color: var(--red-100);
 }
 
 .group-head-now {
-  background: rgb(238 246 243 / 0.7);
+  background: rgb(238 246 243 / 0.8);
+  border-bottom-color: var(--brand-100);
+}
+
+.group-dot {
+  flex-shrink: 0;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: var(--stone-400);
+}
+
+.group-dot-alert {
+  background: var(--red-500);
+}
+
+.group-dot-now {
+  background: var(--brand-500);
 }
 
 .group-title {
-  font-size: 0.875rem;
+  font-size: 0.9375rem;
   font-weight: 600;
   color: var(--stone-900);
 }
@@ -88,43 +105,40 @@
   color: var(--red-700);
 }
 
+.group-sep {
+  color: var(--stone-300);
+}
+
 .group-note {
-  margin-top: 0.125rem;
-  font-size: 0.75rem;
+  font-size: 0.875rem;
   color: var(--stone-500);
 }
 
+.group-note-alert {
+  color: var(--red-600);
+}
+
+/* Pushed to the far end of the strip by the gap the note leaves. */
 .group-count {
+  margin-left: auto;
   flex-shrink: 0;
-  border-radius: var(--radius-full);
-  background: #fff;
-  padding: var(--sp-1) 0.625rem;
-  font-size: 0.75rem;
-  font-weight: 500;
-  color: var(--stone-600);
-  box-shadow: inset 0 0 0 1px var(--stone-200);
+  font-size: 0.8125rem;
+  color: var(--stone-500);
 }
 
-.group-count-alert {
-  background: var(--red-100);
-  color: var(--red-700);
-  box-shadow: none;
-}
+/* ---- one job ------------------------------------------------------------ */
 
-/* ---- one task ---------------------------------------------------------- */
-
-.task-list {
+.work-list {
   list-style: none;
   margin: 0;
   padding: 0;
-  border-top: 1px solid rgb(227 231 228 / 0.7);
 }
 
-.task-list > li + li {
-  border-top: 1px solid rgb(227 231 228 / 0.7);
+.work-list > li + li {
+  border-top: 1px solid var(--stone-200);
 }
 
-.task {
+.work-item {
   display: flex;
   align-items: center;
   gap: var(--sp-4);
@@ -132,187 +146,184 @@
   transition: background-color 0.15s;
 }
 
-.task:hover {
-  background: rgb(238 246 243 / 0.5);
+.work-item:hover {
+  background: rgb(238 246 243 / 0.4);
 }
 
-.task-ref {
+.work-ref {
   display: grid;
   place-items: center;
   flex-shrink: 0;
-  width: 2.75rem;
-  height: 2.75rem;
-  border-radius: var(--radius-full);
+  width: 3rem;
+  height: 3rem;
+  border-radius: var(--radius);
   font-family: ui-monospace, "SFMono-Regular", monospace;
   font-size: 0.75rem;
   background: var(--stone-100);
   color: var(--stone-600);
 }
 
-.task-ref-alert {
+.work-ref-alert {
   background: var(--red-50);
   color: var(--red-700);
 }
 
-.task-ref-now {
+.work-ref-now {
   background: var(--brand-100);
   color: var(--brand-800);
 }
 
-.task-main {
+.work-item-main {
   min-width: 0;
   flex: 1;
 }
 
-.task-title {
-  display: block;
-  font-size: 1rem;
-  font-weight: 500;
-  color: var(--stone-900);
+.work-item-top {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
 }
 
-.task-sub {
-  display: block;
+.work-item-title {
+  font-size: 1.0625rem;
+  font-weight: 600;
+  color: var(--stone-900);
+  transition: color 0.15s;
+}
+
+.work-item-title:hover {
+  color: var(--brand-700);
+}
+
+.work-item-verb {
   margin-top: 0.125rem;
   font-size: 0.875rem;
   color: var(--stone-500);
 }
 
-.task-due {
+.work-item-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-2) var(--sp-4);
+  margin-top: var(--sp-3);
+  font-size: 0.75rem;
+  color: var(--stone-500);
+}
+
+.work-item-client {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  min-width: 0;
+}
+
+.work-item-client svg {
+  width: 0.875rem;
+  height: 0.875rem;
   flex-shrink: 0;
+  color: var(--stone-400);
+}
+
+/* How far through the pipeline the video is — the row says what is left to
+   do, the bar says how much of it is already behind them. */
+.work-item-progress {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--stone-400);
+}
+
+.work-bar {
+  display: block;
+  width: 5rem;
+  height: 0.25rem;
+  border-radius: var(--radius-full);
+  background: var(--stone-200);
+  overflow: hidden;
+}
+
+.work-bar-fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--brand-500);
+}
+
+/* ---- the right-hand side ------------------------------------------------ */
+
+.work-item-side {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-5);
+}
+
+.work-due {
   text-align: right;
 }
 
-.task-due-date {
+.work-due-date {
   display: block;
   font-size: 0.875rem;
-  font-weight: 500;
+  font-weight: 600;
   color: var(--stone-700);
 }
 
-.task-due-late {
+.work-due-late {
   color: var(--red-600);
 }
 
-.task-due-label {
+.work-due-label {
   display: block;
-  font-size: 0.75rem;
+  margin-top: 0.0625rem;
+  font-size: 0.6875rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
   color: var(--stone-400);
 }
 
-.task-go {
-  display: grid;
-  place-items: center;
+.work-open {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
   flex-shrink: 0;
-  width: 2.25rem;
-  height: 2.25rem;
   border-radius: var(--radius-full);
-  background: var(--stone-100);
-  color: var(--stone-500);
-  transition:
-    background-color 0.15s,
-    color 0.15s;
-}
-
-.task:hover .task-go {
   background: var(--brand-800);
   color: #fff;
-}
-
-.task-go svg {
-  width: 1rem;
-  height: 1rem;
-}
-
-/* ---- side panel -------------------------------------------------------- */
-
-.month-card {
-  padding: var(--sp-4) var(--sp-5);
-}
-
-.month-title {
-  font-size: 0.875rem;
+  padding: 0.5rem 0.875rem 0.5rem 1rem;
+  font-size: 0.8125rem;
   font-weight: 500;
-  color: var(--stone-900);
+  white-space: nowrap;
+  box-shadow: var(--shadow-sm);
+  transition:
+    background-color 0.15s,
+    transform 0.15s;
 }
 
-.month-list {
-  margin: var(--sp-3) 0 0;
-  font-size: 0.875rem;
+.work-open:hover {
+  background: var(--brand-900);
+  transform: translateY(-1px);
 }
 
-.month-list > * + * {
-  margin-top: 0.625rem;
+.work-open svg {
+  width: 0.875rem;
+  height: 0.875rem;
 }
 
-.month-row {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-}
+@media (max-width: 720px) {
+  .work-item {
+    flex-wrap: wrap;
+  }
 
-.month-row dt,
-.month-row dd {
-  margin: 0;
-}
+  .work-item-side {
+    width: 100%;
+    justify-content: space-between;
+  }
 
-.month-value {
-  font-weight: 500;
-  color: var(--stone-900);
-}
-
-.month-value-late {
-  color: var(--red-600);
-}
-
-/* ---- quiet lists ------------------------------------------------------- */
-
-.quiet-head {
-  padding: var(--sp-4) var(--sp-5) var(--sp-2);
-}
-
-.quiet-title {
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: var(--stone-900);
-}
-
-.quiet-note {
-  margin-top: 0.125rem;
-  font-size: 0.75rem;
-  color: var(--stone-500);
-}
-
-.quiet-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-.quiet-list > li + li {
-  border-top: 1px solid rgb(227 231 228 / 0.7);
-}
-
-.quiet-row {
-  padding: var(--sp-3) var(--sp-5);
-}
-
-.quiet-row-title {
-  font-size: 0.875rem;
-  color: var(--stone-700);
-}
-
-.quiet-row-meta {
-  display: flex;
-  align-items: center;
-  gap: 0.375rem;
-  margin-top: 0.125rem;
-  font-size: 0.75rem;
-  color: var(--stone-400);
-}
-
-.quiet-more {
-  padding: 0.625rem var(--sp-5);
-  font-size: 0.75rem;
-  color: var(--stone-400);
+  .work-due {
+    text-align: left;
+    order: -1;
+  }
 }

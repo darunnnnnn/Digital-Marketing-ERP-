@@ -259,27 +259,18 @@
   background: var(--stone-200);
 }
 
-.topbar-who {
-  display: none;
-  text-align: right;
-}
-
-@media (min-width: 640px) {
-  .topbar-who {
-    display: block;
-  }
-}
-
+/* Hidden on a phone, where the avatar alone identifies who is signed in. */
 .topbar-name {
+  display: none;
   font-size: 0.875rem;
   font-weight: 500;
-  line-height: 1.25;
   color: var(--stone-900);
 }
 
-.topbar-role {
-  font-size: 0.75rem;
-  color: var(--stone-500);
+@media (min-width: 640px) {
+  .topbar-name {
+    display: block;
+  }
 }
 
 .avatar {

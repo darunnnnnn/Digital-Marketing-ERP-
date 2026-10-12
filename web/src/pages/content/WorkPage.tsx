@@ -12,8 +12,8 @@ import "./WorkPage.css";
 /**
  * One desk of someone who holds several roles: /work/script, /work/shoot,
  * /work/edit. The same queue a single-role person gets on the content page,
- * built for just this one role, with a switcher to the others — the sidebar
- * carries the same links, but it is hidden on phones.
+ * built for just this one role. The switcher below only shows under 1024px,
+ * where the left rail — which carries the same links — is hidden.
  */
 /**
  * Where someone holding several crafts lands.

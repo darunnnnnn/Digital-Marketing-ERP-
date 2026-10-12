@@ -1,0 +1,264 @@
+/*
+ * The month's pay, at the top of the earnings page. The figure leads; the
+ * deliveries that produced it sit under a hairline in the same card, so the
+ * number and its evidence are never more than a glance apart.
+ */
+.earn-hero {
+  padding: var(--sp-6) var(--sp-6) var(--sp-2);
+}
+
+@media (min-width: 768px) {
+  .earn-hero {
+    padding: var(--sp-7) var(--sp-8) var(--sp-3);
+  }
+}
+
+/* ---- the figure --------------------------------------------------------- */
+
+.earn-hero-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--sp-5);
+}
+
+.earn-hero-figure {
+  min-width: 0;
+}
+
+.earn-hero-kicker {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-2);
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: var(--stone-600);
+}
+
+.earn-hero-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: var(--brand-500);
+  box-shadow: 0 0 0 3px var(--brand-50);
+}
+
+.earn-hero-dot.is-idle {
+  background: var(--stone-300);
+  box-shadow: 0 0 0 3px var(--stone-100);
+}
+
+.earn-hero-pill {
+  border-radius: var(--radius-full);
+  padding: 0.1875rem 0.5rem;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  background: var(--brand-50);
+  color: var(--brand-700);
+  box-shadow: inset 0 0 0 1px var(--brand-100);
+}
+
+.earn-hero-pill.is-idle {
+  background: var(--stone-100);
+  color: var(--stone-500);
+  box-shadow: inset 0 0 0 1px var(--stone-200);
+}
+
+.earn-hero-amount {
+  margin-top: var(--sp-3);
+  font-size: 2.75rem;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+  color: var(--stone-900);
+  word-break: break-word;
+}
+
+@media (min-width: 768px) {
+  .earn-hero-amount {
+    font-size: 3.25rem;
+  }
+}
+
+.earn-hero-caption {
+  margin-top: var(--sp-2);
+  max-width: 32rem;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--stone-500);
+}
+
+/* ---- the right-hand block ------------------------------------------------ */
+
+/* How the figure was built, for anyone on payroll. */
+.earn-hero-lines {
+  flex: 0 1 17rem;
+  min-width: 13rem;
+  margin: 0;
+  border-radius: var(--radius-lg);
+  background: var(--stone-50);
+  box-shadow: inset 0 0 0 1px var(--stone-200);
+  padding: var(--sp-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.earn-hero-line {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  font-size: 0.8125rem;
+}
+
+.earn-hero-line dt {
+  color: var(--stone-500);
+}
+
+.earn-hero-line dd {
+  margin: 0;
+  font-weight: 500;
+  color: var(--stone-900);
+}
+
+.earn-hero-line-foot {
+  margin-top: var(--sp-1);
+  padding-top: var(--sp-3);
+  border-top: 1px solid var(--stone-200);
+  font-size: 0.75rem;
+}
+
+.earn-hero-line-foot dt,
+.earn-hero-line-foot dd {
+  color: var(--stone-400);
+  font-weight: 400;
+}
+
+/* The amber notice, for anyone the CEO has not priced yet. */
+.earn-hero-notice {
+  flex: 0 1 26rem;
+  min-width: 15rem;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-3);
+  border-radius: var(--radius-lg);
+  background: #fffbeb;
+  box-shadow: inset 0 0 0 1px #fde68a;
+  padding: var(--sp-3) var(--sp-4);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: #92400e;
+}
+
+.earn-hero-notice svg {
+  flex-shrink: 0;
+  margin-top: 0.125rem;
+  color: #d97706;
+}
+
+.earn-hero-notice strong {
+  font-weight: 600;
+}
+
+/* ---- what was delivered -------------------------------------------------- */
+
+.earn-hero-body {
+  margin-top: var(--sp-6);
+  padding-top: var(--sp-5);
+  border-top: 1px solid var(--stone-200);
+  padding-bottom: var(--sp-5);
+}
+
+.earn-hero-label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--stone-400);
+}
+
+.earn-hero-none {
+  margin-top: var(--sp-3);
+  font-size: 0.875rem;
+  color: var(--stone-500);
+}
+
+.earn-steps {
+  margin: var(--sp-4) 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: var(--sp-3);
+}
+
+@media (min-width: 900px) {
+  .earn-steps {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.earn-step {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  border-radius: var(--radius-lg);
+  background: var(--stone-50);
+  box-shadow: inset 0 0 0 1px var(--stone-200);
+  padding: var(--sp-3);
+}
+
+.earn-step-icon {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: var(--radius);
+  background: #fff;
+  color: var(--stone-600);
+  box-shadow: inset 0 0 0 1px var(--stone-200);
+}
+
+.earn-step-main {
+  min-width: 0;
+  flex: 1;
+}
+
+.earn-step-name {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--stone-900);
+}
+
+.earn-step-what {
+  margin-top: 0.0625rem;
+  font-size: 0.75rem;
+  color: var(--stone-500);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.earn-step-count {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.3125rem;
+  border-radius: var(--radius);
+  background: #fff;
+  box-shadow: inset 0 0 0 1px var(--stone-200);
+  padding: 0.3125rem 0.625rem;
+  font-size: 0.75rem;
+  color: var(--stone-500);
+}
+
+.earn-step-count strong {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--stone-900);
+}

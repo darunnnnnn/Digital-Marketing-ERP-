@@ -4,7 +4,6 @@
 
 import { supabase } from "./supabase";
 import { ROLE_STEPS, loadPerfSource, measureMember } from "./performance";
-import { stageIndex } from "./pipeline";
 import { CRAFTS, craftByRole, craftIsOpen, craftsOf } from "./roles";
 import { calendarDate, currentMonthKey, toDate } from "./utils";
 
@@ -78,7 +77,6 @@ export async function myWork(
     source,
   );
 
-  const mine = stageIndex(step.stage);
   const craft = craftByRole(role);
   // In the stage is not enough: the shoot and the voice over share one, and a
   // video with the footage already in is no longer on the cameraman's desk.
@@ -96,14 +94,13 @@ export async function myWork(
     step,
     task: ROLE_TASK[role],
     month: summary,
-    /** On their desk right now. */
+    /**
+     * On their desk right now, and all this page shows. Videos they are
+     * assigned to but cannot touch yet, and ones they have already handed on,
+     * are deliberately left out: both are someone else's move, and listing
+     * them only made the page look like it was asking for something.
+     */
     todo: rows.filter(onDesk).map(map),
-    /** Assigned to them, but an earlier step is still running. */
-    upcoming: rows.filter((r) => stageIndex(r.stage) < mine).map(map),
-    /** Already handed on — with the CEO or someone else. */
-    handedOn: rows
-      .filter((r) => stageIndex(r.stage) > mine || (r.stage === step.stage && !onDesk(r)))
-      .map(map),
   };
 }
 

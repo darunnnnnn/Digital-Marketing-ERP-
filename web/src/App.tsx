@@ -19,6 +19,7 @@ import { WorkHome, WorkPage } from "@/pages/content/WorkPage";
 import { TeamPage } from "@/pages/team/TeamPage";
 import { TeamProfilePage } from "@/pages/team/TeamProfilePage";
 import { PayoutsPage } from "@/pages/payouts/PayoutsPage";
+import { EarningsPage } from "@/pages/earnings/EarningsPage";
 import { NotFoundPage } from "@/pages/NotFoundPage";
 
 /**
@@ -135,6 +136,9 @@ function AppRoutes() {
       />
       {/* Anyone may open a profile page; it shows only what their role may read. */}
       <Route path="team/:id" element={<TeamProfilePage />} />
+
+      {/* Everyone's own money. The CEO's /payouts page is the whole team's. */}
+      <Route path="earnings" element={<EarningsPage />} />
 
       <Route
         path="payouts"

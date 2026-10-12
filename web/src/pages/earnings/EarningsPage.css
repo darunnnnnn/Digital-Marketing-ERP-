@@ -1,0 +1,247 @@
+/*
+ * Three blocks down the page: the month's pay, what has settled, and the
+ * history. Everything is the frosted card from index.css — the earnings page
+ * is read beside the rest of the app, so it holds the same surfaces rather
+ * than inventing its own.
+ */
+.earn-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-6);
+}
+
+/* ---- settled totals ------------------------------------------------------ */
+
+.earn-stats {
+  display: grid;
+  gap: var(--sp-4);
+}
+
+@media (min-width: 860px) {
+  .earn-stats {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.earn-stat {
+  padding: var(--sp-5) var(--sp-5) var(--sp-4);
+  display: flex;
+  flex-direction: column;
+}
+
+.earn-stat-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--sp-3);
+}
+
+.earn-stat-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--stone-600);
+}
+
+.earn-stat-icon {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: var(--radius-sm);
+}
+
+.earn-stat-icon svg {
+  width: 0.875rem;
+  height: 0.875rem;
+}
+
+.earn-stat-icon.is-paid {
+  background: var(--brand-50);
+  color: var(--brand-600);
+}
+
+.earn-stat-icon.is-waiting {
+  background: var(--stone-100);
+  color: var(--stone-500);
+}
+
+.earn-stat-icon.is-settled {
+  background: var(--brand-50);
+  color: var(--brand-700);
+}
+
+.earn-stat-value {
+  margin-top: var(--sp-4);
+  font-size: 2rem;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  color: var(--stone-900);
+}
+
+.earn-stat-note {
+  margin-top: var(--sp-4);
+  padding-top: var(--sp-3);
+  border-top: 1px solid var(--stone-200);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  color: var(--stone-500);
+}
+
+.earn-stat-dot {
+  width: 0.375rem;
+  height: 0.375rem;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: var(--stone-300);
+}
+
+.earn-stat-dot.is-paid {
+  background: var(--brand-400);
+}
+
+.earn-stat-dot.is-settled {
+  background: var(--brand-600);
+}
+
+/* ---- month by month ------------------------------------------------------ */
+
+.earn-history {
+  padding: var(--sp-5) var(--sp-6) var(--sp-6);
+}
+
+.earn-history-title {
+  font-size: 1.0625rem;
+  font-weight: 600;
+  color: var(--stone-900);
+}
+
+.earn-history-note {
+  margin-top: 0.125rem;
+  font-size: 0.875rem;
+  color: var(--stone-500);
+}
+
+.earn-history-empty {
+  margin-top: var(--sp-5);
+  border-radius: var(--radius-lg);
+  border: 1px dashed var(--stone-300);
+  background: rgb(255 255 255 / 0.4);
+  padding: var(--sp-8) var(--sp-5);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-4);
+  text-align: center;
+  font-size: 0.875rem;
+  color: var(--stone-500);
+}
+
+.earn-history-empty-icon {
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 50%;
+  background: var(--stone-100);
+  color: var(--stone-400);
+}
+
+.earn-history-empty-icon svg {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.earn-history-list {
+  margin: var(--sp-4) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.earn-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-3) 0;
+  border-top: 1px solid var(--stone-200);
+}
+
+.earn-row:first-child {
+  border-top: 0;
+}
+
+/* A filled dot means the money landed; a hollow one means it has not. */
+.earn-mark {
+  flex-shrink: 0;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1.5px var(--stone-300);
+}
+
+.earn-mark-paid {
+  background: var(--brand-500);
+  box-shadow: 0 0 0 3px var(--brand-50);
+}
+
+.earn-row-main {
+  min-width: 0;
+  flex: 1;
+}
+
+.earn-row-month {
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: var(--stone-900);
+}
+
+.earn-row-meta {
+  margin-top: 0.125rem;
+  font-size: 0.75rem;
+  color: var(--stone-500);
+}
+
+.earn-tag {
+  flex-shrink: 0;
+  border-radius: var(--radius-full);
+  padding: 0.1875rem 0.5rem;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.earn-tag-paid {
+  background: var(--brand-50);
+  color: var(--brand-700);
+}
+
+.earn-tag-waiting {
+  background: var(--stone-100);
+  color: var(--stone-600);
+}
+
+.earn-row-amount {
+  flex-shrink: 0;
+  min-width: 5.5rem;
+  text-align: right;
+  font-size: 1.0625rem;
+  font-weight: 600;
+  color: var(--stone-900);
+}
+
+.earn-history-open {
+  margin-top: var(--sp-4);
+  padding-top: var(--sp-4);
+  border-top: 1px dashed var(--stone-300);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--stone-500);
+}
+
+.earn-history-open strong {
+  font-weight: 600;
+  color: var(--stone-800);
+}

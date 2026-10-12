@@ -304,3 +304,49 @@ export async function savePaySettings(
   if (error) return error.message;
   return (data ?? []).length ? null : "That person is no longer on the team.";
 }
+
+export type EarningsHistory = {
+  /** Every month the CEO has already closed, newest first. */
+  months: {
+    monthKey: string;
+    deliveries: number;
+    total: number;
+    status: "approved" | "paid";
+    paidAt: Date | null;
+  }[];
+  /** Money already in their hands. */
+  paid: number;
+  /** Approved and locked, but not yet handed over. */
+  awaiting: number;
+  /** Everything closed months have earned them — paid and awaiting together. */
+  settled: number;
+};
+
+/**
+ * One person's own closed months. Only frozen Payout rows, which is all the
+ * self-read policy hands back and all that can be stated as fact: an open
+ * month is still moving, so it is added on top as an estimate by the page
+ * rather than being buried inside a lifetime figure here.
+ */
+export async function memberEarningsHistory(memberId: string): Promise<EarningsHistory> {
+  const { data, error } = await supabase
+    .from("Payout")
+    .select("*")
+    .eq("memberId", memberId)
+    .order("monthKey", { ascending: false });
+  if (error) throw new Error(`Couldn't load your earnings: ${error.message}`);
+
+  const months = ((data ?? []) as Payout[]).map((r) => ({
+    monthKey: r.monthKey,
+    deliveries: r.deliveries,
+    total: r.amount,
+    status: (r.status === "paid" ? "paid" : "approved") as "approved" | "paid",
+    paidAt: toDate(r.paidAt),
+  }));
+
+  const sum = (of: "paid" | "approved") =>
+    months.filter((m) => m.status === of).reduce((n, m) => n + m.total, 0);
+  const paid = sum("paid");
+  const awaiting = sum("approved");
+  return { months, paid, awaiting, settled: paid + awaiting };
+}

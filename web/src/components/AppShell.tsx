@@ -34,6 +34,8 @@ type NavItem = {
   soon?: boolean;
   /** Who sees it. Omitted means everyone. */
   roles?: string[];
+  /** Who does not, for links everyone but one role needs. */
+  hideFor?: string[];
   /** Shown under the icon, for links that are someone's whole job. */
   caption?: string;
   /** Videos waiting on them there. */
@@ -65,6 +67,9 @@ const NAV: NavItem[] = [
   { to: "/team", label: "Team", title: "Team", icon: IconSpark, roles: ["ceo"] },
   { to: "/reports", label: "Reports", title: "Reports", icon: IconChart, soon: true, roles: MANAGERS },
   { to: "/payouts", label: "Payouts", title: "Payouts", icon: IconWallet, roles: ["ceo"] },
+  // Their own pay. The CEO sees the whole team's on /payouts instead, so this
+  // link would only be a second route to a subset of what they already have.
+  { to: "/earnings", label: "Earnings", title: "Your Earnings", icon: IconWallet, hideFor: ["ceo"] },
 ];
 
 export function AppShell({
@@ -92,7 +97,9 @@ export function AppShell({
     [user.id, user.role, pathname],
   );
 
-  const nav = NAV.filter((n) => !n.roles || n.roles.includes(user.role)).flatMap((n) =>
+  const nav = NAV.filter(
+    (n) => (!n.roles || n.roles.includes(user.role)) && !n.hideFor?.includes(user.role),
+  ).flatMap((n) =>
     // Someone with several roles gets a desk per role in place of the one queue.
     n.to === "/content" && portals.length
       ? portals.map((c) => ({
@@ -174,10 +181,10 @@ export function AppShell({
               <IconBell />
             </button>
             <span className="topbar-divider" />
-            <div className="topbar-who">
-              <p className="topbar-name">{user.name}</p>
-              <p className="topbar-role">{roleLabel}</p>
-            </div>
+            {/* The name only — the roles are already in the title and the
+                rail, and three of them stacked here crowded the bar. They
+                stay on the avatar's tooltip. */}
+            <p className="topbar-name">{user.name}</p>
             <span title={`${user.name} · ${roleLabel}`} className="avatar">
               {initials(user.name)}
             </span>

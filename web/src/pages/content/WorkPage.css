@@ -1,9 +1,22 @@
-/* Switches between someone's desks: Scripts, Shoot, Edit. */
+/*
+ * Switches between someone's desks: Scripts, Shoot, Edit.
+ *
+ * The left rail carries the same three links, so on a wide screen these tabs
+ * are the same navigation twice over and the page just hides them. The rail
+ * itself disappears under 1024px, which is the only reason they still exist —
+ * without them a phone has no way to reach another desk.
+ */
 .work-tabs {
   margin-top: var(--sp-4);
   display: flex;
   flex-wrap: wrap;
   gap: var(--sp-2);
+}
+
+@media (min-width: 1024px) {
+  .work-tabs {
+    display: none;
+  }
 }
 
 .work-tab {
