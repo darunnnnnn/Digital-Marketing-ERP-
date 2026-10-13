@@ -117,12 +117,17 @@ export function TeamPage() {
                       locked={self || !m.active}
                       onChanged={reload}
                     />
+                    {/* Your own primary role stays fixed — nobody demotes
+                        themselves out of the agency by accident — but you may
+                        still say what work you do, which is the CEO who writes
+                        and edits their own videos. */}
                     <ExtraRoles
                       id={m.id}
                       name={m.name}
                       role={m.role}
                       roles={m.roles}
-                      locked={self || !m.active}
+                      locked={!m.active}
+                      self={self}
                       onChanged={reload}
                     />
                   </td>

@@ -5,7 +5,6 @@ import { Picker } from "@/components/ui/Picker";
 import { useToast } from "@/components/ui/Toast";
 import { sendInvite, type InviteResult } from "@/lib/invites";
 import { deleteMember, memberFootprint, updateMember } from "@/lib/queries";
-import { isManager } from "@/lib/permissions";
 import { ROLES, ROLE_LABELS, type Role } from "@/lib/pipeline";
 import { CRAFTS, memberRoles } from "@/lib/roles";
 import { cn } from "@/lib/utils";
@@ -47,13 +46,11 @@ export function RoleSelect({
     setValue(next);
     setBusy(true);
     try {
-      // Swaps the primary in place and keeps any other roles they hold. Managers
-      // see the whole board, so extra roles mean nothing for them.
+      // Swaps the primary in place and keeps any other roles they hold —
+      // including when the new primary is CEO or manager, because running the
+      // agency and editing its videos are things one person often does.
       const kept = memberRoles({ role: previous, roles }).filter((r) => r !== previous);
-      await updateMember(id, {
-        role: next,
-        roles: isManager({ id, role: next }) ? [] : storedRoles(next, kept),
-      });
+      await updateMember(id, { role: next, roles: storedRoles(next, kept) });
       onChanged();
     } catch (e) {
       setValue(previous);
@@ -79,6 +76,11 @@ export function RoleSelect({
  * The other jobs someone does besides their main role: the editor who also
  * writes and shoots. Each one gets its own page in their sidebar, and they can
  * be picked for that step anywhere a person is assigned.
+ *
+ * The CEO and the manager get this too. Seeing every video is not the same as
+ * being pickable for one: the assignee dropdowns list people by the crafts they
+ * hold, so a CEO who edits could not be put in the editor slot until they could
+ * be given the craft. It changes nothing about their authority.
  */
 export function ExtraRoles({
   id,
@@ -86,6 +88,7 @@ export function ExtraRoles({
   role,
   roles,
   locked,
+  self = false,
   onChanged,
 }: {
   id: string;
@@ -93,15 +96,14 @@ export function ExtraRoles({
   role: string;
   roles?: string[] | null;
   locked: boolean;
+  /** Addressed in the second person when it is your own row. */
+  self?: boolean;
   onChanged: () => void;
 }) {
   const [open, setOpen] = useState(false);
   const [picked, setPicked] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
   const toast = useToast();
-
-  // Managers already see every video; there is nothing extra to give them.
-  if (isManager({ id, role })) return null;
 
   const extras = memberRoles({ role, roles }).filter((r) => r !== role);
   const names = extras.map((r) => ROLE_LABELS[r as Role] ?? r).join(", ");
@@ -142,7 +144,13 @@ export function ExtraRoles({
       <button
         type="button"
         onClick={show}
-        title={label ? `Also ${names}. Click to change.` : "Give them another role"}
+        title={
+          label
+            ? `Also ${names}. Click to change.`
+            : self
+              ? "Say what work you do yourself"
+              : "Give them another role"
+        }
         className={cn("role-extra", !label && "role-extra-add")}
       >
         {label ?? "Add role"}
@@ -150,8 +158,12 @@ export function ExtraRoles({
       <Modal
         open={open}
         onClose={() => setOpen(false)}
-        title={`What else does ${name.split(" ")[0]} do?`}
-        subtitle="Each role gets its own page in their sidebar, with the work assigned for it."
+        title={self ? "What else do you do?" : `What else does ${name.split(" ")[0]} do?`}
+        subtitle={
+          self
+            ? "This is what you can be assigned to. It changes nothing about what you may approve."
+            : "Each role gets its own page in their sidebar, with the work assigned for it."
+        }
       >
         <div className="role-picks">
           {CRAFTS.map((c) => {
