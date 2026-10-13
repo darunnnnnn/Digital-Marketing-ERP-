@@ -104,12 +104,20 @@ export function ExtraRoles({
   if (isManager({ id, role })) return null;
 
   const extras = memberRoles({ role, roles }).filter((r) => r !== role);
-  const label = extras.length
-    ? `Also ${extras.map((r) => ROLE_LABELS[r as Role] ?? r).join(", ")}`
-    : "Also does…";
+  const names = extras.map((r) => ROLE_LABELS[r as Role] ?? r).join(", ");
+
+  // A count rather than the list itself. Spelling the roles out wrapped to two
+  // lines under the role pill and made every row a different height, which read
+  // as stray text rather than something to press. The names are a hover away
+  // and in the dialog, which is where they can be changed anyway.
+  const label = extras.length ? `+${extras.length} ${extras.length === 1 ? "role" : "roles"}` : null;
 
   if (locked) {
-    return extras.length ? <span className="role-extra role-extra-fixed">{label}</span> : null;
+    return label ? (
+      <span className="role-extra role-extra-fixed" title={`Also ${names}`}>
+        {label}
+      </span>
+    ) : null;
   }
 
   function show() {
@@ -131,8 +139,13 @@ export function ExtraRoles({
 
   return (
     <>
-      <button type="button" onClick={show} className="role-extra">
-        {label}
+      <button
+        type="button"
+        onClick={show}
+        title={label ? `Also ${names}. Click to change.` : "Give them another role"}
+        className={cn("role-extra", !label && "role-extra-add")}
+      >
+        {label ?? "Add role"}
       </button>
       <Modal
         open={open}
