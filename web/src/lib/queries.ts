@@ -824,6 +824,36 @@ export async function setAssignee(
   }
 }
 
+/**
+ * Text a reviewer may fix in place at a gate, and what the log calls it.
+ *
+ * Sending a script back a stage for a typo costs the writer a revision and the
+ * video a day, when the person reading it could have fixed the line in the
+ * second it took to spot it. So whoever may edit the panel may also edit its
+ * text at the gate — one column per save, never the whole panel, because a
+ * panel save writes every field it owns and would quietly clear the reference
+ * link and the voice-over answer that the review sheet never asked for.
+ *
+ * It is logged, so the writer can see their words were touched and by whom.
+ */
+export const GATE_TEXT = { scriptBody: "Script" } as const;
+export type GateTextField = keyof typeof GATE_TEXT;
+
+export async function editGateText(
+  item: ContentItem,
+  field: GateTextField,
+  text: string,
+  actor?: string,
+) {
+  const { error } = await supabase
+    .from("ContentItem")
+    .update({ [field]: text.trim() || null })
+    .eq("id", item.id);
+  if (error) fail("Couldn't save your change", error);
+
+  await logEvent(item.id, "edit", `${GATE_TEXT[field]} edited during review`, actor);
+}
+
 const LINK_FIELDS = [
   "footageUrl",
   "voUrl",

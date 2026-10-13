@@ -466,6 +466,47 @@
   color: var(--stone-800);
 }
 
+/* Edit and copy sit together at the head of a note. */
+.review-note-tools {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1);
+}
+
+.review-edit-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.review-edit-cancel {
+  border: 0;
+  background: transparent;
+  padding: 0.25rem 0.25rem;
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--stone-500);
+  cursor: pointer;
+}
+
+.review-edit-cancel:hover {
+  color: var(--stone-900);
+}
+
+.review-edit-field {
+  margin-top: var(--sp-2);
+}
+
+/* The editor stands where the script stood, set the same way, so a fix is made
+   against the same lines that were just read. */
+.review-edit-script {
+  margin-top: 0.625rem;
+  font-family: ui-monospace, "SFMono-Regular", monospace;
+  font-size: 0.8125rem;
+  line-height: 1.8;
+}
+
 .review-nothing {
   border-radius: var(--radius-lg);
   background: var(--stone-100);

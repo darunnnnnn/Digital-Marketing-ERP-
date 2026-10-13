@@ -6,11 +6,11 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Field, Textarea } from "@/components/ui/Field";
 import { useToast } from "@/components/ui/Toast";
-import { canAdvance, canSendBack } from "@/lib/permissions";
+import { canAdvance, canEditPanel, canSendBack } from "@/lib/permissions";
 import { priority, refLabel, stageConfig } from "@/lib/pipeline";
-import { sendBack } from "@/lib/queries";
-import type { Approval } from "@/lib/approvals";
-import type { Member, Viewer } from "@/lib/types";
+import { editGateText, sendBack } from "@/lib/queries";
+import type { Approval, GateNote } from "@/lib/approvals";
+import type { ContentItemWithNames, Member, Viewer } from "@/lib/types";
 import { cn, dueLabel, formatDateTime, initials } from "@/lib/utils";
 import { GateForm } from "@/pages/content/gate-forms";
 import { buildHandoff } from "@/pages/content/handoff-info";
@@ -50,6 +50,21 @@ function CopyIcon() {
   );
 }
 
+function PencilIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" />
+    </svg>
+  );
+}
+
 /** Lifting a script out of the sheet to paste it somewhere else. */
 function CopyScript({ text }: { text: string }) {
   const toast = useToast();
@@ -70,6 +85,97 @@ function CopyScript({ text }: { text: string }) {
       <CopyIcon />
       {done ? "Copied" : "Copy script"}
     </button>
+  );
+}
+
+/**
+ * One piece of what they sent, and — for a script — the chance to fix it here.
+ *
+ * Most things sent back a stage come back with two words changed. That costs
+ * the writer a revision against their name and the video a day in the queue,
+ * for a typo the reader had already found. So the text the gate is built around
+ * is editable in place by anyone who may edit that panel, which is the CEO and
+ * the manager: small change, save, approve. Anything bigger than a small change
+ * still belongs in "Request changes", where the writer learns from it.
+ */
+function ReviewNote({
+  note,
+  item,
+  viewer,
+  onSaved,
+}: {
+  note: GateNote;
+  item: ContentItemWithNames;
+  viewer: Viewer;
+  onSaved: () => void;
+}) {
+  // A script reads better monospaced — the beats line up, as on the video
+  // page — and it is long enough to be worth copying out.
+  const isScript = note.text.length > 240;
+  const mayEdit = note.edit ? canEditPanel(viewer, item, note.edit.panel) : false;
+
+  const [draft, setDraft] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const toast = useToast();
+  const editing = draft !== null;
+
+  async function save() {
+    if (!note.edit || draft === null) return;
+    setBusy(true);
+    try {
+      await editGateText(item, note.edit.field, draft, viewer.name);
+      setDraft(null);
+      toast.say("Saved.");
+      onSaved();
+    } catch (err) {
+      toast.warn(err instanceof Error ? err.message : "Couldn't save your change.");
+    }
+    setBusy(false);
+  }
+
+  return (
+    <section className="review-note">
+      <div className="review-note-head">
+        <h3 className="review-note-label">{note.label}</h3>
+        {editing ? (
+          <div className="review-edit-actions">
+            <button
+              type="button"
+              className="review-edit-cancel"
+              onClick={() => setDraft(null)}
+              disabled={busy}
+            >
+              Cancel
+            </button>
+            <Button type="button" variant="secondary" size="sm" onClick={save} disabled={busy}>
+              {busy ? "Saving…" : "Save"}
+            </Button>
+          </div>
+        ) : (
+          <div className="review-note-tools">
+            {mayEdit && (
+              <button type="button" className="review-copy" onClick={() => setDraft(note.text)}>
+                <PencilIcon />
+                Edit
+              </button>
+            )}
+            {isScript && <CopyScript text={note.text} />}
+          </div>
+        )}
+      </div>
+
+      {editing ? (
+        <Textarea
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          rows={isScript ? 20 : 6}
+          aria-label={`Edit ${note.label.toLowerCase()}`}
+          className={cn("review-edit-field", isScript && "review-edit-script")}
+        />
+      ) : (
+        <p className={cn("review-note-text", isScript && "review-note-script")}>{note.text}</p>
+      )}
+    </section>
   );
 }
 
@@ -369,22 +475,17 @@ export function ApprovalReview({
               </dl>
             )}
 
-            {notes.map((n) => {
-              // A script reads better monospaced — the beats line up, as on the
-              // video page — and it is long enough to be worth copying out.
-              const isScript = n.text.length > 240;
-              return (
-                <section key={n.label} className="review-note">
-                  <div className="review-note-head">
-                    <h3 className="review-note-label">{n.label}</h3>
-                    {isScript && <CopyScript text={n.text} />}
-                  </div>
-                  <p className={cn("review-note-text", isScript && "review-note-script")}>
-                    {n.text}
-                  </p>
-                </section>
-              );
-            })}
+            {notes.map((n) => (
+              // Keyed by the video too: the pager swaps the item under the same
+              // labels, and a draft left in the editor must not follow it.
+              <ReviewNote
+                key={`${item.id}-${n.label}`}
+                note={n}
+                item={item}
+                viewer={viewer}
+                onSaved={onChanged}
+              />
+            ))}
 
             {links.length === 0 && notes.length === 0 && facts.length === 0 && (
               <p className="review-nothing">

@@ -13,6 +13,7 @@
 import { supabase } from "./supabase";
 import { ROLE_LABELS, isOverdue, type AssignField, type Role, type Stage } from "./pipeline";
 import { deadlineFor } from "./schedule";
+import type { GateTextField } from "./queries";
 import type { ContentItemWithNames, Member } from "./types";
 import { toDate } from "./utils";
 
@@ -20,14 +21,20 @@ import { toDate } from "./utils";
 export const APPROVAL_STAGES: Stage[] = ["script_review", "footage_review", "edit_review"];
 
 export type GateLink = { label: string; href: string };
-export type GateNote = { label: string; text: string };
+
+/**
+ * A note the reviewer may fix in place instead of sending the work back: which
+ * column holds it, and which panel's permission decides who may touch it.
+ */
+export type GateEdit = { field: GateTextField; panel: string };
+export type GateNote = { label: string; text: string; edit?: GateEdit };
 export type GateFact = { label: string; value: string };
 
 // A gate lists everything it *could* show; whatever the sender left blank is
 // dropped here rather than rendered as an empty row.
 const links = (rows: { label: string; href: string | null }[]) =>
   rows.filter((r) => Boolean(r.href?.trim())) as GateLink[];
-const notes = (rows: { label: string; text: string | null }[]) =>
+const notes = (rows: { label: string; text: string | null; edit?: GateEdit }[]) =>
   rows.filter((r) => Boolean(r.text?.trim())) as GateNote[];
 const facts = (rows: { label: string; value: string | null }[]) =>
   rows.filter((r) => Boolean(r.value?.trim())) as GateFact[];
@@ -59,7 +66,11 @@ export const GATES: Record<string, Gate> = {
     notes: (item) =>
       notes([
         { label: "The idea", text: item.idea },
-        { label: "Script", text: item.scriptBody },
+        {
+          label: "Script",
+          text: item.scriptBody,
+          edit: { field: "scriptBody", panel: "script" },
+        },
       ]),
     facts: (item) =>
       facts([

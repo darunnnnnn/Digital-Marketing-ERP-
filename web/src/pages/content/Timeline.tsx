@@ -12,6 +12,7 @@ const KIND_TONES: Record<string, string> = {
   revision: "dot-quiet",
   assign: "dot-brand",
   note: "dot-faint",
+  edit: "dot-quiet",
   publish: "dot-strong",
   price: "dot-strong",
 };
