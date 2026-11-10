@@ -183,33 +183,54 @@ export function ContentBoardPage() {
           description="Content is always planned against a client. Create one, then come back and plan their month."
           action={<LinkButton to="/clients">Go to clients</LinkButton>}
         />
-      ) : visible.length === 0 ? (
-        <EmptyState
-          title={hasAnyContent ? "Nothing matches those filters" : "No content planned yet"}
-          description={
-            hasAnyContent
-              ? "Clear a filter or widen the search to see the rest of the pipeline."
-              : manager
-                ? "Plan a week of ideas in one go — paste one idea per line and each becomes its own tracked video."
-                : "Nothing is assigned to you yet. New work will show up here."
-          }
-          action={
-            hasAnyContent || !canPlan(viewer) ? undefined : (
-              <NewContentButton label="Plan your first videos" />
-            )
-          }
-        />
       ) : view === "list" ? (
-        <ContentList items={visible} />
+        visible.length === 0 ? (
+          <EmptyState
+            title={hasAnyContent ? "Nothing matches those filters" : "No content planned yet"}
+            description={
+              hasAnyContent
+                ? "Clear a filter or widen the search to see the rest of the pipeline."
+                : manager
+                  ? "Plan a week of ideas in one go — paste one idea per line and each becomes its own tracked video."
+                  : "Nothing is assigned to you yet. New work will show up here."
+            }
+            action={
+              hasAnyContent || !canPlan(viewer) ? undefined : (
+                <NewContentButton label="Plan your first videos" />
+              )
+            }
+          />
+        ) : (
+          <ContentList items={visible} />
+        )
       ) : (
-        <Board
-          items={visible}
-          draggable={canDrag(viewer)}
-          onMoved={board.reload}
-          canQuickAdd={canPlan(viewer)}
-          clients={clients}
-          members={members}
-        />
+        /*
+         * The board itself stands in for the empty state. An empty month still
+         * has all nine stages, and the "+" on each one is how a video that was
+         * never planned here — a script a client sent over, footage shot
+         * outside the app — gets dropped straight onto the step it is actually
+         * on. Replacing the lanes with a single "nothing planned yet" panel
+         * took that away exactly when it was most useful.
+         */
+        <>
+          {visible.length === 0 && (
+            <p className="board-note">
+              {hasAnyContent
+                ? "Nothing matches those filters — clear one to see the rest of the pipeline."
+                : canPlan(viewer)
+                  ? "Nothing planned this month. Use + on any stage to drop a video straight onto it, or plan a whole week at once with Plan content."
+                  : "Nothing is assigned to you yet. New work will show up here."}
+            </p>
+          )}
+          <Board
+            items={visible}
+            draggable={canDrag(viewer)}
+            onMoved={board.reload}
+            canQuickAdd={canPlan(viewer)}
+            clients={clients}
+            members={members}
+          />
+        </>
       )}
     </div>
   );

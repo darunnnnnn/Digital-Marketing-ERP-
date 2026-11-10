@@ -138,3 +138,16 @@
   border-color: var(--brand-300);
   color: var(--brand-600);
 }
+
+/*
+ * The line that sits above an empty board, in place of the full empty state
+ * panel that used to replace the lanes entirely. Deliberately quiet: the board
+ * below it is the thing to look at, and this only says why it is bare and
+ * points at the "+" that fills it.
+ */
+.board-note {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--stone-500);
+}
