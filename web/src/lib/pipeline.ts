@@ -375,10 +375,12 @@ export function refLabel(ref: number) {
 
 /**
  * Whether a video can be dropped straight onto this stage, skipping the ones
- * before it — true for every stage with someone actually doing work on it.
- * Not the three CEO gates, which only exist to approve what came before, and
- * not Published, which is reached by posting, not by being added to.
+ * before it — true for every stage with someone actually doing work on it,
+ * Published included: a post that already went out before it was ever
+ * planned here still belongs on the board, counting toward the client's
+ * target like any other. Not the three CEO gates, which only exist to
+ * approve what came before — there is nothing to add straight into a gate.
  */
 export function canQuickAddTo(stage: Stage) {
-  return STAGE_CONFIG[stage].owner !== "ceo" && stage !== "published";
+  return STAGE_CONFIG[stage].owner !== "ceo";
 }
